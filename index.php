@@ -20,7 +20,7 @@ function commentAdd() {
 function commentDelete() {
     // check if user owns comment
 }
-/* 
+/* - 
 CREATE TABLE `user` ( `uId` int(11) NOT NULL AUTO_INCREMENT, `uName` varchar(32) NOT NULL, 
 `uEmail` varchar(128) NOT NULL, `uLastName` varchar(32) DEFAULT NULL, `uFirstName` varchar(32) DEFAULT NULL, 
 `uPassword` char(128) DEFAULT NULL,  `uYear` int(11) DEFAULT NULL, `uCourse` char(32) DEFAULT NULL, 
