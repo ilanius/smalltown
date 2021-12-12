@@ -1,0 +1,34 @@
+
+.userGrid {
+    display: grid;
+    grid-template-areas: 
+     
+        "contPane"
+        "footPane";
+    grid-template-columns: 1fr;
+    width: 90%;
+    margin: auto;
+    border: 11px red dashed;
+}
+
+.userPane {
+    grid-area: "userPane";
+    border: 11px blue solid;
+}
+.lognPane {
+    width: 100%;
+    border:1px red solid;
+}
+.lognPane label {
+    width: 20%;
+    display: inline-block;
+    padding: 4px;
+}
+
+.contPane {
+    grid-area: "contPane";
+}
+.footPane {
+    grid-area: "footPane";
+    border: 11px brown dashed;
+}

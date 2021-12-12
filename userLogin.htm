@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>smalltown</title>
+  <link rel="stylesheet" href="/smalltown/jc/style.css">
+  <script src="/smalltown/jc/script.js"> </script>
+</head>
+
+<body>
+  <div class="userGrid">
+
+    <div class="contPane"> 
+      
+      <div class="lognPane">
+        <h1>User Login</h1>
+        <form action="/index.php?func=login" method="post">
+          <label for="uEmail">    User Email      </label> <input type="email"    name="uEmail" required> <br>
+          <label for="uPassword"> Password        </label> <input type="password" name="uPassword" required>
+          <button type="submit">Login</button>
+        </form>                   
+      </div>                       
+                                  
+      <div class="lognPane">
+        <h1>User Sign Up</h1>
+        <form action="/index.php?func=signup" method="post">
+          <label for="uEmail">     User Email     </label> <input type="email"    name="uEmail" required> <br>
+          <label for="uFirstname"> User Firstname </label> <input type="text"     name="uFirstname" required> <br>
+          <label for="uLastname">  User Lastname  </label> <input type="text"     name="uLastname" required> <br>
+          <label for="uPassword">  Password       </label> <input type="password" name="uPassword" required> &nbsp;
+          <button type="submit">Sign Up</button>
+        </form>
+      </div>
+ 
+    </div>
+
+    <div class="footPane"> 
+      <div class="cookieLoose">
+          Cookies on the loose!! This site uses cookies! - If you don't like cookies don't use this site!
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

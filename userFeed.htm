@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+
+</head>
+
+<body>
+    <div class="userGrid">
+
+    <div class="userPane"> 
+        <span class=""> <img src="img/users/<?=$ord[userImage]?"> </span>
+        <span class=""> </span>
+        <span class=""> </span>
+        <span class=""> </span>
+    </div>
+    <div class="leftPane"> </div>
+    <div class="contPane"> 
+    <?php
+    foreach( $ord['userFeed'] as $post ) {
+        echo "<div class='userPost'>$post[pTxt] </div>";
+        foreach( $post['comm'] as $comm ) {
+            echo "<div class='userComm'>$comm[pTxt] </div>";
+        }
+    }
+    ?>
+    </div>
+    <div class="footPane"> </div>
+    </div>
+</body>
+</html>
