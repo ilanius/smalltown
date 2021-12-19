@@ -8,15 +8,15 @@
     <div class="userGrid">
 
     <div class="userPane"> 
-        <span class=""> <img src="img/users/<?=$ord[userImage]?"> </span>
+        <span class=""> <img src="img/users/<?=$ord['userImage']?>"> </span>
         <span class=""> </span>
         <span class=""> </span>
-        <span class=""> </span>
+        <span class=""> <?=$R['stmnt']?> </span>
     </div>
     <div class="leftPane"> </div>
     <div class="contPane"> 
     <?php
-    foreach( $ord['userFeed'] as $post ) {
+    foreach( $R['uFeed'] as $post ) {
         echo "<div class='userPost'>$post[pTxt] </div>";
         foreach( $post['comm'] as $comm ) {
             echo "<div class='userComm'>$comm[pTxt] </div>";

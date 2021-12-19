@@ -111,7 +111,7 @@ CREATE TABLE `user` (
   `uPassword` char(128) DEFAULT NULL,
   `uYear` int(11) DEFAULT NULL,
   `uCourse` char(32) DEFAULT NULL,
-  `uImageId` int(11) DEFAULT NULL,
+  `uImageId` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`uId`),
   KEY `uEmail` (`uEmail`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;

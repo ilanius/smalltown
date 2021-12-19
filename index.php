@@ -3,7 +3,9 @@
 /* smalltown - facebook light      */
 /* no ads                          */
 /* ******************************* */
-
+function debg( $mess ) {
+    error_log( $mess."\n" , 3, './phplog.txt');
+}
 function postAdd() {  /* post and comments handled here */
     $DB->insert( 'post', $ord );
     userFeed();
@@ -36,39 +38,68 @@ function userGet($R, $DB) {
     require 'userProfile.php';
 }
 function userFeed( $R, $DB ) {
-    $friendUser = $DB->select("uId2 from friend where uId1='$R[uId]' and relType in ('friend', 'follow')");
+    $stmnt = "uId2 from friend where uId1='$R[uId]' and relType in ('friend', 'follow')";
+    debg( '>>>>>>'.$stmnt );
+    $friendUser = $DB->select( $stmnt );
+    array_push( $friendUser, '-1' );
     // implode to string
     $fU = '(' . implode( ',', $friendUser ) . ')';
-    $post = $DB->select("* from post where uId in $fU and uId2 is null order by pTime desc limit0,100");
+    $stmnt = "* from post where uId in $fU and ppId is null order by pTime desc limit 0,100";
+    debg( 'AAAAAAA '.$stmnt );
+    $post = $DB->select( $stmnt );
 
     foreach ( $post as $itm ) {
         $phsh[ $itm['pId'] ] = $itm;
     }
+    $stmnt = "* from post where uId in $fU and ppId is not null order by pTime desc limit 0,100";
+    debg( $stmnt );
+    $comm = $DB->select( $stmnt );
 
-    $comm = $DB->select("* from post where uId in $fu and uId2 is not null and order by pTime desc limit0,100");
     foreach ( $comm as $itm ) {
-        if ( $phsh[ $itm['pId2'] ] ) {
-            $pst = $phsh[$itm['pId2'] ];
+        if ( $phsh[ $itm['ppId'] ] ) {
+            $pst = $phsh[$itm['ppId'] ];
             array_push(  $pst['comm'], $itm );
         }
     }
-    $ord['uFeed'] = $posts;
-    require 'userFeed.php';
+    // $R['uFeed'] = $pst['comm'];
+    require 'userFeed.htm';
 }
-function userLoggedIn($R, $DB ) {
+function createSession( &$R, $DB ) {
+    $R['sHash'] = sha1( time().$R['uEmail'] );
+    $R['sTime'] = 'now()';
+    $DB->replace('session', $R );
+    setCookie( 'session', $R['sHash'] );
+    debg( $R['sHash'] );
+}
+function userLoggedIn(&$R, $DB ) {
     if ( isset( $_COOKIE['session'] ) ) {
-        $res = $DB->select("* from session where session='$_COOKIE[session]'");
+        $res = $DB->select("* from session where sHash='$_COOKIE[session]'");
         if ( $res != 0 ) {
-            $DB->update("session where session='$_COOKIE[session]' set sTime='now()'");
+            $R['sTime']= 'now()';
+            $R['uId'] = $res[0]['uId'];
+            debg('userLoggedIn update $R[uId]:'.$R['uId'] );
+            $DB->update('session', $R, "sHash='$_COOKIE[session]'");
         }
         return 1;
-    } else if ( isset( $_POST['uEmail'] ) && isset( $_POST['uPassword'] ) ) {
-        $pass = password_hash( $_POST['uPassword'], PASSWORD_DEFAULT );
-        
-        $res = $DB->select("* from user where uEmail='$_POST[uEmail]'");
-        if ( $password_verify( $_POST['uPassword'], $res['uPassword'] ) ) {
-            return 1;
+    } else {
+        if ( $R['func'] == 'userLogin' ) { /* logging in */
+            $R['uPassword'] = password_hash( $R['uPassword0'] , PASSWORD_DEFAULT);
+            if ( isset( $R['uEmail'] ) && isset( $R['uPassword0'] ) ) {
+                $res = $DB->select("* from user where uEmail='$R[uEmail]'");
+                if ( !( $res && password_verify( $R['uPassword0'], $res['uPassword'] ) ) ) {
+                    return 0;
+                }
+            }
+        } else if ( $R['func'] == 'userSignup' ) {
+            $R['stmnt'] = $DB->insert( 'user', $R );
+            $res = $DB->select("* from user where uEmail='$R[uEmail]'");
+            $R['uId'] = $res[0]['uId'];
+        } else {
+            return 0;
         }
+        // set cookie
+        createSession( $R, $DB );
+        return 1;
     }
     return 0;
 }
@@ -78,7 +109,10 @@ function userLogin($R) {
     return 0;
 }
 function userSearch() {}
-function userSignup() {}
+function userSignup( $R, $DB ) {
+    // hash password
+    // if ( $R['uPassword1'] != $R['uPassword2] ) {}
+}
 
 /* init */
 require 'lib/Config.php';
@@ -88,15 +122,20 @@ $DB = new Database( $C );
 
 global $R;
 $R = array();
-foreach ( $_REQUEST as $k=>$v ) {
+foreach ( $_REQUEST as $k=>$v ) { // moving to shorter $R
     $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection
 }
 $R['userImage'] = 'default.png';
 $R['func'] = isset( $R['func'] ) ? $R['func'] : '';
+
 /* **************************** */
 /* routing */
 /* **************************** */
+
+debg( ">>>>1>>>>>>$R[func]<<<" );
+
 userLoggedIn( $R, $DB ) || userLogin( $R, $DB ) || die();
+debg( ">>>>2>>>>>>$R[func]<<<" );
 
 // change to switch: https://www.php.net/manual/en/control-structures.switch.php
 if ( $R['func'] == 'userPost' ) {
@@ -107,7 +146,6 @@ if ( $R['func'] == 'userPost' ) {
 } else if ( $R['func'] == 'userComment' ) {
     userComment( $R, $DB );
 } else {  // default userFeed
-    echo "\nRoute userFeed\n";
     userFeed( $R, $DB );
 }
 

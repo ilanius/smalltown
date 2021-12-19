@@ -14,20 +14,23 @@
       
       <div class="lognPane">
         <h1>User Login</h1>
-        <form action="/index.php?func=login" method="post">
+        <form action="index.php method="post">
+          <input type="hidden"  name="func" value="userLogin">
           <label for="uEmail">    User Email      </label> <input type="email"    name="uEmail" required> <br>
-          <label for="uPassword"> Password        </label> <input type="password" name="uPassword" required>
+          <label for="uPassword0"> Password        </label> <input type="password" name="uPassword" required>
           <button type="submit">Login</button>
         </form>                   
       </div>                       
                                   
       <div class="lognPane">
         <h1>User Sign Up</h1>
-        <form action="/index.php?func=signup" method="post">
-          <label for="uEmail">     User Email     </label> <input type="email"    name="uEmail" required> <br>
-          <label for="uFirstname"> User Firstname </label> <input type="text"     name="uFirstname" required> <br>
-          <label for="uLastname">  User Lastname  </label> <input type="text"     name="uLastname" required> <br>
-          <label for="uPassword">  Password       </label> <input type="password" name="uPassword" required> &nbsp;
+        <form action="index.php" method="post">
+          <input type="hidden" name="func" value="userSignup">
+          <label for="uEmail">    User Email       </label> <input type="email"    name="uEmail"                     required> <br>
+          <label for="uFirstname">User Firstname   </label> <input type="text"     name="uFirstname" pattern="\w+"   required> <br>
+          <label for="uLastname"> User Lastname    </label> <input type="text"     name="uLastname"  pattern="\w+"   required> <br>
+          <label for="uYear">     User Year  (YYYY)</label> <input type="text"     name="uYear"      pattern="\d{4}" value="1234" required> <br>
+          <label for="uPassword0">Password        </label>  <input type="password" name="uPassword" required> &nbsp;
           <button type="submit">Sign Up</button>
         </form>
       </div>
@@ -36,7 +39,8 @@
 
     <div class="footPane"> 
       <div class="cookieLoose">
-          Cookies on the loose!! This site uses cookies! - If you don't like cookies don't use this site!
+          Cookies on the loose!! This site uses cookies! - If you don't like cookies don't use this site! <br>
+          : <?=$R['session']?> : <?=$R['func']?> : <br>
       </div>
     </div>
 

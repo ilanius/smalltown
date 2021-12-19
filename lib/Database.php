@@ -3,7 +3,7 @@
 class Database {
     var $DB;
 
-    function __construct($C) {
+    function __construct( $C ) {
         $this->DB = new mysqli( $C->host, $C->user, $C->password, $C->database );
     }
     function getReg( $stmnt, $keyfield ) {
@@ -14,14 +14,47 @@ class Database {
         }
         return $r;
     }
+    function sqlQuote( $entry ) {
+        if ( preg_match( "/^(NULL|NOW\(\))$/i", $entry ) ) {
+            return $entry;
+        }
+        return '\''.$entry.'\'';
+    }
+    function _tablefields( $table, $forceAll = false )  {
+        $result = $this->DB->query("describe $table") or die( mysqli_error( $this->DB ) );
+        $fields = array();
+        while ( $row= mysqli_fetch_array( $result ) ) {
+            if ( $forceAll || stripos( $row['Extra'], "uto_increment" ) == false ) { // auto_increment generates 0!
+                array_push( $fields, $row['Field'] );
+            }
+        }
+        return $fields;
+    }
+    function _values( $table, $entry, $forceAll = false ) {
+         $tf = $this->_tablefields($table, $forceAll );
+         $starr = array();
+         foreach ( $tf as $key ) {
+             if ( isset( $entry[$key] ) ) {
+                 array_push( $starr, $this->sqlQuote($entry[$key]) );
+             } else {
+                 array_push( $starr, '\'\'' );
+             }
+         }
+         $jn = join( ",", $starr );
+         $jn = trim ( $jn ,"," );
+         $col = join( ",", $tf );
+         $col = trim ( $col ,"," );
+         return [$col, $jn];
+    }
     function insert( $table, $entry ) {
-        $jn = $this->_values( $table, $entry );
-        $stmnt = "insert into $table values ($jn)";
+        [$col, $jn] = $this->_values( $table, $entry );
+        $stmnt = "insert into $table ($col) values ($jn)";
         // print " **** $stmnt **** \n";
         $this->DB->query( $stmnt ) or die ( mysqli_error( $this->DB ) );
+        return $stmnt;
     }
     function replace( $table, $entry ) {
-        $jn = $this->_values( $table, $entry );
+        [$col, $jn] = $this->_values( $table, $entry, true );
         $stmnt = "replace into $table values ($jn)";
         // print " **** $stmnt **** \n";
         $this->DB->query( $stmnt ) or die ( mysqli_error($this->DB ) );
@@ -41,12 +74,10 @@ class Database {
         $jn = join( ",", $starr );
         $jn = trim ( $jn ,"," );
         $stmnt = "update $table set $jn where $where";
-        // print " **** $stmnt **** \n";
-        $this->DB->query( $stmnt ) or die ( mysql_error( $this->DB ) );
+        $this->DB->query( $stmnt ) or die ( mysqli_error( $this->DB ) );
     }
     function select( $query ) {
         $stmnt ="select ".$query;
-        print "\nselect.stmnt:$stmnt\n";
         $rslt =  $this->DB->query( $stmnt ) or die('###select### '. mysqli_error($this->DB ) );
         $ret = array();
         while ( $row= mysqli_fetch_array( $rslt ) ) {
@@ -58,36 +89,8 @@ class Database {
         $tmp = $this->select($query);
         return count($tmp)? $tmp[0] : null;
     }
-    function _tablefields( $table )  {
-        $result = $this->DB->query("describe $table") or die( mysqli_error( $this->DB ) );
-        $fields = array();
-        while ( $row= mysqli_fetch_array( $result ) ) {
-            if ( strpos( $row['Field'], "auto_increment" ) != -1 ) {
-                array_push( $fields, $row['Field'] );
-            }
-        }
-        return $fields;
-    }
-    function sqlQuote( $entry ) {
-       if ( preg_match( "/^(NULL|NOW\(\))$/i", $entry ) ) {
-           return $entry;
-       }
-       return '\''.$entry.'\'';
-    }
-    function _values( $table, $entry ) {
-        $tf = $this->_tablefields($table);
-        $starr = array();
-        foreach ( $tf as $key ) {
-            if ( isset( $entry[$key] ) ) {
-                array_push( $starr, $this->sqlQuote($entry[$key]) );
-            } else {
-                array_push( $starr, '\'\'' );
-            }
-        }
-        $jn = join( ",", $starr );
-        $jn = trim ( $jn ,"," );
-        return $jn;
-    }
+    
+    
     function getUploadName( $R, $imgname ) {
         $fname = $_REQUEST['old_'.$imgname];
         if ( $_FILES[$imgname]['name'] > "0" ) {
