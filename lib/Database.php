@@ -59,7 +59,7 @@ class Database {
         // print " **** $stmnt **** \n";
         $this->DB->query( $stmnt ) or die ( mysqli_error($this->DB ) );
     }
-    function delet( $table, $where ) {
+    function delete( $table, $where ) {
         $stmnt = "delete from $table where $where";
         $this->DB->query( $stmnt ) or die ( mysqli_error( $this-DB ) );
     }
@@ -85,12 +85,10 @@ class Database {
         }
         return $ret;
     }
-    function selectFirst( $query ) {
-        $tmp = $this->select($query);
-        return count($tmp)? $tmp[0] : null;
+    function selectOne( $query ) {
+        $res = $this->select($query);
+        return count($res)? $res[0] : 0;
     }
-    
-    
     function getUploadName( $R, $imgname ) {
         $fname = $_REQUEST['old_'.$imgname];
         if ( $_FILES[$imgname]['name'] > "0" ) {

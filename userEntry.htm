@@ -1,23 +1,24 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>smalltown</title>
-  <link rel="stylesheet" href="/smalltown/jc/style.css">
-  <script src="/smalltown/jc/script.js"> </script>
+  <?php require 'head.htm'; ?>
 </head>
 
-<body>
-  <div class="userGrid">
+<body class="login">
+    <div class="headPane"></div>
 
     <div class="contPane"> 
       
       <div class="lognPane">
         <h1>User Login</h1>
-        <form action="index.php method="post">
+        <?php
+        if ( $R['badLogin'] ) {
+          echo "<h3>$R[badLogin] </h3>";
+        } ?>
+        <form action="index.php" method="post">
           <input type="hidden"  name="func" value="userLogin">
-          <label for="uEmail">    User Email      </label> <input type="email"    name="uEmail" required> <br>
-          <label for="uPassword0"> Password        </label> <input type="password" name="uPassword" required>
+          <label for="uEmail">    User Email   </label> <input type="email"    name="uEmail" required> <br>
+          <label for="uPassword0"> Password    </label> <input type="password" name="uPassword0" required>
           <button type="submit">Login</button>
         </form>                   
       </div>                       
@@ -30,7 +31,7 @@
           <label for="uFirstname">User Firstname   </label> <input type="text"     name="uFirstname" pattern="\w+"   required> <br>
           <label for="uLastname"> User Lastname    </label> <input type="text"     name="uLastname"  pattern="\w+"   required> <br>
           <label for="uYear">     User Year  (YYYY)</label> <input type="text"     name="uYear"      pattern="\d{4}" value="1234" required> <br>
-          <label for="uPassword0">Password        </label>  <input type="password" name="uPassword" required> &nbsp;
+          <label for="uPassword0">Password        </label>  <input type="password" name="uPassword0" required> &nbsp;
           <button type="submit">Sign Up</button>
         </form>
       </div>
@@ -44,6 +45,5 @@
       </div>
     </div>
 
-  </div>
 </body>
 </html>

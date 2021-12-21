@@ -1,20 +1,16 @@
 <!doctype html>
 <html>
 <head>
-
+    <?php require 'head.htm'; ?>
 </head>
 
-<body>
-    <div class="userGrid">
-
-    <div class="userPane"> 
-        <span class=""> <img src="img/users/<?=$ord[userImage]?"> </span>
-        <span class=""> </span>
-        <span class=""> </span>
-        <span class=""> </span>
+<body class="profile">
+    <div class="headPane">
+        logo --- startsida --- konto --- logout
     </div>
-    <div class="leftPane"> </div>
     <div class="contPane"> 
+        <span class=""> <img src="img/users/<?=$R[userImage]?"> </span>
+
     <?php
     foreach( $ord['userFeed'] as $post ) {
         echo "<div class='userPost'>$post[pTxt] </div>";
@@ -25,6 +21,6 @@
     ?>
     </div>
     <div class="footPane"> </div>
-    </div>
+
 </body>
 </html>

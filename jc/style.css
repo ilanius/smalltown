@@ -1,16 +1,22 @@
 
-.userGrid {
+body {
     display: grid;
     grid-template-areas: 
-     
+        "headPane"
         "contPane"
         "footPane";
     grid-template-columns: 1fr;
+    grid-template-rows: 20px 1fr 30px;
     width: 90%;
     margin: auto;
-    border: 11px red dashed;
+    margin-top: 2px;
+    gap: 4px;
+    border: 2px red dashed;
 }
-
+.headPane {
+    grid-area: headPane;
+    border: 1px blue solid;
+}
 .userPane {
     grid-area: "userPane";
     border: 11px blue solid;
@@ -24,11 +30,10 @@
     display: inline-block;
     padding: 4px;
 }
-
 .contPane {
     grid-area: "contPane";
 }
 .footPane {
     grid-area: "footPane";
-    border: 11px brown dashed;
+    border: 1px brown dashed;
 }
