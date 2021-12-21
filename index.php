@@ -38,30 +38,39 @@ function userGet($R, $DB) {
     require 'userProfile.php';
 }
 function userFeed( $R, $DB ) {
-    $stmnt = "uId2 from friend where uId1='$R[uId]' and relType in ('friend', 'follow')";
-    debg( '>>>>>>'.$stmnt );
-    $friendUser = $DB->select( $stmnt );
-    array_push( $friendUser, '-1' );
-    // implode to string
-    $fU = '(' . implode( ',', $friendUser ) . ')';
-    $stmnt = "* from post where uId in $fU and ppId is null order by pTime desc limit 0,100";
-    debg( 'AAAAAAA '.$stmnt );
-    $post = $DB->select( $stmnt );
+    $stmnt = "uId2 from friend where uId1='$R[uId]' and relType in ('friend', 'follow')"; debg( 'A userFeed. stmnt:'.$stmnt );
+    $friends = $DB->select( $stmnt );
+    array_push( $friends, '-1' );
+    $fU = implode( ',', $friends );
 
-    foreach ( $post as $itm ) {
-        $phsh[ $itm['pId'] ] = $itm;
-    }
-    $stmnt = "* from post where uId in $fU and ppId is not null order by pTime desc limit 0,100";
-    debg( $stmnt );
-    $comm = $DB->select( $stmnt );
-
-    foreach ( $comm as $itm ) {
-        if ( $phsh[ $itm['ppId'] ] ) {
-            $pst = $phsh[$itm['ppId'] ];
-            array_push(  $pst['comm'], $itm );
+    // main posts for feed
+    $stmnt = "* from post where uId in ($fU) and ppId is null order by pTime desc limit 0,100"; debg( 'B userFeed.stmnt: '.$stmnt );
+    $posts = $DB->select( $stmnt );
+ 
+    debg( 'sizeof posts:'. sizeof($posts) ) ;
+ 
+    if ( sizeof ( $posts ) > 0 ) {
+        $cPostIds = [-1];
+        foreach ( $posts as $post ) {
+            $postHash[ $post['pId'] ] = $post;
+            array_push( $cPostIds, $post['pId'] );
         }
+
+        // comments
+        $cpi = implode( ',', $cPostIds );
+        $stmnt = "* from post where uId in ($fU) and ppId in ($cpi) order by pTime desc limit 0,100"; debg( 'C userFeed.stmnt:'.$stmnt );
+        $comments = $DB->select( $stmnt );
+
+        foreach ( $comments as $comment ) {
+            if ( $postHash[ $comment['ppId'] ] ) {
+                $post = $postHash[$comment['ppId'] ];
+                array_push(  $post['comment'], $comment );
+            }
+        }
+    } else {
+        $posts = [ 0 => [ 'pTxt' => 'No posts!'] ];    
     }
-    // $R['uFeed'] = $pst['comm'];
+    $R['posts'] = $posts;
     require 'userFeed.htm';
 }
 function createSession( &$R, $DB ) {
