@@ -13,6 +13,9 @@ body {
     gap: 4px;
     border: 2px red dashed;
 }
+div, span {
+    box-sizing: border-box;
+}
 .headPane {
     grid-area: headPane;
     border: 1px blue solid;
@@ -23,7 +26,7 @@ body {
 }
 .lognPane {
     width: 100%;
-    border:1px red solid;
+    border:4px solid yellow;
 }
 .lognPane label {
     width: 20%;
@@ -32,8 +35,22 @@ body {
 }
 .contPane {
     grid-area: "contPane";
+    border-top:3px cyan solid;
+    border-bottom:3px cyan solid;
 }
 .footPane {
     grid-area: "footPane";
     border: 1px brown dashed;
+}
+.userPostTA  {
+    border-top:2px magenta solid;
+    border-bottom:2px magenta solid;
+    width: 100%;
+    display: block;
+    text-align: right;
+}
+.userPostTA textarea {
+    width:99%;
+    text-align: left;
+    resize:none;
 }

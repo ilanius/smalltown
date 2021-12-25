@@ -30,7 +30,8 @@ function commentComplement( &$posts, &$DB ) {
     }
     // comments
     $cpi = implode( ',', $cPostIds );
-    $stmnt = "* from post where uId in ($fU) and ppId in ($cpi) order by pTime desc limit 0,100"; debg( 'C userFeed.stmnt:'.$stmnt );
+    // $stmnt = "* from post where uId in ($fU) and ppId in ($cpi) order by pTime desc limit 0,100"; debug( 'C userFeed.stmnt:'.$stmnt );
+    $stmnt = "* from post where ppId in ($cpi) order by pTime desc limit 0,100"; debug( 'C userFeed.stmnt:'.$stmnt );
     $comments = $DB->select( $stmnt );
     foreach ( $comments as $comment ) {
         if ( $postHash[ $comment['ppId'] ] ) {
@@ -64,6 +65,8 @@ function userFeed( &$R, &$DB ) {
     $stmnt   = "uId2 from friend where uId1='$R[uId]' and relType in ('friend', 'follow')"; 
     $friends = $DB->select( $stmnt );
     array_push( $friends, '-1' );
+    array_push( $friends, $R['uId'] ); /* your own feed */
+    
     $fU = implode( ',', $friends );
     /* main posts for feed  */
     $stmnt = "* from post where uId in ($fU) and ppId is null order by pTime desc limit 0,100"; 
@@ -71,7 +74,7 @@ function userFeed( &$R, &$DB ) {
     if ( sizeof ( $posts ) > 0 ) {
         commentComplement( $posts, $DB );        
     } else {
-        $posts = [ 0 => [ 'pTxt' => 'No posts!'] ];    
+        $posts = [ 0 => [ 'pTxt' => 'Nothing to show yet!'] ];    
     }
     $R['stmnt'] = $stmnt;
     $R['posts'] = $posts;
@@ -80,9 +83,12 @@ function userFeed( &$R, &$DB ) {
 function userLogout( &$R, &$DB ) {
     $DB->delete("session", "uId='$R[uId]'");
     setCookie('session', '');
-    require 'userLogout.htm';
+    require 'userEntry.htm';
 }
-
+/* present a page with a button */
+function userLostPass0( &$R, &$DB ) {}
+/* present request received mail recipient */
+function userLostPass1( &$R, &$DB ) {}
 /* ************************* */
 /* friend suggestions        */
 /* ************************* */
@@ -114,6 +120,13 @@ function userLogin(&$R, &$DB) {
     createSession( $R, $DB );
     return 1;
 }
+function userPost( &$R, &$DB ) {
+    debug( 'pTxt:'. $R['pTxt'] );
+    // add post to user feed
+    debug( $R['uId'].' <---------' );
+    $DB->insert( 'post', $R); // untaint
+    userFeed( $R, $DB);
+}
 function userProfile( &$R, &$DB) {
     $user    = $DB->select("* from user where uId='$R[uId]'")[0];
     $friends = $DB->select("* from user where uId in (select uId2 from friend where relType='friend' && uId1='$user[uId]')");
@@ -124,6 +137,7 @@ function userProfile( &$R, &$DB) {
 function userSearch(&$R, &$DB) {}
 function userSignup( &$R, &$DB ) {
     if ( $R['func'] != 'userSignup' ) { return 0; }   
+    $R['uName'] = isset( $R['uName'] ) ? $R['uName'] : 'nada';
     $R['uPassword'] = password_hash( $R['uPassword0'] , PASSWORD_DEFAULT);
     $R['stmnt'] = $DB->insert( 'user', $R );
     $user = $DB->select("* from user where uEmail='$R[uEmail]'")[0];
@@ -152,7 +166,7 @@ foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
 /* ********************** */
 /* entry */
 /* ********************** */
-debug('entry');
+debug('entry func:' . $R['func']);
 checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userEntry($R,$DB) || exit();
 
 /* **************************** */
@@ -160,7 +174,9 @@ checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userEntry
 /* change to switch: https://www.php.net/manual/en/control-structures.switch.php  */
 /* **************************** */
 debug('route:'.$R['func']);
-if ( $R['func'] == 'userPost' ) {
+if ( $R['func'] == 'userLogout') {
+    userLogout($R, $DB );
+} else if ( $R['func'] == 'userPost' ) {
     userPost( $R, $DB );
 } else if ( $R['func'] == 'userProfile' ) {
     userProfile( $R, $DB );

@@ -32,24 +32,25 @@ class Database {
     }
     function _values( $table, $entry, $forceAll = false ) {
          $tf = $this->_tablefields($table, $forceAll );
-         $starr = array();
+         $tval = array();
+         $tcol = array();
          foreach ( $tf as $key ) {
              if ( isset( $entry[$key] ) ) {
-                 array_push( $starr, $this->sqlQuote($entry[$key]) );
+                array_push( $tcol, $key );
+                array_push( $tval, $this->sqlQuote($entry[$key]) );
              } else {
-                 array_push( $starr, '\'\'' );
+                // array_push( $tval, '\'\'' );
              }
          }
-         $jn = join( ",", $starr );
-         $jn = trim ( $jn ,"," );
-         $col = join( ",", $tf );
-         $col = trim ( $col ,"," );
-         return [$col, $jn];
+         $vals = join( ",", $tval );
+         $vals = trim( $vals, "," );
+         $tcol = join( ",", $tcol );
+         $tcol = trim ( $tcol ,"," );
+         return [$tcol, $vals];
     }
     function insert( $table, $entry ) {
-        [$col, $jn] = $this->_values( $table, $entry );
-        $stmnt = "insert into $table ($col) values ($jn)";
-        // print " **** $stmnt **** \n";
+        [$tcol, $jn] = $this->_values( $table, $entry );
+        $stmnt = "insert into $table ($tcol) values ($jn)";
         $this->DB->query( $stmnt ) or die ( mysqli_error( $this->DB ) );
         return $stmnt;
     }
