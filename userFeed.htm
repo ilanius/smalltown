@@ -2,6 +2,35 @@
 <html>
 <head>
 <?php require 'head.htm'; ?>
+
+<script>
+  function gid(id) { return document.getElementById(id); }
+  function insertInput( pId ) {
+    e = gid( 'comm_' + pId);
+    e.innerHTML = '<input type="text" id="omm_'+pId+'" name="omm_'+pId+'" placeholder="opinion" onkeyUp="postIt(event, this);">';
+    gid( 'omm_'+pId ).focus();
+  }
+  function setIt( o ) {
+    e = gid( 'c' + o.name );
+    e.innerHTML = o.value;
+  }  
+  function postIt( e, o ) {
+    // We need root user id, ruId, here. when we post on someone elses feed
+    if ( e.keyCode != 13 || o.value == '' ) return;
+    e.preventDefault();
+    // alert( e.keyCode + ' ' + o.value + ' ' + o.name );    
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        setIt( o );
+      }
+    };
+    var val = o.name.substring(4);    
+    xhttp.open("POST", "index.php", true);
+    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhttp.send("func=userPost0&ppId="+val+"&pTxt="+ o.value );
+  }
+</script>
 </head>
 
 <body class="feed">
@@ -14,44 +43,30 @@
   </div>
 
   <div class="contPane"> 
-    <div class="userPostTA">
-      <form name="userPost" action="?func=userPost" method="post">
-        <input type="hidden" name="func" value="userPost">
-        <textarea class="userPostTA" name="pTxt" id="pTxt" placeholder="What is on your mind?"></textarea>
-        <button type="submit"> =&gt; post =&gt; </button>
-      </form>
-    </div>
+    <span onclick="insertInput('');"> -comment- </span>
+    <span class="postComment" id="comm_">  </span> 
+    
     <?php
-
-    foreach( $R['posts'] as $p ) {
-        echo "        
-    <div class='userPost'>
-      <div class='userComm'>
-        <span> $p[uId] </span> 
-        $p[pTxt] 
-        <span id='yy $p[pId] yy'> - </span>
-        <button onclick='ansComment($p[pId], -1 );'> ans post </button>
-";
-        if ( isset( $post['comments'] ) ) { 
-            foreach( $post['comments'] as $c ) {
-        echo "
-      <div class='userComm'>
-        <span> $c[uId] </span>
-        $c[pTxt] 
-        <span id='zz $c[pId] zz'> + </span>
-        <button onclick='ansComment($c[pId], $c[ppId] );'> ans comment </button>
-      </div>
-";
-            }
-        }
-        echo "
-    </div>
-";   
+    function createFeed( &$posts, &$feed  ) {
+      if ( sizeof( $posts ) == 0 ) return;
+      foreach( $posts as &$p ) {
+        $feed = $feed . "
+        <div class='post'>$p[pId] : $p[ppId] : $p[uId] : $p[rpId] : $p[pTxt] <br>\n
+          <span id=\"emot_$p[pId]\" onclick=\"alert($p[pId])\"> -like/dislike- </span>
+          <span onclick=\"insertInput($p[pId])\"> -comment- </span>\n";
+        createFeed( $p['child'], $feed );
+        $feed = $feed . "
+        <span class=\"postComment\" id=\"comm_$p[pId]\">  </span> \n
+        </div>";
+      }
     }
+    $feed = "";
+    createFeed( $R['posts'], $feed );
+    echo $feed;
     ?>
-  </div>
   <div class="footPane"> 
-      Debug stmnt: <?=$R['stmnt']?> 
+      Debug stmnt1: <?=$R['stmnt1']?> <br>
+      Debug stmnt2: <?=$R['stmnt2']?> 
   </div>
 
 </body>

@@ -8,7 +8,8 @@ function checkLogin(&$R, &$DB ) {
         $session = $DB->selectOne("* from session where sHash='$_COOKIE[session]'");
         if ( $session ) {
             $R['sTime']= 'now()';
-            $R['uId'] = $session['uId'];
+            $R['uId'] = $session['uId']; 
+            $R['user'] = $DB->selectOne("* from user where uId='$R[uId]'");        
             $DB->update('session', $R, "sHash='$_COOKIE[session]'");
             return 1;
         }
@@ -17,7 +18,7 @@ function checkLogin(&$R, &$DB ) {
 }
 function commentAdd(&$R, &$DB) {
     $DB->insert( 'post', $R );
-    userFeed();
+    userEventFeed();
 }
 function commentDelete(&$R, &$DB) {
     // check if user owns comment
@@ -30,8 +31,8 @@ function commentComplement( &$posts, &$DB ) {
     }
     // comments
     $cpi = implode( ',', $cPostIds );
-    // $stmnt = "* from post where uId in ($fU) and ppId in ($cpi) order by pTime desc limit 0,100"; debug( 'C userFeed.stmnt:'.$stmnt );
-    $stmnt = "* from post where ppId in ($cpi) order by pTime desc limit 0,100"; debug( 'C userFeed.stmnt:'.$stmnt );
+    // $stmnt = "* from post where uId in ($fU) and ppId in ($cpi) order by pTime desc limit 0,100"; debug( 'C userEventFeed.stmnt:'.$stmnt );
+    $stmnt = "* from post where ppId in ($cpi) order by pTime desc limit 0,100"; debug( 'C userEventFeed.stmnt:'.$stmnt );
     $comments = $DB->select( $stmnt );
     foreach ( $comments as $comment ) {
         if ( $postHash[ $comment['ppId'] ] ) {
@@ -49,10 +50,6 @@ function createSession( &$R, &$DB ) {
 function debug( $mess ) {
     error_log( $mess."\n" , 3, './debugLog.txt');
 }
-function postAdd(&$R, &$DB) {  /* post and comments handled here */
-    $DB->insert( 'post', $ord );
-    userFeed();
-}
 function postDelete(&$R, &$DB) {
     // check if user owns post
     // delete post
@@ -61,24 +58,46 @@ function postDelete(&$R, &$DB) {
 function userEntry(&$R, &$DB ) {
     require 'userEntry.htm';
 }
-function userFeed( &$R, &$DB ) {
+function buildTree( &$posts ) {
+    $postHash = [];
+    $tree     = [];
+    foreach ( $posts as &$p ) {
+        $postHash[ $p['pId'] ] = &$p; // reference
+        $p['child'] = [];
+        if ( $p['ppId'] > 0 ) {
+            $parc = &$postHash[ $p['ppId'] ]['child']; // reference
+            $parc[] = &$p;  // pushing reference - php copies alot :-(
+        } else {
+            $tree[] = &$p; // pushing roots
+        }
+    }
+    return $tree; // finally our recursive structure
+}
+function userEventFeed( &$R, &$DB ) {
     $stmnt   = "uId2 from friend where uId1='$R[uId]' and relType in ('friend', 'follow')"; 
     $friends = $DB->select( $stmnt );
-    array_push( $friends, '-1' );
-    array_push( $friends, $R['uId'] ); /* your own feed */
-    
-    $fU = implode( ',', $friends );
+    $fU      = $DB->implodeSelection( $friends, 'uId2' ) .",-1,$R[uId]";
+    debug( '-->fU:'.$fU );
     /* main posts for feed  */
-    $stmnt = "* from post where uId in ($fU) and ppId is null order by pTime desc limit 0,100"; 
+
+    $stmnt = "rpId from post where ruId in ($fU) order by pTime desc limit 0,100";
+    $R['stmnt1'] = $stmnt;
     $posts = $DB->select( $stmnt );
+    $rpId  = $DB->implodeSelection( $posts, 'rpId');
+    debug( 'userEventFeed 2:'.$stmnt );
+
+    $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
+    $R['stmnt2'] = $stmnt;
+    debug( 'userEventFeed 3:'.$stmnt );
+    $posts = $DB->select( $stmnt );
+   
     if ( sizeof ( $posts ) > 0 ) {
-        commentComplement( $posts, $DB );        
+        $R['posts'] = buildTree( $posts );
+        debug( 'posts:'. print_r( $R['posts'], true ) );
     } else {
-        $posts = [ 0 => [ 'pTxt' => 'Nothing to show yet!'] ];    
-    }
-    $R['stmnt'] = $stmnt;
-    $R['posts'] = $posts;
-    require 'userFeed.htm';
+        $R['posts'] = [ 0 => [ 'pTxt' => 'Nothing to show yet!'] ];    
+    } 
+    require 'userFeed.htm'; // works also for userProfileFeed
 }
 function userLogout( &$R, &$DB ) {
     $DB->delete("session", "uId='$R[uId]'");
@@ -116,18 +135,57 @@ function userLogin(&$R, &$DB) {
         }
         $R['uId'] = $user['uId'];
     }
-    $R['func'] = 'userFeed';
+    $R['user'] = $user;
+    $R['func'] = 'userEventFeed'; // eventFeed uId
     createSession( $R, $DB );
     return 1;
 }
+
+/* ************************************** */
+/* post in your own feed or someone elses */
+/* ************************************** */
+function userPost0( &$R, &$DB ) {
+    debug( 'userPost0 pTxt:'. $R['pTxt'] );
+    // add post to user feed
+    if ( $R['ppId'] == '' ) {
+        $post = [
+            'uId' => $R['user']['uId'],
+            'ruId' => $R['user']['uId'],
+            'rpId' => 'null',
+            'pTxt' => $R['pTxt'],
+        ]; 
+        $DB->insert( 'post', $post ); /* untaint input */
+        $DB->query( "update post set rpId=pId where rpId is NULL" );
+    } else { 
+        $post = $DB->selectOne( "* from post where pId=$R[ppId]");
+        $post['ppId'] = $post['pId'];
+        // $post['rpId'] = $post['pId'];
+        $post['pTxt'] = $R['pTxt'];
+        $post['uId'] = $R['user']['uId'];
+        unset( $post['pId'] );
+        unset( $post['pTime']);
+        if ( $post['ppId'] != '' ) {
+            unset( $post['ruId'] );
+        }    
+        $DB->insert( 'post', $post ); /* untaint input */
+    }
+    debug( print_r( $post, true ) );
+    debug( 'userPost0. post:'. print_r( $post, true ) );
+    echo "OK";
+    return;
+}
+/*
 function userPost( &$R, &$DB ) {
-    debug( 'pTxt:'. $R['pTxt'] );
+    debug( 'userPost pTxt:'. $R['pTxt'] );
     // add post to user feed
     debug( $R['uId'].' <---------' );
-    $DB->insert( 'post', $R); // untaint
-    userFeed( $R, $DB);
+    $DB->insert( 'post', $R); // untaint input 
+    if ( $R['func0'] == 'userProfileFeed' ) {
+        userProfileFeed( $R, $DB );
+    } else userEventFeed( $R, $DB); // or userProfileFeed
 }
-function userProfile( &$R, &$DB) {
+*/
+function userProfileFeed( &$R, &$DB) {
     $user    = $DB->select("* from user where uId='$R[uId]'")[0];
     $friends = $DB->select("* from user where uId in (select uId2 from friend where relType='friend' && uId1='$user[uId]')");
     $posts   = $DB->select("* from post where uId = '$R[uId]' order by pTime desc limit 0, 100");
@@ -140,9 +198,10 @@ function userSignup( &$R, &$DB ) {
     $R['uName'] = isset( $R['uName'] ) ? $R['uName'] : 'nada';
     $R['uPassword'] = password_hash( $R['uPassword0'] , PASSWORD_DEFAULT);
     $R['stmnt'] = $DB->insert( 'user', $R );
-    $user = $DB->select("* from user where uEmail='$R[uEmail]'")[0];
+    $user = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
     $R['uId'] = $user['uId'];
-    $R['func'] = 'userFeed';
+    $R['user'] = $user;
+    $R['func'] = 'userEventFeed';
     createSession( $R, $DB );
     return 1;
 }
@@ -174,17 +233,19 @@ checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userEntry
 /* change to switch: https://www.php.net/manual/en/control-structures.switch.php  */
 /* **************************** */
 debug('route:'.$R['func']);
+$R['func0'] = $R['func']; /* for use later */
 if ( $R['func'] == 'userLogout') {
     userLogout($R, $DB );
 } else if ( $R['func'] == 'userPost' ) {
     userPost( $R, $DB );
-} else if ( $R['func'] == 'userProfile' ) {
-    userProfile( $R, $DB );
-} else if ( $R['func'] == 'userComment' ) {
+} else if ( $R['func'] == 'userPost0' ) {
+    userPost0( $R, $DB );
+}  else if ( $R['func'] == 'userComment' ) {
     userComment( $R, $DB );
-} else {  // default userFeed
-    userFeed( $R, $DB );
+} else if ( $R['func'] == 'userProfileFeed' ) {
+    userProfileFeed( $R, $DB );
+} else {  // default userEVentFeed
+    userEventFeed( $R, $DB );
 }
 
 ?>
-

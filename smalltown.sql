@@ -38,6 +38,7 @@ CREATE TABLE `friend` (
 
 LOCK TABLES `friend` WRITE;
 /*!40000 ALTER TABLE `friend` DISABLE KEYS */;
+INSERT INTO `friend` VALUES (1,7,'friend',2),(2,7,'friend',1);
 /*!40000 ALTER TABLE `friend` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -49,15 +50,19 @@ DROP TABLE IF EXISTS `post`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `post` (
-  `pId` int(11) NOT NULL,
+  `pId` int(11) NOT NULL AUTO_INCREMENT,
   `ppId` int(11) DEFAULT NULL,
-  `uId` int(11) DEFAULT NULL,
-  `puId` int(11) DEFAULT NULL,
-  `pTxt` tinytext DEFAULT NULL,
-  `pTime` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `uId` int(11) NOT NULL,
+  `ruId` int(11) DEFAULT NULL,
+  `rpId` int(11) DEFAULT NULL,
+  `pTime` timestamp NOT NULL DEFAULT current_timestamp(),
+  `pTxt` varchar(255) DEFAULT NULL,
+  `emotion` varchar(255) NOT NULL DEFAULT '',
   PRIMARY KEY (`pId`),
-  KEY `uId` (`uId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+  KEY `uId` (`uId`),
+  KEY `rpId` (`rpId`),
+  KEY `ruId` (`ruId`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -66,7 +71,7 @@ CREATE TABLE `post` (
 
 LOCK TABLES `post` WRITE;
 /*!40000 ALTER TABLE `post` DISABLE KEYS */;
-INSERT INTO `post` VALUES (1,NULL,2,NULL,'Mitt nya äppleträd','2021-12-03 18:55:33');
+INSERT INTO `post` VALUES (3,NULL,7,7,3,'2021-12-29 22:25:58','Hello!',''),(4,3,7,NULL,3,'2021-12-29 22:28:32','I am fine!',''),(5,3,7,NULL,3,'2021-12-29 22:30:55','Get it?',''),(6,3,7,NULL,3,'2021-12-29 22:33:55','Got it!',''),(7,6,7,NULL,3,'2021-12-29 22:35:20','Good!','');
 /*!40000 ALTER TABLE `post` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -92,6 +97,7 @@ CREATE TABLE `session` (
 
 LOCK TABLES `session` WRITE;
 /*!40000 ALTER TABLE `session` DISABLE KEYS */;
+INSERT INTO `session` VALUES (5,'a8bee519b4f7aa901c1ad838b780c38e0fd99e61','2021-12-21 21:49:17'),(7,'fe2fe60b4447e17e5e1f848c7ba5a628d4d09723','2021-12-30 15:50:02');
 /*!40000 ALTER TABLE `session` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -114,7 +120,7 @@ CREATE TABLE `user` (
   `uImageId` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`uId`),
   KEY `uEmail` (`uEmail`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -123,7 +129,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (1,'admin','info@smalltown.com','admin','admin',NULL,0,'ALL',NULL),(2,'leo','leonard.ilanius@onnestadsfolkhogskola.se','Ilanius','Leonard',NULL,2022,'ITTEKNIK',NULL);
+INSERT INTO `user` VALUES (1,'admin','info@smalltown.com','admin','admin',NULL,0,'ALL',NULL),(2,'leo','leonard.ilanius@onnestadsfolkhogskola.se','Ilanius','Leonard',NULL,2022,'ITTEKNIK',NULL),(7,'nada','leonard.ilanius@gmail.com',NULL,NULL,'$2y$10$cLv1SYnm2qZ29q6xkprAYeF/ezrsHs3sZ9Fd.asXx3Pq7ruHY22D2',1234,NULL,NULL);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -136,4 +142,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-12-12 19:50:41
+-- Dump completed on 2021-12-30 20:33:11

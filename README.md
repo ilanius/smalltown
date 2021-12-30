@@ -10,4 +10,15 @@
 #           #uId2 => (friend) => #uId1
 #
 #           uid1 => block/follow => uId2     assymmetrical
+#
+# *******************************
+#  post table
+# *******************************
+# pId = post Id, auto_incremented 
+# ppId = parent post id for comments
+# uId owner of post
+# puId ?
+# pTxt post or comment text, may be emoticon
+# pTime timestamp
+#
 

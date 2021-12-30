@@ -16,6 +16,11 @@ body {
 div, span {
     box-sizing: border-box;
 }
+span.postComment, div.post { 
+    display:block;
+    text-align:left;
+    margin-left:4%;
+}
 .headPane {
     grid-area: headPane;
     border: 1px blue solid;
