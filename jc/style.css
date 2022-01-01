@@ -16,10 +16,19 @@ body {
 div, span {
     box-sizing: border-box;
 }
+form {
+    display:inline;
+}
 span.postComment, div.post { 
     display:block;
     text-align:left;
-    margin-left:4%;
+    margin-left:10px;
+    background-color: lightgray; 
+}
+.pTxt {
+    display: inline-block;
+    background-color: rgb(200, 183, 152);
+    padding:4px;
 }
 .headPane {
     grid-area: headPane;
@@ -46,16 +55,4 @@ span.postComment, div.post {
 .footPane {
     grid-area: "footPane";
     border: 1px brown dashed;
-}
-.userPostTA  {
-    border-top:2px magenta solid;
-    border-bottom:2px magenta solid;
-    width: 100%;
-    display: block;
-    text-align: right;
-}
-.userPostTA textarea {
-    width:99%;
-    text-align: left;
-    resize:none;
 }

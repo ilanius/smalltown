@@ -23,6 +23,7 @@ function commentAdd(&$R, &$DB) {
 function commentDelete(&$R, &$DB) {
     // check if user owns comment
 }
+/*
 function commentComplement( &$posts, &$DB ) {
     $cPostIds = [-1];
     foreach ( $posts as $post ) {
@@ -41,6 +42,7 @@ function commentComplement( &$posts, &$DB ) {
         }
     }
 }
+*/ 
 function createSession( &$R, &$DB ) {
     $R['sHash'] = sha1( time().$R['uEmail'] );
     $R['sTime'] = 'now()';
@@ -71,10 +73,10 @@ function buildTree( &$posts ) {
             $tree[] = &$p; // pushing roots
         }
     }
-    return $tree; // finally our recursive structure
+    return $tree; // a recursive tree structure
 }
-function userEventFeed( &$R, &$DB ) {
-    $stmnt   = "uId2 from friend where uId1='$R[uId]' and relType in ('friend', 'follow')"; 
+function userFeedEvent( &$R, &$DB ) {
+    $stmnt   = "uId2 from friend where uId1='$R[uId]' and relation & 6";   // 6 == friend and follow
     $friends = $DB->select( $stmnt );
     $fU      = $DB->implodeSelection( $friends, 'uId2' ) .",-1,$R[uId]";
     debug( '-->fU:'.$fU );
@@ -99,6 +101,26 @@ function userEventFeed( &$R, &$DB ) {
     } 
     require 'userFeed.htm'; // works also for userProfileFeed
 }
+function userFeedProfile( &$R, &$DB) {
+    $stmnt = "rpId from post where ruId='$R[uId]' order by pTime desc limit 0,100";
+    $R['stmnt1'] = $stmnt;
+    $posts = $DB->select( $stmnt );
+    $rpId  = $DB->implodeSelection( $posts, 'rpId');
+    debug( 'userFeedProfile 2:'.$stmnt );
+
+    $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
+    $R['stmnt2'] = $stmnt;
+    debug( 'userFeedProfile 3:'.$stmnt );
+    $posts = $DB->select( $stmnt );
+   
+    if ( sizeof ( $posts ) > 0 ) {
+        $R['posts'] = buildTree( $posts );
+        debug( 'userFeed Profile posts:'. print_r( $R['posts'], true ) );
+    } else {
+        $R['posts'] = [ 0 => [ 'pTxt' => 'Nothing to show yet!'] ];    
+    } 
+    require 'userFeed.htm';
+}
 function userLogout( &$R, &$DB ) {
     $DB->delete("session", "uId='$R[uId]'");
     setCookie('session', '');
@@ -115,11 +137,41 @@ function userLostPass1( &$R, &$DB ) {}
 /* ************************* */
 /* friend request            */
 /* ************************* */
-
+function userBlock( &$R, &$DB ) { 
+    $R['relation'] = 'block';
+    $DB->replace('friend', $R );
+    echo "OK";
+}
+function userUnBlock( &$R, &$DB ) {
+    $DB->update('friend', [ 'relation' => 'relation & 14' ], "uId1='$R[uId1]' and uId2='$R[uId2]'");
+    echo "OK";
+}
+function friendRequest( &$R, &$DB ) {
+    // cases
+    // a) id2 blocks id1
+    // c) id1 block1 id2 ==> remove block
+//             1         2        4          8
+    // SET('block', 'follow', 'friend', 'request')
+    // insert into friend values ( 4, 3, 7, 'block,follow,friend,request' );
+    $f12    = "$R[uId1],$R[uId2]";
+    $check1 = $DB->selectOne("* from friend where (uId1 in ($f12) and uId2 in ($f12) and relation & 5)");  // friend =4 block =1
+    if ( $check1 ) return; // already friends or uid2 has blocked uid1 or uid1 has blocked uid2(!)
+    $check2 = $DB->selectOne("* from friend where (uId1='$R[uId1]' and uId2='$R[uId2]'");
+    if ( $check2 ) { 
+        $DB->update('friend', [ 'relation' => 'relation | 8' ], "uId1='$R[uId1]' and uId2='$R[uId2]'");
+    } else {
+        $R['relation'] ='request';
+        $DB->insert( 'friend', $R) ;
+    }
+    echo "OK";
+}
 /* ************************* */
 /* friend request deny       */
 /* ************************* */
-
+function friendRequestDeny( &$R, &$DB ) {
+    $DB->update('friend', [ 'relation' => 'relation & 7' ], "uId1='$R[uId1]' and uId2='$R[uId2]'");
+    echo "OK";
+}
 /* ************************* */
 /* user block                */
 /* ************************* */
@@ -140,7 +192,6 @@ function userLogin(&$R, &$DB) {
     createSession( $R, $DB );
     return 1;
 }
-
 /* ************************************** */
 /* post in your own feed or someone elses */
 /* ************************************** */
@@ -185,14 +236,13 @@ function userPost( &$R, &$DB ) {
     } else userEventFeed( $R, $DB); // or userProfileFeed
 }
 */
-function userProfileFeed( &$R, &$DB) {
-    $user    = $DB->select("* from user where uId='$R[uId]'")[0];
-    $friends = $DB->select("* from user where uId in (select uId2 from friend where relType='friend' && uId1='$user[uId]')");
-    $posts   = $DB->select("* from post where uId = '$R[uId]' order by pTime desc limit 0, 100");
-    commentComplement( $posts, $DB );
-    require 'userProfile.php';
+function userSearch(&$R, &$DB) {
+    // dont show users that have blocked uId
+    $R['stmnt'] = "* from user where uLastName like '$R[search]%' or uFirstName like '$R[search]%'";
+    $res = $DB->select( $R['stmnt'] );
+    // concat res1 and res2
+    require 'userSearch.htm';
 }
-function userSearch(&$R, &$DB) {}
 function userSignup( &$R, &$DB ) {
     if ( $R['func'] != 'userSignup' ) { return 0; }   
     $R['uName'] = isset( $R['uName'] ) ? $R['uName'] : 'nada';
@@ -201,7 +251,7 @@ function userSignup( &$R, &$DB ) {
     $user = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
     $R['uId'] = $user['uId'];
     $R['user'] = $user;
-    $R['func'] = 'userEventFeed';
+    $R['func'] = 'userFeedEvent';
     createSession( $R, $DB );
     return 1;
 }
@@ -216,8 +266,8 @@ $DB = new Database( $C );
 
 global $R;
 $R = array( 
-    'badLogin' => 0,     'userImage' => 'img/profile0.png',
-    'func'      => '',   'session'   => '',  );
+    'badLogin'  => 0,     'userImage' => 'img/profile0.png',
+    'func'      => '',    'session'   => '',  );
 foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
     $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection
 }
@@ -242,10 +292,12 @@ if ( $R['func'] == 'userLogout') {
     userPost0( $R, $DB );
 }  else if ( $R['func'] == 'userComment' ) {
     userComment( $R, $DB );
-} else if ( $R['func'] == 'userProfileFeed' ) {
-    userProfileFeed( $R, $DB );
+} else if ( $R['func'] == 'userFeedProfile' ) {
+    userFeedProfile( $R, $DB );
+} else if ( $R['func'] == 'userSearch' ) {
+    userSearch( $R, $DB );
 } else {  // default userEVentFeed
-    userEventFeed( $R, $DB );
+    userFeedEvent( $R, $DB );
 }
 
 ?>

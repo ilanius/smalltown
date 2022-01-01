@@ -1,5 +1,4 @@
 <?php
-
 class Database {
     var $DB;
 
@@ -115,7 +114,6 @@ class Database {
             }
         }   
         return $fname;
-    }
-    
+    }    
 }
 ?>

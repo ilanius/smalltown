@@ -35,11 +35,12 @@
 
 <body class="feed">
   <div class="headPane"> <!-- flex box here -->
-      Logo --- 
-      Search ---
-      Startsida --- 
-      Konto --- 
-      <a href="?func=userLogout">Logout</a>
+    <a href="?func=userFeedProfil">Logo</a> &nbsp; 
+    <form action="?func=userSearch" method="post">
+      <input type="text" name="search" id="search" class="search" placeholder="search">
+    </form>
+    <a href="?func=userAccount"> Konto </a> 
+    <a href="?func=userFeedProfile"> Me </a> <a href="?func=userLogout">Logout</a>
   </div>
 
   <div class="contPane"> 
@@ -51,7 +52,8 @@
       if ( sizeof( $posts ) == 0 ) return;
       foreach( $posts as &$p ) {
         $feed = $feed . "
-        <div class='post'>$p[pId] : $p[ppId] : $p[uId] : $p[rpId] : $p[pTxt] <br>\n
+        <div class='post'>
+          <div class='pTxt'>$p[uId]: $p[pTxt] </div>
           <span id=\"emot_$p[pId]\" onclick=\"alert($p[pId])\"> -like/dislike- </span>
           <span onclick=\"insertInput($p[pId])\"> -comment- </span>\n";
         createFeed( $p['child'], $feed );
