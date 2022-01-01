@@ -23,26 +23,6 @@ function commentAdd(&$R, &$DB) {
 function commentDelete(&$R, &$DB) {
     // check if user owns comment
 }
-/*
-function commentComplement( &$posts, &$DB ) {
-    $cPostIds = [-1];
-    foreach ( $posts as $post ) {
-        $postHash[ $post['pId'] ] = $post;
-        array_push( $cPostIds, $post['pId'] );
-    }
-    // comments
-    $cpi = implode( ',', $cPostIds );
-    // $stmnt = "* from post where uId in ($fU) and ppId in ($cpi) order by pTime desc limit 0,100"; debug( 'C userEventFeed.stmnt:'.$stmnt );
-    $stmnt = "* from post where ppId in ($cpi) order by pTime desc limit 0,100"; debug( 'C userEventFeed.stmnt:'.$stmnt );
-    $comments = $DB->select( $stmnt );
-    foreach ( $comments as $comment ) {
-        if ( $postHash[ $comment['ppId'] ] ) {
-            $post = $postHash[$comment['ppId'] ];
-            array_push(  $post['comment'], $comment );
-        }
-    }
-}
-*/ 
 function createSession( &$R, &$DB ) {
     $R['sHash'] = sha1( time().$R['uEmail'] );
     $R['sTime'] = 'now()';
@@ -225,17 +205,6 @@ function userPost0( &$R, &$DB ) {
     echo "OK";
     return;
 }
-/*
-function userPost( &$R, &$DB ) {
-    debug( 'userPost pTxt:'. $R['pTxt'] );
-    // add post to user feed
-    debug( $R['uId'].' <---------' );
-    $DB->insert( 'post', $R); // untaint input 
-    if ( $R['func0'] == 'userProfileFeed' ) {
-        userProfileFeed( $R, $DB );
-    } else userEventFeed( $R, $DB); // or userProfileFeed
-}
-*/
 function userSearch(&$R, &$DB) {
     // dont show users that have blocked uId
     $R['stmnt'] = "* from user where uLastName like '$R[search]%' or uFirstName like '$R[search]%'";
