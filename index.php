@@ -16,13 +16,6 @@ function checkLogin(&$R, &$DB ) {
     } 
     return 0;
 }
-function commentAdd(&$R, &$DB) {
-    $DB->insert( 'post', $R );
-    userEventFeed();
-}
-function commentDelete(&$R, &$DB) {
-    // check if user owns comment
-}
 function createSession( &$R, &$DB ) {
     $R['sHash'] = sha1( time().$R['uEmail'] );
     $R['sTime'] = 'now()';
@@ -34,15 +27,12 @@ function debug( $mess ) {
 }
 function postDelete(&$R, &$DB) {
     // check if user owns post
-    // delete post
-    // delete comments to post
+    // delete post and child posts
 }
-
 function userAccount(&$R, &$DB ) {
     // friend requests
     require 'userAccount.htm';
 }
-
 function userEntry(&$R, &$DB ) {
     require 'userEntry.htm';
 }
@@ -99,48 +89,31 @@ function userLogout( &$R, &$DB ) {
     setCookie('session', '');
     require 'userEntry.htm';
 }
-/* present a page with a button */
 function userLostPass0( &$R, &$DB ) {}
 /* present request received mail recipient */
 function userLostPass1( &$R, &$DB ) {}
 /* ************************* */
 /* friend suggestions        */
 /* ************************* */
-
-function userBlock( &$R, &$DB ) { 
-    $R['relation'] = 'block';
-    $DB->replace('friend', $R );
-    echo "OK";
-}
-function userUnBlock( &$R, &$DB ) {
-    $DB->update('friend', [ 'relation' => 'relation & 14' ], "uId1='$R[uId1]' and uId2='$R[uId2]'");
-    echo "OK";
-}
-function friendRequest( &$R, &$DB ) {
-    // cases
-    // a) id2 blocks id1
-    // c) id1 block1 id2 ==> remove block
-//             1         2        4          8
-    // SET('block', 'follow', 'friend', 'request')
-    // insert into friend values ( 4, 3, 7, 'block,follow,friend,request' );
-    $f12    = "$R[uId1],$R[uId2]";
-    $check1 = $DB->selectOne("* from friend where (uId1 in ($f12) and uId2 in ($f12) and relation & 5)");  // friend =4 block =1
-    if ( $check1 ) return; // already friends or uid2 has blocked uid1 or uid1 has blocked uid2(!)
-    $check2 = $DB->selectOne("* from friend where (uId1='$R[uId1]' and uId2='$R[uId2]'");
-    if ( $check2 ) { 
-        $DB->update('friend', [ 'relation' => 'relation | 8' ], "uId1='$R[uId1]' and uId2='$R[uId2]'");
-    } else {
-        $R['relation'] ='request';
-        $DB->insert( 'friend', $R) ;
-    }
-    echo "OK";
-}
-/* ************************* */
-/* friend request deny       */
-/* ************************* */
 function friendRequestDeny( &$R, &$DB ) {
     $DB->update('friend', [ 'relation' => 'relation & 7' ], "uId1='$R[uId1]' and uId2='$R[uId2]'");
     echo "OK";
+}
+function friendRelation( &$R, &$DB ) {
+    global $C;
+    debug( 'friendRelation subFunc:' . $R['subFunc'] . ' contId:'. $R['contId'] );
+    $stmnt = [
+        'block'     => "relation=1",            'unblock'   => "relation=relation&14",
+        'follow'    => "relation=relation|2",   'unfollow'  => "relation=relation&13",
+        'request'   => "relation=relation|8",   'unrequest' => "relation=relation&7",
+        'unfriend'  => "relation=relation&0",
+    ];    
+    $stmnt = "update friend set ".$stmnt[$R['subFunc']]. " where uId1='$R[uId1]' and uId2='$R[uId2]'";
+    $DB->query( $stmnt); 
+    $o = $C->opposites[ $R['subFunc']];
+    // $o = isset( $p[$o] ) && $p[$o] ? $C->opposites[ $o ] : $o;
+    $op = isset( $C->prettyPrint[ $o ] ) ? $C->prettyPrint[$o] : $o;
+    echo "<span onclick=\"relation('$R[contId]','$o','$R[uId1]','$R[uId2]');\" class=\"button\"> $op </span>";
 }
 /* ************************* */
 /* user block                */
@@ -162,9 +135,9 @@ function userLogin(&$R, &$DB) {
     createSession( $R, $DB );
     return 1;
 }
-/* ************************************** */
-/* post in your own feed or someone elses */
-/* ************************************** */
+/* *************************************** */
+/* post in your own feed or someone else's */
+/* *************************************** */
 function userPost0( &$R, &$DB ) {
     debug( 'userPost0 pTxt:'. $R['pTxt'] );
     // add post to user feed
@@ -196,10 +169,20 @@ function userPost0( &$R, &$DB ) {
     return;
 }
 function userSearch(&$R, &$DB) {
-    // dont show users that have blocked uId
+    global $C;
+    // dont show users that have blocked you
     $R['stmnt'] = "* from user where uLastName like '$R[search]%' or uFirstName like '$R[search]%'";
     $posts = $DB->select( $R['stmnt'] );
-    // concat res1 and res2
+    $relHash = [];
+    $relations = $DB->select( "* from friend where uId1='$R[uId]'");
+    foreach ( $relations as $r ) {
+        $relHash[ $r['uId2'] ] = $r['relation'];
+    }
+    foreach ( $posts as &$p ) {
+        foreach ( ['block','friend','follow','request'] as $type ) {
+            $p[$type] = strpos( ' '.$relHash[$p['uId']], $type );
+        }
+    }
     require 'userSearch.htm';
 }
 function userSignup( &$R, &$DB ) {
@@ -214,37 +197,31 @@ function userSignup( &$R, &$DB ) {
     createSession( $R, $DB );
     return 1;
 }
-
 /* ********************** */
-/* init */
+/* init                   */
 /* ********************** */
 require 'lib/Config.php';
 require 'lib/Database.php';
+
 $C  = new Config();
 $DB = new Database( $C );
 
-global $R;
 $R = array( 
     'badLogin'  => 0,     'userImage' => 'img/profile0.png',
     'func'      => '',    'session'   => '',  );
 foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
     $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection
 }
-
 /* ********************** */
-/* entry */
+/* entry                  */
 /* ********************** */
-debug('entry func:' . $R['func']);
 checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userEntry($R,$DB) || exit();
 
 /* **************************** */
-/* routing */
+/* Routing, i.e. determine which function/model (view) to call  */
 /* change to switch: https://www.php.net/manual/en/control-structures.switch.php  */
 /* **************************** */
 debug('route:'.$R['func']);
-$R['func0'] = $R['func']; /* for use later */
-
-
 if ( $R['func'] == 'userAccount') {
     userAccount($R, $DB );
 } else if ( $R['func'] == 'userLogout') {
@@ -259,8 +236,9 @@ if ( $R['func'] == 'userAccount') {
     userFeedProfile( $R, $DB );
 } else if ( $R['func'] == 'userSearch' ) {
     userSearch( $R, $DB );
+} else if ( $R['func'] == 'friendRelation' ) {
+    friendRelation( $R, $DB );
 } else {  // default userEVentFeed
     userFeedEvent( $R, $DB );
 }
-
 ?>

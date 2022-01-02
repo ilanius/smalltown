@@ -13,6 +13,12 @@ body {
     gap: 4px;
     border: 2px red dashed;
 }
+.button {
+    border-radius:4px;
+    background-color:lightblue;
+    padding:4px;
+    margin:4px;
+}
 div, span {
     box-sizing: border-box;
 }

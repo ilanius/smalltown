@@ -3,10 +3,7 @@
   <head>
   <?php require 'head.htm'; ?>
   <script>
-    function addFriend( uid1, uid2 ) {
-      alert(1);
-      // <a href=\"?func=friendRequest&uId1=$R[uId]&uId2=$p[uId]\"> Add friend  </a> 
-    }
+  
   </script>
   </head>
 <body>
@@ -25,12 +22,30 @@
   if ( sizeof( $posts ) == 0 ) {
     $posts[] = [ 'uFirstName' => 'No match found', 'uLastName' => '' ];
   }
+  global $C;
+  
   foreach( $posts as $p ) {
-    echo "
-    <p>
-      <a href=\"?func=userFeedProfile&profileId=$p[uId]\"> $p[uFirstName] $p[uLastName] </a> 
-      <span id=\"addF$R[uId]_$p[uId]\"><span onclick=\"addFriend('$R[uId]','$p[uId]')\"> Add friend</span></span>
-    </p>";
+    echo "\n<p>\n  <a href=\"?func=userFeedProfile&profileId=$p[uId]\"> $p[uFirstName] $p[uLastName] </a> \n";
+  
+    /* tangled logic */
+    $optss = [  /* mutually exclusive options. follow is ubiqitous */
+      'block'   => [ 'block', 'follow', 'request' ], /* you can follow someone whom you have blocked :-) */
+      'friend'  => [ 'block', 'follow', 'friend' ],
+      'request' => [ 'block', 'follow', 'request' ]  ];
+    $opts = $optss['block'];
+    foreach ( $optss as $o => $val ) {
+      if ( $p[$o] ) {
+        $opts = $val;  break;
+      }
+    }
+    foreach ( $opts as $o ) {
+        $o = isset( $p[$o] ) && $p[$o] ? $C->opposites[ $o ] : $o;
+        $op = isset( $C->prettyPrint[ $o ] ) ? $C->prettyPrint[$o] : $o;
+        echo "  <span class=\"button\" id=\"$R[uId]_$p[uId]_$o\"> 
+          <span onclick=\"relation( '$R[uId]_$p[uId]_$o', '$o', '$R[uId]','$p[uId]')\"> $op </span>
+        </span> \n";
+      }
+      echo "</p>\n";
   }
   ?>
   </div>

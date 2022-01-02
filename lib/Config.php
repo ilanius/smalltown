@@ -24,5 +24,17 @@ class Config {
     // --- newsletter --not used --- legacy code ------------------- */
     public    $newstest   = "XXX@XXXX.XXX";
     public    $salt       = "XXXX";
+
+    public    $opposites = [
+        'block'    => 'unblock',    'unblock'   => 'block',  
+        'follow'   => 'unfollow',   'unfollow'  => 'follow', 
+        'friend'   => 'unfriend',   'unfriend'  => 'friend', 
+        'request'  => 'unrequest',  'unrequest' => 'request'
+    ];
+    public    $prettyPrint = [
+        'unblock'   => 'remove block',   'unfriend'  => 'remove friend',
+        'request'   => 'add friend',     'unrequest' => 'remove request',
+        'unblock'   => 'remove block'
+    ];
 }
 ?>

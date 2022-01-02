@@ -81,7 +81,7 @@ class Database {
     function select( $query ) {
         $stmnt ="select ".$query;
         $rslt =  $this->DB->query( $stmnt ) or die('###select### '. mysqli_error($this->DB ) );
-        $ret = array();
+        $ret = [];
         while ( $row= mysqli_fetch_array( $rslt ) ) {
             array_push( $ret, $row );
         }
