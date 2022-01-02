@@ -37,6 +37,12 @@ function postDelete(&$R, &$DB) {
     // delete post
     // delete comments to post
 }
+
+function userAccount(&$R, &$DB ) {
+    // friend requests
+    require 'userAccount.htm';
+}
+
 function userEntry(&$R, &$DB ) {
     require 'userEntry.htm';
 }
@@ -58,47 +64,34 @@ function buildTree( &$posts ) {
 function userFeedEvent( &$R, &$DB ) {
     $stmnt   = "uId2 from friend where uId1='$R[uId]' and relation & 6";   // 6 == friend and follow
     $friends = $DB->select( $stmnt );
-    $fU      = $DB->implodeSelection( $friends, 'uId2' ) .",-1,$R[uId]";
-    debug( '-->fU:'.$fU );
+    array_push( $friends, [ 'uId2' => '-1'], ['uId2' => $R['uId'] ] );
+    $fU      = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
+ 
     /* main posts for feed  */
-
     $stmnt = "rpId from post where ruId in ($fU) order by pTime desc limit 0,100";
     $R['stmnt1'] = $stmnt;
     $posts = $DB->select( $stmnt );
     $rpId  = $DB->implodeSelection( $posts, 'rpId');
-    debug( 'userEventFeed 2:'.$stmnt );
-
+    
     $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
     $R['stmnt2'] = $stmnt;
-    debug( 'userEventFeed 3:'.$stmnt );
     $posts = $DB->select( $stmnt );
-   
-    if ( sizeof ( $posts ) > 0 ) {
-        $R['posts'] = buildTree( $posts );
-        debug( 'posts:'. print_r( $R['posts'], true ) );
-    } else {
-        $R['posts'] = [ 0 => [ 'pTxt' => 'Nothing to show yet!'] ];    
-    } 
+    $R['posts'] = $posts; 
+    $R['profileId'] = $R['uId'];
     require 'userFeed.htm'; // works also for userProfileFeed
 }
 function userFeedProfile( &$R, &$DB) {
-    $stmnt = "rpId from post where ruId='$R[uId]' order by pTime desc limit 0,100";
+    $R['profileId'] = isset( $R['profileId']) ? $R['profileId'] : $R['uId'];
+    $stmnt = "rpId from post where ruId='$R[profileId]' order by pTime desc limit 0,100";
     $R['stmnt1'] = $stmnt;
     $posts = $DB->select( $stmnt );
+    $posts[] = [ 'rpId' => '-1'];
     $rpId  = $DB->implodeSelection( $posts, 'rpId');
-    debug( 'userFeedProfile 2:'.$stmnt );
-
+    
     $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
     $R['stmnt2'] = $stmnt;
-    debug( 'userFeedProfile 3:'.$stmnt );
     $posts = $DB->select( $stmnt );
-   
-    if ( sizeof ( $posts ) > 0 ) {
-        $R['posts'] = buildTree( $posts );
-        debug( 'userFeed Profile posts:'. print_r( $R['posts'], true ) );
-    } else {
-        $R['posts'] = [ 0 => [ 'pTxt' => 'Nothing to show yet!'] ];    
-    } 
+    $R['posts'] = $posts; // buildTree( $posts );
     require 'userFeed.htm';
 }
 function userLogout( &$R, &$DB ) {
@@ -114,9 +107,6 @@ function userLostPass1( &$R, &$DB ) {}
 /* friend suggestions        */
 /* ************************* */
 
-/* ************************* */
-/* friend request            */
-/* ************************* */
 function userBlock( &$R, &$DB ) { 
     $R['relation'] = 'block';
     $DB->replace('friend', $R );
@@ -181,7 +171,7 @@ function userPost0( &$R, &$DB ) {
     if ( $R['ppId'] == '' ) {
         $post = [
             'uId' => $R['user']['uId'],
-            'ruId' => $R['user']['uId'],
+            'ruId' => $R['profileId'], // $R['user']['uId'],
             'rpId' => 'null',
             'pTxt' => $R['pTxt'],
         ]; 
@@ -208,7 +198,7 @@ function userPost0( &$R, &$DB ) {
 function userSearch(&$R, &$DB) {
     // dont show users that have blocked uId
     $R['stmnt'] = "* from user where uLastName like '$R[search]%' or uFirstName like '$R[search]%'";
-    $res = $DB->select( $R['stmnt'] );
+    $posts = $DB->select( $R['stmnt'] );
     // concat res1 and res2
     require 'userSearch.htm';
 }
@@ -253,7 +243,11 @@ checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userEntry
 /* **************************** */
 debug('route:'.$R['func']);
 $R['func0'] = $R['func']; /* for use later */
-if ( $R['func'] == 'userLogout') {
+
+
+if ( $R['func'] == 'userAccount') {
+    userAccount($R, $DB );
+} else if ( $R['func'] == 'userLogout') {
     userLogout($R, $DB );
 } else if ( $R['func'] == 'userPost' ) {
     userPost( $R, $DB );

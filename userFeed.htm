@@ -4,21 +4,23 @@
 <?php require 'head.htm'; ?>
 
 <script>
+  var profileId = <?=$R['profileId']?>;
   function gid(id) { return document.getElementById(id); }
   function insertInput( pId ) {
     e = gid( 'comm_' + pId);
-    e.innerHTML = '<input type="text" id="omm_'+pId+'" name="omm_'+pId+'" placeholder="opinion" onkeyUp="postIt(event, this);">';
+    // javascript template here?
+    e.innerHTML = '<input type="text" id="omm_'+
+      pId+'" name="omm_'+pId+
+      '" placeholder="opinion" onkeyUp="postIt(event, this);">';
     gid( 'omm_'+pId ).focus();
   }
   function setIt( o ) {
     e = gid( 'c' + o.name );
-    e.innerHTML = o.value;
+    e.innerHTML = o.value; // page reload here?
   }  
   function postIt( e, o ) {
-    // We need root user id, ruId, here. when we post on someone elses feed
     if ( e.keyCode != 13 || o.value == '' ) return;
-    e.preventDefault();
-    // alert( e.keyCode + ' ' + o.value + ' ' + o.name );    
+    e.preventDefault(); // cancel event bubble here
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
@@ -28,18 +30,18 @@
     var val = o.name.substring(4);    
     xhttp.open("POST", "index.php", true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send("func=userPost0&ppId="+val+"&pTxt="+ o.value );
+    xhttp.send("func=userPost0&profileId="+profileId+"&ppId="+val+"&pTxt="+ o.value );
   }
 </script>
 </head>
 
 <body class="feed">
   <div class="headPane"> <!-- flex box here -->
-    <a href="?func=userFeedProfil">Logo</a> &nbsp; 
+    <a href="?func=userFeedEvent">Logo</a> &nbsp; 
     <form action="?func=userSearch" method="post">
       <input type="text" name="search" id="search" class="search" placeholder="search">
     </form>
-    <a href="?func=userAccount"> Konto </a> 
+    <a href="?func=userAccount"> Account </a> 
     <a href="?func=userFeedProfile"> Me </a> <a href="?func=userLogout">Logout</a>
   </div>
 
@@ -51,10 +53,15 @@
     function createFeed( &$posts, &$feed  ) {
       if ( sizeof( $posts ) == 0 ) return;
       foreach( $posts as &$p ) {
+        $p['fromTo'] = $p['uId'];
+        if ( isset( $p['ruId']) && $p['ruId'] != $p['uId'] ) {
+          $p['fromTo'] .= '=>'.$p['ruId'];
+        }
         $feed = $feed . "
         <div class='post'>
-          <div class='pTxt'>$p[uId]: $p[pTxt] </div>
+          <span class='fromTo'>$p[fromTo] </span><div class='pTxt'> $p[pTxt] </div>
           <span id=\"emot_$p[pId]\" onclick=\"alert($p[pId])\"> -like/dislike- </span>
+          <span id=\"emot_$p[pId]\" onclick=\"alert($p[pId])\"> -delete - </span>
           <span onclick=\"insertInput($p[pId])\"> -comment- </span>\n";
         createFeed( $p['child'], $feed );
         $feed = $feed . "
@@ -62,10 +69,16 @@
         </div>";
       }
     }
+    if ( sizeof( $R['posts'] ) > 0 ) {
+    $tree = buildTree( $posts );
     $feed = "";
-    createFeed( $R['posts'], $feed );
+    createFeed( $tree, $feed );
     echo $feed;
+    } else {
+      echo "<p>Nothing here yet!</p>";
+    }
     ?>
+  </div>
   <div class="footPane"> 
       Debug stmnt1: <?=$R['stmnt1']?> <br>
       Debug stmnt2: <?=$R['stmnt2']?> 

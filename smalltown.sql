@@ -23,12 +23,12 @@ DROP TABLE IF EXISTS `friend`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `friend` (
-  `fId` int(11) NOT NULL,
   `uId1` int(11) DEFAULT NULL,
-  `relType` enum('friend','follow','block') DEFAULT NULL,
   `uId2` int(11) DEFAULT NULL,
-  PRIMARY KEY (`fId`),
-  KEY `uId1` (`uId1`)
+  `relation` set('block','follow','friend','request') DEFAULT NULL,
+  UNIQUE KEY `uId1_2` (`uId1`,`uId2`),
+  KEY `uId1` (`uId1`),
+  KEY `uId2` (`uId2`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -38,7 +38,7 @@ CREATE TABLE `friend` (
 
 LOCK TABLES `friend` WRITE;
 /*!40000 ALTER TABLE `friend` DISABLE KEYS */;
-INSERT INTO `friend` VALUES (1,7,'friend',2),(2,7,'friend',1);
+INSERT INTO `friend` VALUES (7,2,'friend'),(2,7,'friend');
 /*!40000 ALTER TABLE `friend` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -62,7 +62,7 @@ CREATE TABLE `post` (
   KEY `uId` (`uId`),
   KEY `rpId` (`rpId`),
   KEY `ruId` (`ruId`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -71,7 +71,7 @@ CREATE TABLE `post` (
 
 LOCK TABLES `post` WRITE;
 /*!40000 ALTER TABLE `post` DISABLE KEYS */;
-INSERT INTO `post` VALUES (3,NULL,7,7,3,'2021-12-29 22:25:58','Hello!',''),(4,3,7,NULL,3,'2021-12-29 22:28:32','I am fine!',''),(5,3,7,NULL,3,'2021-12-29 22:30:55','Get it?',''),(6,3,7,NULL,3,'2021-12-29 22:33:55','Got it!',''),(7,6,7,NULL,3,'2021-12-29 22:35:20','Good!','');
+INSERT INTO `post` VALUES (3,NULL,7,7,3,'2021-12-29 22:25:58','Hello!',''),(4,3,7,NULL,3,'2021-12-29 22:28:32','I am fine!',''),(5,3,7,NULL,3,'2021-12-29 22:30:55','Get it?',''),(6,3,7,NULL,3,'2021-12-29 22:33:55','Got it!',''),(7,6,7,NULL,3,'2021-12-29 22:35:20','Good!',''),(8,NULL,7,2,8,'2022-01-01 23:45:44','add to user 2 from user 7','');
 /*!40000 ALTER TABLE `post` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -97,7 +97,7 @@ CREATE TABLE `session` (
 
 LOCK TABLES `session` WRITE;
 /*!40000 ALTER TABLE `session` DISABLE KEYS */;
-INSERT INTO `session` VALUES (5,'a8bee519b4f7aa901c1ad838b780c38e0fd99e61','2021-12-21 21:49:17'),(7,'fe2fe60b4447e17e5e1f848c7ba5a628d4d09723','2021-12-30 15:50:02');
+INSERT INTO `session` VALUES (5,'a8bee519b4f7aa901c1ad838b780c38e0fd99e61','2021-12-21 21:49:17'),(7,'072df4b72da0f7285d2fb714c8ef216e55463c10','2022-01-02 01:05:26');
 /*!40000 ALTER TABLE `session` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -119,7 +119,7 @@ CREATE TABLE `user` (
   `uCourse` char(32) DEFAULT NULL,
   `uImageId` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`uId`),
-  KEY `uEmail` (`uEmail`)
+  UNIQUE KEY `uEmail` (`uEmail`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -142,4 +142,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-12-30 20:33:11
+-- Dump completed on 2022-01-02  2:06:47

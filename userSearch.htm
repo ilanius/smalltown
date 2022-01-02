@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+  <?php require 'head.htm'; ?>
+  <script>
+    function addFriend( uid1, uid2 ) {
+      alert(1);
+      // <a href=\"?func=friendRequest&uId1=$R[uId]&uId2=$p[uId]\"> Add friend  </a> 
+    }
+  </script>
+  </head>
+<body>
+  <div class="headPane"> <!-- flex box here -->
+    <a href="?func=userFeedEvent">Logo</a> &nbsp; 
+    <form action="?func=userSearch" method="post">
+      <input type="text" name="search" id="search" class="search" placeholder="search">
+    </form>
+    <a href="?func=userAccount"> Account </a> 
+    <a href="?func=userFeedProfile"> Me </a> <a href="?func=userLogout">Logout</a>
+  </div>
+
+  <div class="contPane"> 
+    <h2>Matches found </h2>
+  <?php 
+  if ( sizeof( $posts ) == 0 ) {
+    $posts[] = [ 'uFirstName' => 'No match found', 'uLastName' => '' ];
+  }
+  foreach( $posts as $p ) {
+    echo "
+    <p>
+      <a href=\"?func=userFeedProfile&profileId=$p[uId]\"> $p[uFirstName] $p[uLastName] </a> 
+      <span id=\"addF$R[uId]_$p[uId]\"><span onclick=\"addFriend('$R[uId]','$p[uId]')\"> Add friend</span></span>
+    </p>";
+  }
+  ?>
+  </div>
+  <div class="footPane"> 
+    <p> <?php echo "$R[search] --- $R[stmnt]"; ?> </p>
+  </div>
+  
+</body>
+</html>
