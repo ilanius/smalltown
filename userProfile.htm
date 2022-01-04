@@ -5,12 +5,15 @@
 </head>
 
 <body class="profile">
-    <div class="headPane">
-        logo --- startsida --- konto --- logout
-    </div>
-    <div class="contPane"> 
-        <span class=""> <img src="img/users/<?=$R[userImage]?"> </span>
-
+  <div class="headPane">
+      logo --- startsida --- konto --- logout
+  </div>
+  <div class="contPane"> 
+      -----------------
+    <span class=""> 
+      <img src="img/<?=$R['user']['uImageId']?>"> 
+    </span>
+---------------
     <?php
     foreach( $ord['userFeed'] as $post ) {
         echo "<div class='userPost'>$post[pTxt] </div>";

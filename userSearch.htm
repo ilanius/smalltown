@@ -7,14 +7,7 @@
   </script>
   </head>
 <body>
-  <div class="headPane"> <!-- flex box here -->
-    <a href="?func=userEvent">Logo</a> &nbsp; 
-    <form action="?func=userSearch" method="post">
-      <input type="text" name="search" id="search" class="search" placeholder="search">
-    </form>
-    <a href="?func=userAccount"> Account </a> 
-    <a href="?func=userProfile"> Me </a> <a href="?func=userLogout">Logout</a>
-  </div>
+  <?php require 'headPane.htm' ?>
 
   <div class="contPane"> 
     <h2>Matches found </h2>

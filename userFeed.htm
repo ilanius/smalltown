@@ -9,19 +9,11 @@
 </head>
 
 <body class="feed">
-  <div class="headPane"> <!-- flex box here -->
-    <a href="?func=userEvent">Logo</a> &nbsp; 
-    <form action="?func=userSearch" method="post">
-      <input type="text" name="search" id="search" class="search" placeholder="search">
-    </form>
-    <a href="?func=userAccount"> Account </a> 
-    <a href="?func=userProfile"> Me </a> <a href="?func=userLogout">Logout</a>
-  </div>
-
+  <?php require 'headPane.htm' ?>
   <div class="contPane"> 
+    <img src="img/<?=$R['profile']['uImageId']?>" width="100"> 
     <span onclick="insertInput('');"> -comment- </span>
     <span class="postComment" id="comm_">  </span> 
-    
     <?php
     function createFeed( &$posts, &$feed  ) {
       if ( sizeof( $posts ) == 0 ) return;
@@ -30,7 +22,6 @@
         if ( isset( $p['ruId']) && $p['ruId'] != $p['uId'] ) {
           $p['fromTo'] .= '=>'.$p['ruId'];
         }
-        
         $feed = $feed . <<<html
         <div class="post">
           <span class="fromTo">$p[fromTo] </span>
@@ -57,9 +48,10 @@ html;
     ?>
   </div>
   <div class="footPane"> 
-      Debug stmnt1: <?=$R['stmnt1']?> <br>
-      Debug stmnt2: <?=$R['stmnt2']?> 
+    <script>
+      console.log(" stmnt1: <?=$R['stmnt1']?> " );
+      console.log(" stmnt2: <?=$R['stmnt2']?> " );
+    </script>
   </div>
-
 </body>
 </html>

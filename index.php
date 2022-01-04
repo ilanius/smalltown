@@ -48,9 +48,13 @@ function userAccount(&$R, &$DB ) {
         $DB->update("user", $R, "uId=$R[uId]");    
         $R['user'] = $DB->selectOne("* from user where uId=$R[uId]");
     }
+    $request        = $DB->select("uId1 from friend where uId2='$R[uId]' and relation&8");
+    $fid            = $DB->implodeSelection( $request, 'uId1' );
+    $R['requester'] = $DB->select("* from user where uId in ($fid)");
+    debug( print_r( $R['requester'], true ) ); 
     require 'userAccount.htm';
 }
-function userEntry(&$R, &$DB ) {
+function userEntry(&$R, &$DB ) {  // login signup page
     require 'userEntry.htm';
 }
 function buildTree( &$posts ) {
@@ -84,7 +88,7 @@ function userEvent( &$R, &$DB ) {
     $R['stmnt2']    = $stmnt;
     $posts = $DB->select( $stmnt );
     $R['posts']     = $posts; 
-    $R['profileId'] = $R['uId'];
+    $R['profile'] = $R['user'];
     require 'userFeed.htm'; // works also for userProfileFeed
 }
 function userProfile( &$R, &$DB) {
@@ -99,6 +103,11 @@ function userProfile( &$R, &$DB) {
     $R['stmnt2'] = $stmnt;
     $posts = $DB->select( $stmnt );
     $R['posts'] = $posts; // buildTree( $posts );
+
+    $R['profile'] = $DB->selectOne("* from user where uId='$R[profileId]'");
+    if ( strlen( $R['profile']['uImageId']) < 3 ) {
+        $R['profile']['uImageId'] = 'profileDefaultImage.png';
+    }
     require 'userFeed.htm';
 }
 function userLogout( &$R, &$DB ) {
@@ -243,6 +252,7 @@ function userSignup( &$R, &$DB ) {
     createSession( $R, $DB );
     return 1;
 }
+
 /* ********************** */
 /* init                   */
 /* ********************** */
@@ -252,7 +262,7 @@ require 'lib/Database.php';
 $C  = new Config();
 $DB = new Database( $C );
 
-$R = array( 
+$R = array( // $R is easier to write than $_REQUEST
     'badLogin'  => 0,     'userImage' => 'img/profile0.png',
     'func'      => '',    'session'   => '',  );
 foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
@@ -261,7 +271,8 @@ foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
 /* ********************** */
 /* entry                  */
 /* ********************** */
-checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userEntry($R,$DB) || exit();
+checkLogin( $R, $DB ) ||  userLogin( $R, $DB ) || 
+userSignup($R,$DB)    ||  userEntry($R,$DB)    || exit();
 
 /* **************************** */
 /* Routing, i.e. determine which function/model (view) to call  */
@@ -269,14 +280,17 @@ checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userEntry
 /* **************************** */
 debug('route:'.$R['func']);
 $allowed = [
-    'userAccount' => 1, 'userLogout' => 1, 'userPost'=>1, 
-    'userProfile' => 1, 'userSearch' => 1, 'friendRelation' => 1,
-    'userEvent' => 1,   'postDelete' => 1 ];
+    ''               => 0,     'userAccount'  => 1, 
+    'userLogout'     => 1,     'userPost'     => 1, 
+    'userProfile'    => 1,     'userSearch'   => 1, 
+    'friendRelation' => 1,     'userEvent'    => 1,     
+    'postDelete'     => 1 ];
 
 if ( $allowed[ $R['func'] ] ) {
     $R['func']($R, $DB );
 } else {
     debug('unallowed func: $R[func]'); /* silence */
+    userEvent($R, $DB ); 
 }
 
 ?>

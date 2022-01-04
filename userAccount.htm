@@ -5,14 +5,8 @@
   <script></script>
 </head>  
 <body class="userAccount">
-  <div class="headPane"> <!-- flex box here -->
-    <a href="?func=userEvent">Logo</a> &nbsp; 
-    <form action="?func=userSearch" method="post">
-      <input type="text" name="search" id="search" class="search" placeholder="search">
-    </form>
-    <a href="?func=userAccount"> Account </a> 
-    <a href="?func=userProfile"> Me </a> <a href="?func=userLogout">Logout</a>
-  </div>
+
+  <?php require 'headPane.htm' ?>
 
   <div class="contPane"> 
     <?php 
@@ -39,6 +33,26 @@ html;
     Password  <input type="password" name="uPassword" value=""> <br>
     <button type="submit"> Update Account </button>
   </form>
+
+    <br>
+    <br>
+  <?php
+  
+  if ( sizeof( $R['requester'] ) > 0 ) {
+    echo "<h2> Friend requests </h2>";
+  
+    foreach( $R['requester'] as $u ) {
+      echo <<<html
+      <span class="button" onclick="acceptRequest('$R[uId]', '$u[uId]');"> $u[uFirstName] $u[uLastName]  </span>
+html;
+    }
+  } else {
+    echo "<h2> No friend requests </h2>";
+  }
+
+  ?>
+
+
   </div>
   <div class="footPane"> 
     

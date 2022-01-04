@@ -6,7 +6,7 @@ body {
         "contPane"
         "footPane";
     grid-template-columns: 1fr;
-    grid-template-rows: 20px 1fr 30px;
+    grid-template-rows: 54px 1fr 30px;
     width: 90%;
     margin: auto;
     margin-top: 2px;
@@ -39,6 +39,17 @@ span.postComment, div.post {
 .headPane {
     grid-area: headPane;
     border: 1px blue solid;
+    display: flex;
+    justify-content: left;
+    align-items: stretch; 
+}
+.headPane .item {
+    border-radius:4px;
+    background-color:lightblue;
+    padding: 12px;
+    padding-bottom:0px;
+    margin:  2px;
+    text-align:center;
 }
 .userPane {
     grid-area: "userPane";
