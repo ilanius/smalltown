@@ -8,12 +8,12 @@
   </head>
 <body>
   <div class="headPane"> <!-- flex box here -->
-    <a href="?func=userFeedEvent">Logo</a> &nbsp; 
+    <a href="?func=userEvent">Logo</a> &nbsp; 
     <form action="?func=userSearch" method="post">
       <input type="text" name="search" id="search" class="search" placeholder="search">
     </form>
     <a href="?func=userAccount"> Account </a> 
-    <a href="?func=userFeedProfile"> Me </a> <a href="?func=userLogout">Logout</a>
+    <a href="?func=userProfile"> Me </a> <a href="?func=userLogout">Logout</a>
   </div>
 
   <div class="contPane"> 
@@ -22,14 +22,13 @@
   if ( sizeof( $posts ) == 0 ) {
     $posts[] = [ 'uFirstName' => 'No match found', 'uLastName' => '' ];
   }
-  global $C;
-  
+
   foreach( $posts as $p ) {
-    echo "\n<p>\n  <a href=\"?func=userFeedProfile&profileId=$p[uId]\"> $p[uFirstName] $p[uLastName] </a> \n";
+    echo "\n<p>\n  <a href=\"?func=userProfile&profileId=$p[uId]\"> $p[uFirstName] $p[uLastName] </a> \n";
   
     /* tangled logic */
     $optss = [  /* mutually exclusive options. follow is ubiqitous */
-      'block'   => [ 'block', 'follow', 'request' ], /* you can follow someone whom you have blocked :-) */
+      'block'   => [ 'block', 'follow', 'request' ], /* you actually can follow someone even when you have blocked them, presupposing of course they haven't blocked you :-) */
       'friend'  => [ 'block', 'follow', 'friend' ],
       'request' => [ 'block', 'follow', 'request' ]  ];
     $opts = $optss['block'];
@@ -41,9 +40,11 @@
     foreach ( $opts as $o ) {
         $o = isset( $p[$o] ) && $p[$o] ? $C->opposites[ $o ] : $o;
         $op = isset( $C->prettyPrint[ $o ] ) ? $C->prettyPrint[$o] : $o;
-        echo "  <span class=\"button\" id=\"$R[uId]_$p[uId]_$o\"> 
-          <span onclick=\"relation( '$R[uId]_$p[uId]_$o', '$o', '$R[uId]','$p[uId]')\"> $op </span>
-        </span> \n";
+        echo <<<html
+        <span class="button" id="$R[uId]_$p[uId]_$o"> 
+          <span onclick="relation('$R[uId]_$p[uId]_$o','$o','$R[uId]','$p[uId]')"> $op </span>
+        </span>
+html;
       }
       echo "</p>\n";
   }
@@ -52,6 +53,5 @@
   <div class="footPane"> 
     <p> <?php echo "$R[search] --- $R[stmnt]"; ?> </p>
   </div>
-  
 </body>
 </html>

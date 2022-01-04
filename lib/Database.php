@@ -75,7 +75,6 @@ class Database {
         $jn = join( ",", $starr );
         $jn = trim ( $jn ,"," );
         $stmnt = "update $table set $jn where $where";
-        debug( $stmnt );
         $this->DB->query( $stmnt ) or die ( mysqli_error( $this->DB ) );
     }
     function select( $query ) {
@@ -102,18 +101,5 @@ class Database {
         }
         return implode( ',', $coll );
     }
-    function getUploadName( $R, $imgname ) {
-        $fname = $_REQUEST['old_'.$imgname];
-        if ( $_FILES[$imgname]['name'] > "0" ) {
-            $fname = $_FILES[$imgname]['name'];
-            if ( is_uploaded_file($_FILES[$imgname]['tmp_name'] ) ) {
-                if ( ! file_exists( $R['uploaddir'] ) ) {
-                    mkdir( $R['uploaddir'] );
-                }
-                copy($_FILES[$imgname]['tmp_name'], $R['uploaddir'].'/'.$fname );
-            }
-        }   
-        return $fname;
-    }    
 }
 ?>

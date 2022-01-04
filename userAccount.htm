@@ -6,27 +6,39 @@
 </head>  
 <body class="userAccount">
   <div class="headPane"> <!-- flex box here -->
-    <a href="?func=userFeedEvent">Logo</a> &nbsp; 
+    <a href="?func=userEvent">Logo</a> &nbsp; 
     <form action="?func=userSearch" method="post">
       <input type="text" name="search" id="search" class="search" placeholder="search">
     </form>
     <a href="?func=userAccount"> Account </a> 
-    <a href="?func=userFeedProfile"> Me </a> <a href="?func=userLogout">Logout</a>
+    <a href="?func=userProfile"> Me </a> <a href="?func=userLogout">Logout</a>
   </div>
 
   <div class="contPane"> 
-    <?php  $U = $R['user']; ?>
-    <img src="img/profileDefaultImage.png"> <br>
-    Firstname <input type="text" name="uFirstName" value="<?=$U['uFirstName']?>"><br>
-    Lastname  <input type="text" name="uLastName"  value="<?=$U['uLastName']?>"><br>
-    Email     <input type="text" name="uEmail"     value="<?=$U['uEmail']?>"><br>
-    Year      <input type="text" name="uYear"      value="<?=$U['uYear']?>"><br>
-    Course    <input type="text" name="uCourse"    value="<?=$U['uCourse']?>"><br>
+    <?php 
+      $U = $R['user']; 
+    ?>
+    <form action="?func=userAccount" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="subFunc" value="update">
+      <img src="img/<?=$U['uImageId']?>"> <br>
+      Select image to upload:  <input type="file" name="profileImage" id="fileToUpload"> <br>
+    <?php  
+    $userFields = [ 
+      'uFirstName' => 'First name',     'uLastName'  => 'Last name', 
+      'uEmail'     => 'Email',          'uYear'      => 'Year', 
+      'uCourse'    => 'Course'  ];
+
+    foreach ( $userFields as $key => $val ) {
+      echo <<<html
+      <label class="uLabel" for="$key">$val </label><input type="text" id="$key" name="$key" value="$U[$key]"> <br>
+html;
+    }
+    ?>
     <br>
     <a href="https://www.w3schools.com/howto/howto_js_toggle_password.asp"> Howto Toggle Password</a><br>
-    Password  <input type="password" name="uPassword"> <br>
-    
-    <button onclick="callSomeFunction()"> Update My Account </button>
+    Password  <input type="password" name="uPassword" value=""> <br>
+    <button type="submit"> Update Account </button>
+  </form>
   </div>
   <div class="footPane"> 
     

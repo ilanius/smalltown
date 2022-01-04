@@ -5,18 +5,17 @@
 
 <script>
   var profileId = <?=$R['profileId']?>;
-  
 </script>
 </head>
 
 <body class="feed">
   <div class="headPane"> <!-- flex box here -->
-    <a href="?func=userFeedEvent">Logo</a> &nbsp; 
+    <a href="?func=userEvent">Logo</a> &nbsp; 
     <form action="?func=userSearch" method="post">
       <input type="text" name="search" id="search" class="search" placeholder="search">
     </form>
     <a href="?func=userAccount"> Account </a> 
-    <a href="?func=userFeedProfile"> Me </a> <a href="?func=userLogout">Logout</a>
+    <a href="?func=userProfile"> Me </a> <a href="?func=userLogout">Logout</a>
   </div>
 
   <div class="contPane"> 
@@ -31,23 +30,27 @@
         if ( isset( $p['ruId']) && $p['ruId'] != $p['uId'] ) {
           $p['fromTo'] .= '=>'.$p['ruId'];
         }
-        $feed = $feed . "
-        <div class='post'>
-          <span class='fromTo'>$p[fromTo] </span><div class='pTxt'> $p[pTxt] </div>
-          <span id=\"emot_$p[pId]\" onclick=\"alert($p[pId])\"> -like/dislike- </span>
-          <span id=\"emot_$p[pId]\" onclick=\"alert($p[pId])\"> -delete - </span>
-          <span onclick=\"insertInput($p[pId])\"> -comment- </span>\n";
+        
+        $feed = $feed . <<<html
+        <div class="post">
+          <span class="fromTo">$p[fromTo] </span>
+          <div class="pTxt"> $p[pTxt] </div>
+          <span id="emot_$p[pId]" onclick="alert($p[pId])"> -like/dislike- </span>
+          <span id="emot_$p[pId]" onclick="postDelete($p[pId])"> -delete - </span>
+          <span onclick="userPost0($p[pId])"> -comment- </span>
+html;
         createFeed( $p['child'], $feed );
-        $feed = $feed . "
-        <span class=\"postComment\" id=\"comm_$p[pId]\">  </span> \n
-        </div>";
+        $feed = $feed . <<<html
+          <span class="postComment" id="comm_$p[pId]">  </span> 
+        </div>
+html;
       }
     }
     if ( sizeof( $R['posts'] ) > 0 ) {
-    $tree = buildTree( $posts );
-    $feed = "";
-    createFeed( $tree, $feed );
-    echo $feed;
+      $tree = buildTree( $posts );
+      $feed = "";
+      createFeed( $tree, $feed );
+      echo $feed;
     } else {
       echo "<p>Nothing here yet!</p>";
     }
