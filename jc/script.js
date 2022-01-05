@@ -19,6 +19,17 @@ function relation( contId, rAction, uId1, uId2 ) {
   var sendTxt = "func=friendRelation&subFunc="+rAction+"&uId1="+uId1+"&uId2="+uId2+"&contId="+contId;
   httpPost( sendTxt, reloadPage );
 }
+function requestAccept( uId1, uId2 ) {
+  var contid = 'nokok'+uId1+'_'+uId2;
+  relation( contId, 'requestAccept', uId1, uId2 );
+  o = gid( contId ).innerHTML = ' ok ';
+}
+function requestDeny( uId1, uId2 ) {
+  var contid = 'nokok'+uId1+'_'+uId2;
+  relation( contId, 'requestAccept', uId1, uId2 );
+  o = gid( contId ).style.display = 'none';
+}
+
 function userPost( e, o ) {
     if ( e.keyCode != 13 || o.value == '' ) return;
     e.preventDefault(); // cancel event bubble here

@@ -43,7 +43,12 @@ html;
   
     foreach( $R['requester'] as $u ) {
       echo <<<html
-      <span class="button" onclick="acceptRequest('$R[uId]', '$u[uId]');"> $u[uFirstName] $u[uLastName]  </span>
+      <span ="oknok$R[uId]_$u[uId]">
+      <a href=""> $u[uFirstName] $u[uLastName] </a>
+      <span class="button" onclick="requestAccept('$R[uId]', '$u[uId]');"> Accept   </span>
+      <span class="button" onclick="requestDeny('$R[uId]', '$u[uId]');">  Deny  </span>
+      </span>
+
 html;
     }
   } else {
