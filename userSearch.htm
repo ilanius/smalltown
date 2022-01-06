@@ -2,49 +2,26 @@
 <html>
   <head>
   <?php require 'head.htm'; ?>
-  <script>
-  
-  </script>
   </head>
-<body>
+  <body>
   <?php require 'headPane.htm' ?>
-
   <div class="contPane"> 
     <h2>Matches found </h2>
   <?php 
-  if ( sizeof( $posts ) == 0 ) {
-    $posts[] = [ 'uFirstName' => 'No match found', 'uLastName' => '' ];
-  }
-
-  foreach( $posts as $p ) {
-    echo "\n<p>\n  <a href=\"?func=userProfile&profileId=$p[uId]\"> $p[uFirstName] $p[uLastName] </a> \n";
-  
-    /* tangled logic */
-    $optss = [  /* mutually exclusive options. follow is ubiqitous */
-      'block'   => [ 'block', 'follow', 'request' ], /* you actually can follow someone even when you have blocked them, presupposing of course they haven't blocked you :-) */
-      'friend'  => [ 'block', 'follow', 'friend' ],
-      'request' => [ 'block', 'follow', 'request' ]  ];
-    $opts = $optss['block'];
-    foreach ( $optss as $o => $val ) {
-      if ( $p[$o] ) {
-        $opts = $val;  break;
-      }
+    if ( sizeof( $posts ) == 0 ) {
+      $posts[] = [ 'uFirstName' => 'No match found', 'uLastName' => '' ];
     }
-    foreach ( $opts as $o ) {
-        $o = isset( $p[$o] ) && $p[$o] ? $C->opposites[ $o ] : $o;
-        $op = isset( $C->prettyPrint[ $o ] ) ? $C->prettyPrint[$o] : $o;
-        echo <<<html
-        <span class="button" id="$R[uId]_$p[uId]_$o"> 
-          <span onclick="relation('$R[uId]_$p[uId]_$o','$o','$R[uId]','$p[uId]')"> $op </span>
-        </span>
-html;
-      }
-      echo "</p>\n";
-  }
+    foreach( $posts as $p ) {
+      echo "
+      <p>
+        <a href=\"?func=userProfile&profileId=$p[uId]\"> $p[uFirstName] $p[uLastName] </a>
+        <span id=\"row_$p[uId]\">" . expressRelation( $R, $p ) . "</span>" .
+      "</p>";
+    }
   ?>
   </div>
   <div class="footPane"> 
     <p> <?php echo "$R[search] --- $R[stmnt]"; ?> </p>
   </div>
-</body>
+  </body>
 </html>

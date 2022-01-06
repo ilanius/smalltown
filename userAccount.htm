@@ -30,25 +30,29 @@ html;
     ?>
     <br>
     <a href="https://www.w3schools.com/howto/howto_js_toggle_password.asp"> Howto Toggle Password</a><br>
-    Password  <input type="password" name="uPassword" value=""> <br>
+    Password  
+    <?php if (isset($R['updateNow']) ) { ?>
+    <input  class="updateNow" autofocus type="password" name="uPassword" value=""> Update now!
+    <?php } else { ?>
+      <input  type="password" name="uPassword" value=""> 
+    <?php } ?>
+    <br>
     <button type="submit"> Update Account </button>
-  </form>
-
-    <br>
-    <br>
+    </form>
+    <br>    <br>
   <?php
   
   if ( sizeof( $R['requester'] ) > 0 ) {
     echo "<h2> Friend requests </h2>";
-  
     foreach( $R['requester'] as $u ) {
       echo <<<html
-      <span ="oknok$R[uId]_$u[uId]">
-      <a href=""> $u[uFirstName] $u[uLastName] </a>
-      <span class="button" onclick="requestAccept('$R[uId]', '$u[uId]');"> Accept   </span>
-      <span class="button" onclick="requestDeny('$R[uId]', '$u[uId]');">  Deny  </span>
-      </span>
-
+      <div>
+        <a href=""> $u[uFirstName] $u[uLastName] </a>
+        <span id="nokok$R[uId]_$u[uId]">
+        <span class="button" onclick="requestAccept('$R[uId]', '$u[uId]');"> Accept   </span>
+        <span class="button" onclick="requestDeny('$R[uId]', '$u[uId]');">  Deny  </span>
+        </span>
+      </div>
 html;
     }
   } else {
@@ -56,6 +60,7 @@ html;
   }
 
   ?>
+  <br> &nbsp; <br> 
 
 
   </div>

@@ -73,3 +73,8 @@ span.postComment, div.post {
     grid-area: "footPane";
     border: 1px brown dashed;
 }
+.updateNow {
+    border: 4px red dashed;
+    margin:4px;
+    padding:4px;
+}

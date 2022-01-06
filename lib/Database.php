@@ -87,7 +87,7 @@ class Database {
         return $ret;
     }
     function query( $stmnt ) {
-        $rslt =  $this->DB->query( $stmnt ) or die('###select### '. mysqli_error($this->DB ) );
+        $rslt =  $this->DB->query( $stmnt ) or die('###query### '. mysqli_error($this->DB ) );
         return $rslt;
     }
     function selectOne( $query ) {
