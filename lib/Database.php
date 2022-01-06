@@ -50,14 +50,12 @@ class Database {
     function insert( $table, $entry ) {
         [$tcol, $jn] = $this->_values( $table, $entry );
         $stmnt = "insert into $table ($tcol) values ($jn)";
-        debug( $stmnt );
         $this->DB->query( $stmnt ) or die ( mysqli_error( $this->DB ) );
         return $stmnt;
     }
     function replace( $table, $entry ) {
         [$col, $jn] = $this->_values( $table, $entry, true );
         $stmnt = "replace into $table values ($jn)";
-        // print " **** $stmnt **** \n";
         $this->DB->query( $stmnt ) or die ( mysqli_error($this->DB ) );
     }
     function delete( $table, $where ) {

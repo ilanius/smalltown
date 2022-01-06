@@ -127,7 +127,6 @@ function userLostPass1( &$R, &$DB ) {}
 
 function friendRelation( &$R, &$DB ) {
     global $C;
-    debug( '--- friendRelation subFunc:' . $R['subFunc'] . ' contId:'. $R['contId'] );
     $action = [
         'requestAccept' => "relation=(relation|4)&7",
         'block'         => "relation=1",            'unblock'   => "relation=relation&14",
@@ -180,7 +179,6 @@ function changeRelation( &$R, &$DB ) {
     $r = $DB->selectOne( "* from friend where uId1='$R[uId1]'"); 
     foreach ( ['block','friend','follow','request'] as $type ) {
         $p[$type] = strpos( ' '.$r['relation'], $type );
-        debug( 'type:'.$type. ' p.type'. $p[$type] . 'p relation:'.$r['relation']);
     }
     echo expressRelation( $R, $p );
 }
@@ -201,7 +199,6 @@ function userLostPass0( &$R, &$DB ) {
         <a href="?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]"> Access Token </a>
 html;
         $headers = "From: admin@smalltown.com";
-        debug( $body );
         // mail($R['uEmail'], $subject, $body, $headers);
     } 
     echo $body; // <-- until we have fixed a working email server
@@ -238,7 +235,6 @@ function userLogin(&$R, &$DB) {
 /* post in your own feed or someone else's */
 /* *************************************** */
 function userPost( &$R, &$DB ) {
-    debug( 'userPost pTxt:'. $R['pTxt'] );
     // add post to user feed
     if ( $R['ppId'] == '' ) {
         $post = [
@@ -263,7 +259,6 @@ function userPost( &$R, &$DB ) {
 }
 function postDelete(&$R, &$DB) {
     $stmnt = "pId, ppId from post where pId>='$R[pId]' and rpId in (select rpId from post where pId='$R[pId]' and uId='$R[uId]' )";
-    debug( $stmnt );
     $posts = $DB->select( $stmnt );
     $prev = $posts[0]['ppId'];
     $dels = [];
@@ -276,9 +271,7 @@ function postDelete(&$R, &$DB) {
         }
     }
     $dels[] = '-1';
-    debug( print_r( $dels, true ) );
     $colls = implode(',', $dels ); 
-    debug( $colls );
     $DB->delete( 'post', "pId in ($colls)");
     // check if user owns post
     // delete post and child posts
