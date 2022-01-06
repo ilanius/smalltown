@@ -1,24 +1,21 @@
-# smalltown
-
-# Tables
+# Smalltown
 #
-# friend, post, session, user
+# This system mimics a bare minimum subset of Facebook features
+# Its output could be improved with CSS
+# It needs more debugging and testing
 #
-# Table: friend: fId, uId1, relType, uId2 
-#           uId1 => (friend) => uId2        symmetrical   
-# for indexing reasons this post will have a reciprocal:  
-#           #uId2 => (friend) => #uId1
+# Tables are documented on google.doc
+# https://docs.google.com/document/d/1zonUvxt3HwJSKie6GtoiK2B-rS2yFVpIjFHQzIU9MS0/edit?usp=sharing
+# 
+# The system comprises Abyss Webserver, MySQL (MariaDB), PHP on top of windows
+# 
+# It is designed according to the Model View Controll paradigm (MVC). 
+# The database is the Model. Controll is the logic in index.php and view is html and som php logic in the template files that here have the file names ending with 'htm'.
 #
-#           uid1 => block/follow => uId2     assymmetrical
+# If we need an email server hMailserver did not install, whereas Pegasus
+# mail might work. Webhotels provide email-servers.
 #
-# *******************************
-#  post table
-# *******************************
-# pId = post Id, auto_incremented 
-# ppId = parent post id for comments
-# uId owner of post
-# puId ?
-# pTxt post or comment text, may be emoticon
-# pTime timestamp
+# Sendmail.php is for testing email function and settings in 
+# C:\Program FIles\PHP7\php.ini
 #
-
+#
