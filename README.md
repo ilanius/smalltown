@@ -18,4 +18,13 @@
 # Sendmail.php is for testing email function and settings in 
 # C:\Program FIles\PHP7\php.ini
 #
+# I think a good starting point where one could improve Graphical User Interface (GUI)
+# is the userEntry.htm file. There are 3 entries for login, signing up and lost password 
+# one page. They could be rearranged using css and javascript without rewriting server
+# script. Eventually it could become a single page application (SPA) where as much
+# computation as possible is located to the client side.
+#
+#
+# Further improvements in GUI and otherwise will become obvious after some
+# use of the system. 
 #
