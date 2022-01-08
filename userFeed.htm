@@ -1,57 +1,86 @@
 <!doctype html>
-<html>
+<html id="docuTop">
 <head>
 <?php require 'head.htm'; ?>
 
-<script>
-  var profileId = <?=$R['profileId']?>;
-</script>
+  <script>
+    var profileId   = <?=$R['profileId']?>;
+    var feedType    = '<?=$R['feedType']?>';
+    var postPos     = 0;
+    var maxScrollY  = window.scrollY;
+    var cTimeOut    = 0;
+
+    function addPost( p, children ) {
+        p['fromTo'] = p['uId'];
+        if ( p['ruId'] && p['ruId'] != p['uId'] ) {
+          p['fromTo'] += '=>' + p['ruId'];
+        }        
+        let str = `<div id="pId${p['pId']}" class="post">` + 
+        `<span class="fromTo">${p['fromTo']} </span> ` +
+        `<div class="pTxt"> ${p['pTxt']}     </div>`   + 
+        `<span id="emot_${p['pId']}" onclick="alert(${p['pId']})"> -like/dislike- </span>` + 
+        
+        // postDelete reloads page. Not what we want. We want to replace this post only 
+        // We should delete on client side using gid(`pId${p[pId]}`).remove 
+        // https://developer.mozilla.org/en-US/docs/Web/API/Element/remove
+        `<span id="emot_${p['pId']}" onclick="postDelete(${p['pId']}, ${p['ppId']})"> -delete - </span>` +  
+
+        `<span onclick="userPost0(${p['pId']})"> -comment- </span>`;
+        str += children; // ~buildTree( p['child'] );
+        str += `<span class="postComment" id="comm_${p['pId']}"> </span>` + 
+        '</div>';
+        return str;
+    }
+    function buildTree( tree ) {
+      let str = '';
+      for ( var i in tree ) {
+        var p = tree[i];
+        str += addPost( p, buildTree( p['child'] )  );
+      }
+      return str;
+    }  
+    function buildPostTree( txt ) {
+      console.log( txt );
+       var tree = JSON.parse( txt );
+       console.log( txt + ' tree.length:' + tree.length );
+       if ( tree.length > 0 ) postPos+= 100;
+       var contPane = gid( 'contPane' );
+       contPane.innerHTML += buildTree( tree );  
+    }
+    function userFeed() {
+      var sendTxt = `func=${feedType}&profileId=${profileId}&postPos=${postPos}`;
+      httpPost( sendTxt, buildPostTree );
+    }
+  </script>
 </head>
 
 <body class="feed">
   <?php require 'headPane.htm' ?>
-  <div class="contPane"> 
+
+  <div id="contPane" class="contPane"> 
     <img src="img/<?=$R['profile']['uImageId']?>" width="100"> 
     <span onclick="userPost0('');"> -comment- </span>
     <span class="postComment" id="comm_">  </span> 
-    <?php
-    function createFeed( &$posts, &$feed  ) {
-      if ( sizeof( $posts ) == 0 ) return;
-      foreach( $posts as &$p ) {
-        $p['fromTo'] = $p['uId'];
-        if ( isset( $p['ruId']) && $p['ruId'] != $p['uId'] ) {
-          $p['fromTo'] .= '=>'.$p['ruId'];
-        }
-        $feed = $feed . <<<html
-        <div class="post">
-          <span class="fromTo">$p[fromTo] </span>
-          <div class="pTxt"> $p[pTxt] </div>
-          <span id="emot_$p[pId]" onclick="alert($p[pId])"> -like/dislike- </span>
-          <span id="emot_$p[pId]" onclick="postDelete($p[pId])"> -delete - </span>
-          <span onclick="userPost0($p[pId])"> -comment- </span>
-html;
-        createFeed( $p['child'], $feed );
-        $feed = $feed . <<<html
-          <span class="postComment" id="comm_$p[pId]">  </span> 
-        </div>
-html;
-      }
-    }
-    if ( sizeof( $R['posts'] ) > 0 ) {
-      $tree = buildTree( $posts );
-      $feed = "";
-      createFeed( $tree, $feed );
-      echo $feed;
-    } else {
-      echo "<p>Nothing here yet!</p>";
-    }
-    ?>
   </div>
+
   <div class="footPane"> 
-    <script>
-      console.log(" stmnt1: <?=$R['stmnt1']?> " );
-      console.log(" stmnt2: <?=$R['stmnt2']?> " );
-    </script>
+  -- empty foot pane
   </div>
+
+  <script>   
+    document.addEventListener( 'scroll', 
+      function(e) {
+        if ( window.scrollY > maxScrollY ) {
+          /* scroll fires a lot. These two lines works as a brake */
+          clearTimeout( cTimeOut );
+          cTimeOut = setTimeout( userFeed , 1000 ); 
+          /* **************************************************** */   
+          maxScrollY = window.scrollY;
+       }
+      } 
+    );
+
+    userFeed();
+  </script>
 </body>
 </html>

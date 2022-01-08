@@ -75,42 +75,53 @@ function buildTree( &$posts ) {
     }
     return $tree; // a recursive tree structure
 }
-function userEvent( &$R, &$DB ) {
+function userEventFeed( &$R, &$DB ) {
     $stmnt   = "uId2 from friend where uId1='$R[uId]' and relation & 6";   // 6 == friend and follow
     $friends = $DB->select( $stmnt );
     array_push( $friends, [ 'uId2' => '-1'], ['uId2' => $R['uId'] ] );
     $fU      = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
- 
-    $stmnt = "rpId from post where ruId in ($fU) order by pTime desc limit 0,100";
-    $R['stmnt1'] = $stmnt;
+    $postPos = $R['postPos'];
+    $stmnt = "rpId from post where ruId in ($fU) order by pTime desc limit $postPos,100";
     $posts = $DB->select( $stmnt );
-    $rpId  = $DB->implodeSelection( $posts, 'rpId');
-    
-    $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
-    $R['stmnt2']    = $stmnt;
-    $posts = $DB->select( $stmnt );
-    $R['posts']     = $posts; 
-    $R['profile'] = $R['user'];
+    if ( sizeof( $posts ) > 0 ) {
+        $rpId  = $DB->implodeSelection( $posts, 'rpId');
+        $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
+        $posts = $DB->select( $stmnt );
+        $tree  = buildTree( $posts );
+        echo json_encode( $tree );
+    } else {
+        echo "[]";
+    }
+}
+function userEvent( &$R, &$DB ) {
+    $R['profile']   = $R['user'];
     $R['profileId'] = $R['uId'];
-    require 'userFeed.htm'; // works also for userProfileFeed
+    $R['feedType'] = 'userEventFeed';
+    require 'userFeed.htm'; // same template file used by userProfile
+}
+function userProfileFeed( &$R, &$DB ) {
+    $postPos = $R['postPos'];
+    $stmnt = "rpId from post where ruId='$R[profileId]' order by pTime desc limit $postPos,100";
+    $posts = $DB->select( $stmnt );
+    if ( sizeof( $posts ) > 0 ) {
+        // $posts[] = [ 'rpId' => '-1'];
+        $rpId  = $DB->implodeSelection( $posts, 'rpId');    
+        $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
+        $posts = $DB->select( $stmnt );
+        $tree = buildTree( $posts );
+        echo json_encode( $tree );
+    } else {
+        echo "[]";
+    }
+    // $R['posts'] = $posts; // buildTree( $posts );
 }
 function userProfile( &$R, &$DB) {
     $R['profileId'] = isset( $R['profileId']) ? $R['profileId'] : $R['uId'];
-    $stmnt = "rpId from post where ruId='$R[profileId]' order by pTime desc limit 0,100";
-    $R['stmnt1'] = $stmnt;
-    $posts = $DB->select( $stmnt );
-    $posts[] = [ 'rpId' => '-1'];
-    $rpId  = $DB->implodeSelection( $posts, 'rpId');
-    
-    $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
-    $R['stmnt2'] = $stmnt;
-    $posts = $DB->select( $stmnt );
-    $R['posts'] = $posts; // buildTree( $posts );
-
     $R['profile'] = $DB->selectOne("* from user where uId='$R[profileId]'");
     if ( strlen( $R['profile']['uImageId']) < 3 ) {
         $R['profile']['uImageId'] = 'profileDefaultImage.png';
     }
+    $R['feedType'] = 'userProfileFeed';
     require 'userFeed.htm';
 }
 function userLogout( &$R, &$DB ) {
@@ -119,10 +130,11 @@ function userLogout( &$R, &$DB ) {
     require 'userEntry.htm';
 }
 /* present request received mail recipient */
-function userLostPass1( &$R, &$DB ) {}
+/* function userLostPass1( &$R, &$DB ) {} // not used */
 
 /* ************************* */
 /* friend suggestions        */
+/* not implemented           */
 /* ************************* */
 
 function friendRelation( &$R, &$DB ) {
@@ -182,14 +194,9 @@ function changeRelation( &$R, &$DB ) {
     }
     echo expressRelation( $R, $p );
 }
-/* ************************* */
-/* user block                */
-/* ************************* */
-
 function userLostPass0( &$R, &$DB ) {
     if ( isset( $R['uEmail'] ) ) {
         $U = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
-        // $U['uPassword1'] = password_hash( $U['uPassword'] , PASSWORD_DEFAULT);
         $U['uPassword0'] = urlencode( $U['uPassword'] );
         $to_email = "leonard.ilanius@gmail.com";
         $subject = "Password reset";
@@ -199,9 +206,12 @@ function userLostPass0( &$R, &$DB ) {
         <a href="?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]"> Access Token </a>
 html;
         $headers = "From: admin@smalltown.com";
-        // mail($R['uEmail'], $subject, $body, $headers);
+        /* ***************************************************** */
+        /* we need a working e-mail server for this line to work */
+        /* mail($R['uEmail'], $subject, $body, $headers);        */
+        /* ***************************************************** */
     } 
-    echo $body; // <-- until we have fixed a working email server
+    echo $body; 
 }
 function userLogin(&$R, &$DB) {
     if ( ! ( isset( $R['uEmail'] ) && isset( $R['uPassword0'] ) ) ) {
@@ -231,9 +241,9 @@ function userLogin(&$R, &$DB) {
     createSession( $R, $DB );
     return 1;
 }
-/* *************************************** */
-/* post in your own feed or someone else's */
-/* *************************************** */
+/* ********************************************************************** */
+/* This function allows you to post in your own feed or in a friends feed */
+/* ********************************************************************** */
 function userPost( &$R, &$DB ) {
     // add post to user feed
     if ( $R['ppId'] == '' ) {
@@ -257,29 +267,35 @@ function userPost( &$R, &$DB ) {
     }
     echo "OK";
 }
+
+/* ****************************************************************************** */
+/* the algorithm below is not easy to understand so it has been heavily commented */
+/* ****************************************************************************** */
 function postDelete(&$R, &$DB) {
+    /* We want to delete element with post id pId.
+    /* We select pId and ppId where post id > pId  >= we select parent id and root parent id
+    /* children of pId have post ids > pId and we make certain we own pId by selecting for uId as wel */
     $stmnt = "pId, ppId from post where pId>='$R[pId]' and rpId in (select rpId from post where pId='$R[pId]' and uId='$R[uId]' )";
-    $posts = $DB->select( $stmnt );
+    $posts = $DB->select( $stmnt ); // sizeof ( $posts ) may be empty if uId is wrong 
+
     $prev = $posts[0]['ppId'];
-    $dels = [];
-    $pars[ $posts[0]['pId'] ] = 'X'; // $posts[0]['ppId'];
-    $dels[] = $posts[0]['pId'];
+    $dels = []; // ids of posts we want to delete 
+    $pars[ $posts[0]['pId'] ] = 'X'; // $posts[0]['ppId']; // parent of post pId is X
+    $dels[] = $posts[0]['pId']; // root post with post id = pId
     foreach ( $posts as &$p ) {
-        if ( $pars[ $p['ppId'] ] ) {
-            $pars[ $p['pId'] ] = $p['ppId'];
-            $dels[] = $p['pId'];
+        if ( $pars[ $p['ppId'] ] ) { // if parent exists we should delete this post
+            $pars[ $p['pId'] ] = $p['ppId']; // we add this post to chain of posts to delete
+            $dels[] = $p['pId']; // we add post id to our list of deletions
         }
     }
-    $dels[] = '-1';
+    $dels[] = '-1'; // of our list is empty the code will crash so we add a dummy value here
     $colls = implode(',', $dels ); 
     $DB->delete( 'post', "pId in ($colls)");
-    // check if user owns post
-    // delete post and child posts
     echo "OK";
 }
 function userSearch(&$R, &$DB) {
     global $C;
-    // dont show users that have blocked you
+    // TODO: dont show users that have blocked you
     // facebook allows you to search your own account but this complicates logic somewhat
     $R['stmnt'] = "* from user where uId!='$R[uId]' && (uLastName like '$R[search]%' or uFirstName like '$R[search]%')";
     $posts     = $DB->select( $R['stmnt'] );
@@ -308,9 +324,9 @@ function userSignup( &$R, &$DB ) {
     return 1;
 }
 
-/* ********************** */
-/* init                   */
-/* ********************** */
+/* ************************************************************* */
+/* init                                                          */
+/* ************************************************************* */
 require 'lib/Config.php';
 require 'lib/Database.php';
 
@@ -334,12 +350,13 @@ userSignup($R,$DB)    ||  userEntry($R,$DB)    || exit();
 /* change to switch: https://www.php.net/manual/en/control-structures.switch.php  */
 /* **************************** */
 debug('route:'.$R['func']);
-$allowed = [
+$allowed = [  /* only functions followed by 1 can be called if you are logged in */
     ''               => 0,     'userAccount'    => 1, 
     'userLogout'     => 1,     'userPost'       => 1, 
     'userProfile'    => 1,     'userSearch'     => 1, 
     'friendRelation' => 1,     'userEvent'      => 1,     
-    'postDelete'     => 1,     'changeRelation' => 1, ];
+    'postDelete'     => 1,     'changeRelation' => 1, 
+    'userEventFeed'  => 1,     'userProfileFeed' => 1 ];
 
 if ( $allowed[ $R['func'] ] ) {
     $R['func']($R, $DB );
