@@ -1,8 +1,8 @@
 <?php
-/* ******************************* */
-/* smalltown - facebook light      */
-/* no ads                          */
-/* ******************************* */
+/* *********************************** */
+/* Smalltown a.k.a facebook light      */
+/* no ads                              */
+/* *********************************** */
 function checkLogin(&$R, &$DB ) {
     if ( isset( $_COOKIE['session'] ) ) {
         $session = $DB->selectOne("* from session where sHash='$_COOKIE[session]'");
@@ -80,8 +80,8 @@ function userEventFeed( &$R, &$DB ) {
     $friends = $DB->select( $stmnt );
     array_push( $friends, [ 'uId2' => '-1'], ['uId2' => $R['uId'] ] );
     $fU      = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
-    $postPos = $R['postPos'];
-    $stmnt = "rpId from post where ruId in ($fU) order by pTime desc limit $postPos,100";
+    $feedPosition = $R['feedPosition'];
+    $stmnt = "rpId from post where ruId in ($fU) order by pTime desc limit $feedPosition,100";
     $posts = $DB->select( $stmnt );
     if ( sizeof( $posts ) > 0 ) {
         $rpId  = $DB->implodeSelection( $posts, 'rpId');
@@ -100,8 +100,10 @@ function userEvent( &$R, &$DB ) {
     require 'userFeed.htm'; // same template file used by userProfile
 }
 function userProfileFeed( &$R, &$DB ) {
-    $postPos = $R['postPos'];
-    $stmnt = "rpId from post where ruId='$R[profileId]' order by pTime desc limit $postPos,100";
+    $feedPosition = $R['feedPosition'];
+    
+    // We may need to reconsider hard coding the number 100 here
+    $stmnt = "rpId from post where ruId='$R[profileId]' order by pTime desc limit $feedPosition,100";
     $posts = $DB->select( $stmnt );
     if ( sizeof( $posts ) > 0 ) {
         // $posts[] = [ 'rpId' => '-1'];
@@ -129,8 +131,6 @@ function userLogout( &$R, &$DB ) {
     setCookie('session', '');
     require 'userEntry.htm';
 }
-/* present request received mail recipient */
-/* function userLostPass1( &$R, &$DB ) {} // not used */
 
 /* ************************* */
 /* friend suggestions        */
@@ -244,8 +244,8 @@ function userLogin(&$R, &$DB) {
 /* ********************************************************************** */
 /* This function allows you to post in your own feed or in a friends feed */
 /* ********************************************************************** */
-function userPost( &$R, &$DB ) {
-    // add post to user feed
+function postSubmit( &$R, &$DB ) {
+    // Add post to user feed
     if ( $R['ppId'] == '' ) {
         $post = [
             'uId' => $R['user']['uId'],    'ruId' => $R['profileId'], // $R['user']['uId'],
@@ -265,30 +265,35 @@ function userPost( &$R, &$DB ) {
         }    
         $DB->insert( 'post', $post ); /* untaint input */
     }
-    echo "OK";
+    // auto_increment is convenient but we need to know pId
+    // https://www.w3schools.com/sql/func_mysql_last_insert_id.asp
+    $rslt = $DB->selectOne("last_insert_id()");
+    $post['pId'] = $rslt['last_insert_id()'];
+
+    echo json_encode( $post );
 }
 
 /* ****************************************************************************** */
-/* the algorithm below is not easy to understand so it has been heavily commented */
+/* The algorithm below is not easy to understand so it has been heavily commented */
 /* ****************************************************************************** */
 function postDelete(&$R, &$DB) {
     /* We want to delete element with post id pId.
     /* We select pId and ppId where post id > pId  >= we select parent id and root parent id
     /* children of pId have post ids > pId and we make certain we own pId by selecting for uId as wel */
     $stmnt = "pId, ppId from post where pId>='$R[pId]' and rpId in (select rpId from post where pId='$R[pId]' and uId='$R[uId]' )";
-    $posts = $DB->select( $stmnt ); // sizeof ( $posts ) may be empty if uId is wrong 
+    $posts = $DB->select( $stmnt );   // sizeof ( $posts ) may be empty if uId is wrong 
 
     $prev = $posts[0]['ppId'];
-    $dels = []; // ids of posts we want to delete 
-    $pars[ $posts[0]['pId'] ] = 'X'; // $posts[0]['ppId']; // parent of post pId is X
-    $dels[] = $posts[0]['pId']; // root post with post id = pId
+    $dels = [];                       // ids of posts we want to delete 
+    $pars[ $posts[0]['pId'] ] = 'X';  // $posts[0]['ppId']; // parent of post pId is X
+    $dels[] = $posts[0]['pId'];       // root post with post id = pId
     foreach ( $posts as &$p ) {
-        if ( $pars[ $p['ppId'] ] ) { // if parent exists we should delete this post
+        if ( $pars[ $p['ppId'] ] ) {  // if parent exists we should delete this post
             $pars[ $p['pId'] ] = $p['ppId']; // we add this post to chain of posts to delete
-            $dels[] = $p['pId']; // we add post id to our list of deletions
+            $dels[] = $p['pId'];      // we add post id to our list of deletions
         }
     }
-    $dels[] = '-1'; // of our list is empty the code will crash so we add a dummy value here
+    $dels[] = '-1';     // of our list is empty the code will crash so we add a dummy value here
     $colls = implode(',', $dels ); 
     $DB->delete( 'post', "pId in ($colls)");
     echo "OK";
@@ -296,7 +301,7 @@ function postDelete(&$R, &$DB) {
 function userSearch(&$R, &$DB) {
     global $C;
     // TODO: dont show users that have blocked you
-    // facebook allows you to search your own account but this complicates logic somewhat
+    // Facebook allows you to search your own account but this complicates logic somewhat
     $R['stmnt'] = "* from user where uId!='$R[uId]' && (uLastName like '$R[search]%' or uFirstName like '$R[search]%')";
     $posts     = $DB->select( $R['stmnt'] );
     $relHash   = [];
@@ -352,7 +357,7 @@ userSignup($R,$DB)    ||  userEntry($R,$DB)    || exit();
 debug('route:'.$R['func']);
 $allowed = [  /* only functions followed by 1 can be called if you are logged in */
     ''               => 0,     'userAccount'    => 1, 
-    'userLogout'     => 1,     'userPost'       => 1, 
+    'userLogout'     => 1,     'postSubmit'     => 1, 
     'userProfile'    => 1,     'userSearch'     => 1, 
     'friendRelation' => 1,     'userEvent'      => 1,     
     'postDelete'     => 1,     'changeRelation' => 1, 
@@ -364,5 +369,4 @@ if ( $allowed[ $R['func'] ] ) {
     debug('unallowed func: $R[func]'); /* silence */
     userEvent($R, $DB ); 
 }
-
 ?>
