@@ -16,10 +16,6 @@ function httpPost( sendTxt, callBack ) {
     xhttp.send( sendTxt );
     return xhttp;
 }
-/* function friendRelation( contId, rAction, uId1, uId2 ) {
-  var sendTxt = "func=friendRelation&subFunc="+rAction+"&uId1="+uId1+"&uId2="+uId2+"&contId="+contId;
-  httpPost( sendTxt, reloadPage );
-} */
 function changeRelation( contId, rAction, uId1, uId2 ) {
     var sendTxt = "func=changeRelation&subFunc="+rAction+"&uId1="+uId1+"&uId2="+uId2+"&contId="+contId;
     httpPost( sendTxt, function( txt ) {  gid(contId).innerHTML = txt;   } );
@@ -34,22 +30,32 @@ function requestDeny( uId1, uId2 ) {
     friendRelation( contId, 'requestDeny', uId1, uId2 );
     o = gid( contId ).style.display = 'none';
 }
-function userPost( e, o ) {
-    if ( e.keyCode != 13 || o.value == '' ) return;
-    e.preventDefault(); // cancel event bubble here
-    var val = o.name.substring(4);    
-    var sendTxt = "func=userPost&profileId="+profileId+"&ppId="+val+"&pTxt="+ o.value;
-    httpPost( sendTxt, reloadPage );
-}
+
+/* ************************************************ */
+/* userPost0 and userPost work together. userPost0 inserts input field
+/* userPost responds to [enter], submits to server and 
+/* tidies up 
+/* ************************************************ */
 function userPost0( pId ) {
     e = gid( 'comm_' + pId);
-    // javascript template here?
-    e.innerHTML = '<input type="text" id="omm_'+
+    e.innerHTML = '<input type="text" id="omm_'+       // javascript template here?
       pId+'" name="omm_'+pId+'" placeholder="opinion" onkeyUp="userPost(event, this);">';
     gid( 'omm_'+pId ).focus();
 }
+function userPost( e, o ) {
+    if ( e.keyCode != 13 || o.value == '' ) return;
+    e.preventDefault();                                // cancel event bubble here
+    var val = o.name.substring(4);    
+    var sendTxt = "func=userPost&profileId="+profileId+"&ppId="+val+"&pTxt="+ o.value;
+    /* Should not reload page. Better to add to end of contPane */
+    httpPost( sendTxt, reloadPage );
+}
+/* ************************************************ */
+
 function postDelete( pId ) {  
     var sendTxt = "func=postDelete&pId="+pId;
+    // Instead of reload page we should do element.remove() 
+    // https://developer.mozilla.org/en-US/docs/Web/API/Element/remove
     httpPost( sendTxt, reloadPage );    
 }
 function reqLoginMail( contId, uEmailId ) {
