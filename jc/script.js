@@ -30,34 +30,50 @@ function requestDeny( uId1, uId2 ) {
     friendRelation( contId, 'requestDeny', uId1, uId2 );
     o = gid( contId ).style.display = 'none';
 }
-
-/* ************************************************ */
-/* userPost0 and userPost work together. userPost0 inserts input field
-/* userPost responds to [enter], submits to server and 
-/* tidies up 
-/* ************************************************ */
-function userPost0( pId ) {
-    e = gid( 'comm_' + pId);
-    e.innerHTML = '<input type="text" id="omm_'+       // javascript template here?
-      pId+'" name="omm_'+pId+'" placeholder="opinion" onkeyUp="userPost(event, this);">';
-    gid( 'omm_'+pId ).focus();
-}
-function userPost( e, o ) {
-    if ( e.keyCode != 13 || o.value == '' ) return;
-    e.preventDefault();                                // cancel event bubble here
-    var val = o.name.substring(4);    
-    var sendTxt = "func=userPost&profileId="+profileId+"&ppId="+val+"&pTxt="+ o.value;
-    /* Should not reload page. Better to add to end of contPane */
-    httpPost( sendTxt, reloadPage );
-}
-/* ************************************************ */
-
 function postDelete( pId ) {  
     var sendTxt = "func=postDelete&pId="+pId;
-    // Instead of reload page we should do element.remove() 
     // https://developer.mozilla.org/en-US/docs/Web/API/Element/remove
-    httpPost( sendTxt, reloadPage );    
+    httpPost( sendTxt, function() { gid('pId'+pId).remove() } );    
 }
+function postCreate( p, children ) {
+    p['fromTo'] = p['uId'];
+    if ( p['ruId'] && p['ruId'] != p['uId'] ) {
+      p['fromTo'] += '=>' + p['ruId'];
+    }        
+    let str = `<div id="pId${p['pId']}" class="post">` + 
+    `<span class="fromTo">${p['fromTo']} </span> ` +
+    `<div class="pTxt"> ${p['pTxt']}     </div>`   + 
+    `<span id="emot_${p['pId']}" onclick="alert(${p['pId']})"> -like/dislike- </span>` +     
+    `<span id="emot_${p['pId']}" onclick="postDelete(${p['pId']}, ${p['ppId']})"> -delete - </span>` +  
+    `<span onclick="postSubmit0(${p['pId']})"> -comment- </span>`;
+    str += children; // ~buildTree( p['child'] );
+    str += `<span class="postComment" id="comment${p['pId']}"> </span>` + 
+    '</div>';
+    return str;
+}
+function postSubmit0( pId ) {
+    comment = gid( 'comment' + pId);
+    comment.innerHTML = `<input type="text" id="commentInput${pId}" name="commentInput${pId}"` + 
+    ' placeholder="opinion" onkeyUp="postSubmit(event, this);">';
+    gid( 'commentInput'+pId ).focus();
+}
+function postSubmitAddNewNode( txt ) {
+    var p = JSON.parse( txt );
+    if ( p['ppId'] == undefined ) { p['ppId'] = ''; }
+    gid( 'commentInput'+p['ppId']).remove();
+    var newNode = postCreate( p, '' );
+    var parentNode = gid( 'pId' + p['ppId'] );
+    parentNode.innerHTML += newNode;
+}
+function postSubmit( e, o ) {
+    if ( e.keyCode != 13 || o.value == '' ) return;
+    e.preventDefault();                                // cancel event bubble here
+    var ppId = o.name.substring( 'commentInput'.length );    
+    var sendTxt = "func=postSubmit&profileId="+profileId+"&ppId="+ppId+"&pTxt="+ o.value;
+    httpPost( sendTxt, postSubmitAddNewNode );
+}
+
+/* ************************************************ */
 function reqLoginMail( contId, uEmailId ) {
     var uEmail = gid( uEmailId ).value;
     var sendTxt = "func=userLostPass0&uEmail="+uEmail;
