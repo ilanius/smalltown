@@ -4,51 +4,28 @@
 <?php require 'head.htm'; ?>
 
   <script>
-    var profileId   = <?=$R['profileId']?>;
-    var feedType    = '<?=$R['feedType']?>';
-    var postPos     = 0;
-    var maxScrollY  = window.scrollY;
-    var cTimeOut    = 0;
+    var profileId    = <?=$R['profileId']?>;
+    var feedType     = '<?=$R['feedType']?>';
+    var feedPosition = 0;
+    var maxScrollY   = window.scrollY;
+    var cTimeOut     = 0;
 
-    function addPost( p, children ) {
-        p['fromTo'] = p['uId'];
-        if ( p['ruId'] && p['ruId'] != p['uId'] ) {
-          p['fromTo'] += '=>' + p['ruId'];
-        }        
-        let str = `<div id="pId${p['pId']}" class="post">` + 
-        `<span class="fromTo">${p['fromTo']} </span> ` +
-        `<div class="pTxt"> ${p['pTxt']}     </div>`   + 
-        `<span id="emot_${p['pId']}" onclick="alert(${p['pId']})"> -like/dislike- </span>` + 
-        
-        // postDelete reloads page. Not what we want. We want to replace this post only 
-        // We should delete on client side using gid(`pId${p[pId]}`).remove 
-        // https://developer.mozilla.org/en-US/docs/Web/API/Element/remove
-        `<span id="emot_${p['pId']}" onclick="postDelete(${p['pId']}, ${p['ppId']})"> -delete - </span>` +  
-
-        `<span onclick="userPost0(${p['pId']})"> -comment- </span>`;
-        str += children; // ~buildTree( p['child'] );
-        str += `<span class="postComment" id="comm_${p['pId']}"> </span>` + 
-        '</div>';
-        return str;
-    }
     function buildTree( tree ) {
       let str = '';
       for ( var i in tree ) {
         var p = tree[i];
-        str += addPost( p, buildTree( p['child'] )  );
+        str += postCreate( p, buildTree( p['child'] )  );
       }
       return str;
     }  
     function buildPostTree( txt ) {
-      console.log( txt );
        var tree = JSON.parse( txt );
-       console.log( txt + ' tree.length:' + tree.length );
-       if ( tree.length > 0 ) postPos+= 100;
-       var contPane = gid( 'contPane' );
+       if ( tree.length > 0 ) feedPosition+= 100; 
+       var contPane = gid( 'pId' );
        contPane.innerHTML += buildTree( tree );  
     }
     function userFeed() {
-      var sendTxt = `func=${feedType}&profileId=${profileId}&postPos=${postPos}`;
+      var sendTxt = `func=${feedType}&profileId=${profileId}&feedPosition=${feedPosition}`;
       httpPost( sendTxt, buildPostTree );
     }
   </script>
@@ -56,11 +33,10 @@
 
 <body class="feed">
   <?php require 'headPane.htm' ?>
-
-  <div id="contPane" class="contPane"> 
+  <div id="pId" class="contPane"> <!-- pId is used by script -->
     <img src="img/<?=$R['profile']['uImageId']?>" width="100"> 
-    <span onclick="userPost0('');"> -comment- </span>
-    <span class="postComment" id="comm_">  </span> 
+    <span onclick="postSubmit0('');"> -comment- </span>
+    <span class="postComment" id="comment">  </span> 
   </div>
 
   <div class="footPane"> 
@@ -68,6 +44,13 @@
   </div>
 
   <script>   
+    /* **************************************************************** */
+    /* When user has a long feed it is not convenient to load everything.
+    It wastes bandwidth, server resources and if the feed is long enough
+    it may be too much for the browser to hande. We try to deliver parts
+    of the feed on request. When the user scrolls down we try to catch
+    up and fill the feed */
+    /* **************************************************************** */
     document.addEventListener( 'scroll', 
       function(e) {
         if ( window.scrollY > maxScrollY ) {
@@ -80,7 +63,7 @@
       } 
     );
 
-    userFeed();
+    userFeed(); // first load
   </script>
 </body>
 </html>
