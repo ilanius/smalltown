@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+<?php require 'head.htm'; ?>
+
+<script>
+  var profileId = <?=$R['profileId']?>;
+</script>
+</head>
+
+<body class="feed">
+  <?php require 'headPane.htm' ?>
+  <div class="contPane"> 
+    <img src="img/<?=$R['profile']['uImageId']?>" width="100"> 
+    <span onclick="userPost0('');"> -comment- </span>
+    <span class="postComment" id="comm_">  </span> 
+    <?php
+    function createFeed( &$posts, &$feed  ) {
+      if ( sizeof( $posts ) == 0 ) return;
+      foreach( $posts as &$p ) {
+        $p['fromTo'] = $p['uId'];
+        if ( isset( $p['ruId']) && $p['ruId'] != $p['uId'] ) {
+          $p['fromTo'] .= '=>'.$p['ruId'];
+        }
+        $feed = $feed . <<<html
+        <div class="post">
+          <span class="fromTo">$p[fromTo] </span>
+          <div class="pTxt"> $p[pTxt] </div>
+          <span id="emot_$p[pId]" onclick="alert($p[pId])"> -like/dislike- </span>
+          <span id="emot_$p[pId]" onclick="postDelete($p[pId])"> -delete - </span>
+          <span onclick="userPost0($p[pId])"> -comment- </span>
+html;
+        createFeed( $p['child'], $feed );
+        $feed = $feed . <<<html
+          <span class="postComment" id="comm_$p[pId]">  </span> 
+        </div>
+html;
+      }
+    }
+    if ( sizeof( $R['posts'] ) > 0 ) {
+      $tree = buildTree( $posts );
+      $feed = "";
+      createFeed( $tree, $feed );
+      echo $feed;
+    } else {
+      echo "<p>Nothing here yet!</p>";
+    }
+    ?>
+  </div>
+  <div class="footPane"> 
+    <script>
+      console.log(" stmnt1: <?=$R['stmnt1']?> " );
+      console.log(" stmnt2: <?=$R['stmnt2']?> " );
+    </script>
+  </div>
+</body>
+</html>
