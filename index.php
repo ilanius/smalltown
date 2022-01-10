@@ -32,6 +32,8 @@ function debug( $mess ) {
 }
 function userAccount(&$R, &$DB ) {
     // friend requests
+    debug( '000 userAccount htm: ' . print_r( $R['user'], 1) );
+
     if ( isset( $R['subFunc'] ) && $R['subFunc'] == 'update' ) {
         if ( $_FILES['profileImage']['name'] > "0" ) {
             $imgType = strtolower(pathinfo($_FILES['profileImage']['name'], PATHINFO_EXTENSION)) ;
@@ -55,6 +57,7 @@ function userAccount(&$R, &$DB ) {
     $stmnt     = "* from user where uId in ($fid)";
     $R['requester'] = $DB->select( $stmnt );
     $R['user'] = $DB->selectOne("* from user where uId=$R[uId]");
+
     require 'userAccount.htm';
 }
 function userEntry(&$R, &$DB ) {  // login signup page
@@ -147,7 +150,13 @@ function friendRelation( &$R, &$DB ) {
         'unrequest'     => "relation=relation&7",   'unfriend'  => "relation=relation&0",
     ];    
     if ( isset( $action[$R['subFunc'] ] ) ) {
+        // check for existence. uId1, uId2 may not exist
+        $check = $DB->selectOne( "uId1 from friend where uId1='R[uId1]' and uId2='$R[uId2]'" );
+        if ( !$check ) {
+            $DB->query( "replace friend values('$R[uId1]', '$R[uId2]','0') ");
+        }
         $stmnt = "update friend set ".$action[$R['subFunc']]. " where uId1='$R[uId1]' and uId2='$R[uId2]'";    
+        debug( 'friendRelation stmnt:' . $stmnt );
         $DB->query( $stmnt); 
     }
     $reaction = [ // if A blocks or unfriends B, B's relation data vis a vis A must be updated
@@ -157,6 +166,11 @@ function friendRelation( &$R, &$DB ) {
         'unfriend'      => 'relation=relation&3',
     ];
     if ( isset( $reaction[$R['subFunc']]) ) {    
+        // check for existence
+        $check = $DB->selectOne( "uId1 from friend where uId1='R[uId2]' and uId2='$R[uId1]'" );
+        if ( !$check ) {
+            $DB->query( "replace friend values( '$R[uId2]', '$R[uId1]','0' )");
+        }
         $stmnt = "update friend set ".$reaction[$R['subFunc']]. " where uId1='$R[uId2]' and uId2='$R[uId1]'";
         $DB->query( $stmnt); 
     }
@@ -187,10 +201,17 @@ html;
 }
 function changeRelation( &$R, &$DB ) {
     friendRelation( $R, $DB );
-    $p = $DB->selectOne("* from user where uId='$R[uId2]'");
-    $r = $DB->selectOne( "* from friend where uId1='$R[uId1]'"); 
+    $stmnt1 = "* from user where uId='$R[uId2]'";
+    $p = $DB->selectOne( $stmnt1 );
+    $stmnt2 = "* from friend where uId1='$R[uId1]'";
+    $r = $DB->selectOne( $stmnt2 ); 
     foreach ( ['block','friend','follow','request'] as $type ) {
-        $p[$type] = strpos( ' '.$r['relation'], $type );
+        // $p[$type] = 0;
+        // if ( isset( $r['relation']) ) {
+         
+            $p[$type] = strpos( ' '.$r['relation'], $type ) > 0 ? 1 : 0;
+            debug( $type . ' relation:'.$r['relation'] . ' ' . $p[$type] );
+        // }
     }
     echo expressRelation( $R, $p );
 }
@@ -311,9 +332,13 @@ function userSearch(&$R, &$DB) {
     }
     foreach ( $posts as &$p ) { // we need to skip posts who have blocked user
         foreach ( ['block','friend','follow','request'] as $type ) {
+            if ( !isset( $relHash[$p['uId']] ) ) {
+                $relHash[$p['uId']] = '';
+            }
             $p[$type] = strpos( ' '.$relHash[$p['uId']], $type );
         }
     }
+    
     require 'userSearch.htm';
 }
 function userSignup( &$R, &$DB ) {

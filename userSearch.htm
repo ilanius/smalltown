@@ -11,12 +11,15 @@
     if ( sizeof( $posts ) == 0 ) {
       $posts[] = [ 'uFirstName' => 'No match found', 'uLastName' => '' ];
     }
-    foreach( $posts as $p ) {
-      echo "
+
+    foreach( $posts as &$p ) {
+      echo <<<html
       <p>
-        <a href=\"?func=userProfile&profileId=$p[uId]\"> $p[uFirstName] $p[uLastName] </a>
-        <span id=\"row_$p[uId]\">" . expressRelation( $R, $p ) . "</span>" .
-      "</p>";
+        <a  href="?func=userProfile&profileId=$p[uId]"> $p[uFirstName] $p[uLastName] </a>
+        <span id="row_$p[uId]">
+html; 
+      echo expressRelation( $R, $p ) . "</span> \n</p>";
+
     }
   ?>
   </div>

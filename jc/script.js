@@ -18,7 +18,7 @@ function httpPost( sendTxt, callBack ) {
 }
 function changeRelation( contId, rAction, uId1, uId2 ) {
     var sendTxt = "func=changeRelation&subFunc="+rAction+"&uId1="+uId1+"&uId2="+uId2+"&contId="+contId;
-    httpPost( sendTxt, function( txt ) {  gid(contId).innerHTML = txt;   } );
+    httpPost( sendTxt, function( txt ) { alert(txt); gid(contId).innerHTML = txt;   } );
 }
 function requestAccept( uId1, uId2 ) {
     var contId = 'nokok'+uId1+'_'+uId2;
