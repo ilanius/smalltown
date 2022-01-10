@@ -4,7 +4,7 @@ class Config {
     public    $debug      = false;
 
     // ---- database ----
-    public    $host       = '192.168.0.103'; // virtual or real host?
+    public    $host       = 'localhost'; // 192.168.0.103'; // virtual or real host?
     public    $user       = 'smalltown';
     public    $password   = 'smalltown';
     public    $database   = 'smalltown';
