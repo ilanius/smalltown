@@ -48,13 +48,13 @@ function userAccount(&$R, &$DB ) {
             unset($R['uPassword'] );
         }
         $DB->update("user", $R, "uId=$R[uId]");    
-        $R['user'] = $DB->selectOne("* from user where uId=$R[uId]");
     }
     $request   = $DB->select("uId1 from friend where uId2='$R[uId]' and relation&8");
     array_push( $request, ['uId1' => '-1'] ); // in case request is empty
     $fid       = $DB->implodeSelection( $request, 'uId1' );
     $stmnt     = "* from user where uId in ($fid)";
     $R['requester'] = $DB->select( $stmnt );
+    $R['user'] = $DB->selectOne("* from user where uId=$R[uId]");
     require 'userAccount.htm';
 }
 function userEntry(&$R, &$DB ) {  // login signup page
