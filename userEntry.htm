@@ -9,10 +9,7 @@
     <div class="contPane"> 
       <div class="lognPane">
         <h1>User Login</h1>
-        <?php
-        if ( $R['badLogin'] ) {
-          echo "<h3>$R[badLogin] </h3>";
-        } ?>
+        <?= $R[badLogin] ?>
         <form action="index.php" method="post">
           <input type="hidden"  name="func" value="userLogin">
           <label for="uEmail">    User Email   </label> <input type="email"    name="uEmail" required> <br>
