@@ -13,6 +13,13 @@ body {
     gap: 4px;
     border: 2px red dashed;
 }
+.badLogin {
+    font-size:1em;
+    color: blue;
+    padding: 2px;
+    border: 2px dashed red;
+    display: inline-block;
+}
 .button {
     border-radius:4px;
     background-color:lightblue;
