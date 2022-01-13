@@ -224,7 +224,7 @@ html;
 function userLogin(&$R, &$DB) {
     $badLoginHtml = '<span class="badLogin">Bad login!</span> <br>';
     if ( ! ( isset( $R['uEmail'] ) && isset( $R['uPassword0'] ) ) ) {
-        $R['badLogin'] = $badLoginHtml;
+        $R['badLogin'] = '';
         return 0;
     }
     $user = $DB->selectOne("* from user where uEmail='$R[uEmail]'");        
@@ -352,8 +352,8 @@ $C  = new Config();
 $DB = new Database( $C );
 
 $R = array( // $R is easier to write than $_REQUEST
-    'badLogin'  => 0,     'userImage' => 'img/profile0.png',
-    'func'      => '',    'session'   => '',  );
+    'badLogin'  => '',     'userImage' => 'img/profile0.png',
+    'func'      => '',     'session'   => '',  );
 foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
     $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection
 }

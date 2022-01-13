@@ -1,24 +1,10 @@
-
 body {
-    display: grid;
-    grid-template-areas: 
-        "headPane"
-        "contPane"
-        "footPane";
-    grid-template-columns: 1fr;
-    grid-template-rows: 54px 1fr 30px;
     width: 90%;
+    max-width: 400px;
     margin: auto;
     margin-top: 2px;
     gap: 4px;
     border: 2px red dashed;
-}
-.badLogin {
-    font-size:1em;
-    color: blue;
-    padding: 2px;
-    border: 2px dashed red;
-    display: inline-block;
 }
 .button {
     border-radius:4px;
@@ -44,7 +30,6 @@ span.postComment, div.post {
     padding:4px;
 }
 .headPane {
-    grid-area: headPane;
     border: 1px blue solid;
     display: flex;
     justify-content: left;
@@ -58,27 +43,13 @@ span.postComment, div.post {
     margin:  2px;
     text-align:center;
 }
-.userPane {
-    grid-area: "userPane";
-    border: 11px blue solid;
+.pane {
+    border: 4px blue solid;
 }
-.lognPane {
-    width: 100%;
-    border:4px solid yellow;
-}
-.lognPane label {
+.pane label {
     width: 20%;
     display: inline-block;
     padding: 4px;
-}
-.contPane {
-    grid-area: "contPane";
-    border-top:3px cyan solid;
-    border-bottom:3px cyan solid;
-}
-.footPane {
-    grid-area: "footPane";
-    border: 1px brown dashed;
 }
 .updateNow {
     border: 4px red dashed;

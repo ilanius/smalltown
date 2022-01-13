@@ -5,46 +5,60 @@
 </head>
 
 <body class="login">
-    <div class="headPane"></div>
-    <div class="contPane"> 
-      <div class="lognPane">
-        <h1>User Login</h1>
-        <?= $R[badLogin] ?>
-        <form action="index.php" method="post">
-          <input type="hidden"  name="func" value="userLogin">
-          <label for="uEmail">    User Email   </label> <input type="email"    name="uEmail" required> <br>
-          <label for="uPassword0"> Password    </label> <input type="password" name="uPassword0" required>
-          <button type="submit">Login</button>
-        </form>                   
-      </div>                       
-     
-      <div class="lognPane">
-        <a href="">Have you forgotten your password</a>
-        <label for="uEmail"> User Email </label> <input type="email" id="reqUEmail" name="uEmail" required> <br>
-        <span id="reqLoginMail"> <button onclick="reqLoginMail('reqLoginMail','reqUEmail')"> Request password </button> </span>
-      </div>
+    <a href="https://www.w3schools.com/w3css/w3css_tabulators.asp"> tabs css </a>
+    
+  <div id="paneLogin" class="pane">
+    <h1>User Login</h1>
+    <?= $R['badLogin'] ?>
+    <form action="index.php" method="post">
+      <input type="hidden"  name="func" value="userLogin">
+      <label for="uEmail">    User Email   </label> <input type="email"    name="uEmail" required> <br>
+      <label for="uPassword0"> Password    </label> <input type="password" name="uPassword0" required>
+      <button type="submit">Login</button>
+    </form>                   
+    <br> <br>
+    <button onclick=""> Login </button><br>
+    <button onclick=""> Have you forgotten your password</button> <br>
+    <button onclick="">Signup </button><br>
 
-      <div class="lognPane">
-        <h1>User Sign Up</h1>
-        <form action="index.php" method="post">
-          <input type="hidden" name="func" value="userSignup">
-          <label for="uEmail">    User Email       </label> <input type="email"    name="uEmail"                     required> <br>
-          <label for="uFirstName">User Firstname   </label> <input type="text"     name="uFirstName" pattern="\w+"   required> <br>
-          <label for="uLastName"> User Lastname    </label> <input type="text"     name="uLastName"  pattern="\w+"   required> <br>
-          <label for="uYear">     User Year  (YYYY)</label> <input type="text"     name="uYear"      pattern="\d{4}" value="1234" required> <br>
-          <label for="uPassword0">Password         </label> <input type="password" name="uPassword0" required> &nbsp;
-          <button type="submit">Sign Up</button>
-        </form>
-      </div>
+  </div>                       
  
-    </div>
+  <div id="paneLost" class="pane">
+    <label for="uEmail"> User Email </label> <input type="email" id="reqUEmail" name="uEmail" required> <br>
+    <span id="reqLoginMail"> <button onclick="reqLoginMail('reqLoginMail','reqUEmail')"> Request password </button> </span>
 
-    <div class="footPane"> 
-      <div class="cookieLoose">
-          Cookies on the loose!! This site uses cookies! - If you don't like cookies don't use this site! <br>
-          : <?=$R['session']?> : <?=$R['func']?> : <br>
-      </div>
+    <br>  <br>
+    <button onclick=""> Login </button><br>
+    <button onclick=""> Have you forgotten your password</button> <br>
+    <button onclick="">Signup </button><br>
+
+  </div>
+
+  <div id="paneSignup" class="pane">
+    <h1>User Sign Up</h1>
+    <form action="index.php" method="post">
+      <input type="hidden" name="func" value="userSignup">
+      <label for="uEmail">    User Email       </label> <input type="email"    name="uEmail"                     required> <br>
+      <label for="uFirstName">User Firstname   </label> <input type="text"     name="uFirstName" pattern="\w+"   required> <br>
+      <label for="uLastName"> User Lastname    </label> <input type="text"     name="uLastName"  pattern="\w+"   required> <br>
+      <label for="uYear">     User Year  (YYYY)</label> <input type="text"     name="uYear"      pattern="\d{4}" value="1234" required> <br>
+      <label for="uPassword0">Password         </label> <input type="password" name="uPassword0" required> &nbsp;
+      <button type="submit">Sign Up</button>
+    </form>
+
+    <br>  <br>
+    <button onclick=""> Login </button><br>
+    <button onclick=""> Have you forgotten your password</button> <br>
+    <button onclick="">Signup </button><br>
+    
+  </div>
+
+  <div class="pane"> 
+    <div class="cookieLoose">
+        Cookies on the loose!! This site uses cookies! - If you don't like cookies don't use this site! <br>
+        : <?=$R['session']?> : <?=$R['func']?> : <br>
     </div>
+  </div>
 
 </body>
 </html>
