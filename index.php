@@ -222,14 +222,15 @@ html;
     echo $body; 
 }
 function userLogin(&$R, &$DB) {
+    $badLoginHtml = '<span class="badLogin">Bad login!</span> <br>';
     if ( ! ( isset( $R['uEmail'] ) && isset( $R['uPassword0'] ) ) ) {
-        $R['badLogin'] = 'bad login';
+        $R['badLogin'] = $badLoginHtml;
         return 0;
     }
     $user = $DB->selectOne("* from user where uEmail='$R[uEmail]'");        
     if ( $R['func'] == 'userLostPass1' ) {
         if ( !( $user && $R['uPassword0'] == $user['uPassword'] ) ) {
-            $R['badLogin'] = 'bad login';
+            $R['badLogin'] = $badLoginHtml;
             return 0;
         }
         $R['func'] = "userAccount"; // eventFeed uId
@@ -237,7 +238,7 @@ function userLogin(&$R, &$DB) {
     } else if ( $R['func'] == 'userLogin' ) { 
         $R['uPassword'] = password_hash( $R['uPassword0'] , PASSWORD_DEFAULT);
         if ( !( $user && password_verify( $R['uPassword0'], $user['uPassword'] ) ) ) {
-            $R['badLogin'] = 'bad login';
+            $R['badLogin'] = $badLoginHtml;
             return 0;
         }
         $R['func'] = "userEvent"; // eventFeed uId
