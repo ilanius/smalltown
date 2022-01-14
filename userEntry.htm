@@ -17,44 +17,34 @@ function modalView( e, view ) {
 </head>
 
 <body class="login">
-    <a href="https://www.w3schools.com/w3css/w3css_tabulators.asp"> tabs css </a>
-    
-    <nav class="black">
-      <button class="modalButton" onclick="modalView(event, 'login')">Login</button>
-      <button class="modalButton" onclick="modalView(event, 'lost')">Lost Password</button>
-      <button class="modalButton" onclick="modalView(event, 'signup')">Sign Up!</button>
-    </nav>
+  <nav class="black">
+    <button class="viewButton" onclick="modalView(event, 'login')">  Login         </button>
+    <button class="viewButton" onclick="modalView(event, 'lost')">   Lost Password </button>
+    <button class="viewButton" onclick="modalView(event, 'signup')"> Sign Up!      </button>
+  </nav>
 
   <div id="login" class="view">
-    <h1>User Login</h1>
+    <h1>Login</h1>
     <?= $R['badLogin'] ?>
     <form action="index.php" method="post">
       <input type="hidden"  name="func" value="userLogin">
       <label for="uEmail">    User Email   </label> <input type="email"    name="uEmail" required> <br>
       <label for="uPassword0"> Password    </label> <input type="password" name="uPassword0" required>
-      <button type="submit">Login</button>
+      <button class="modalButton" type="submit"> =>Login => </button>
     </form>                   
     <br> <br>
-    <button onclick=""> Login </button><br>
-    <button onclick=""> Have you forgotten your password</button> <br>
-    <button onclick="">Signup </button><br>
-
   </div>                       
  
   <div id="lost" class="view">
-    <h1>Lost password </h1>
+    <h1>Lost Password </h1>
     <label for="uEmail"> User Email </label> <input type="email" id="reqUEmail" name="uEmail" required> <br>
     <span id="reqLoginMail"> <button onclick="reqLoginMail('reqLoginMail','reqUEmail')"> Request password </button> </span>
-
     <br>  <br>
-    <button onclick=""> Login </button><br>
-    <button onclick=""> Have you forgotten your password</button> <br>
-    <button onclick="">Signup </button><br>
-
+    
   </div>
 
   <div id="signup" class="view">
-    <h1>User Sign Up</h1>
+    <h1>Sign Up</h1>
     <form action="index.php" method="post">
       <input type="hidden" name="func" value="userSignup">
       <label for="uEmail">    User Email       </label> <input type="email"    name="uEmail"                     required> <br>
@@ -64,18 +54,16 @@ function modalView( e, view ) {
       <label for="uPassword0">Password         </label> <input type="password" name="uPassword0" required> &nbsp;
       <button type="submit">Sign Up</button>
     </form>
-
     <br>  <br>
-    <button onclick=""> Login </button><br>
-    <button onclick=""> Have you forgotten your password</button> <br>
-    <button onclick="">Signup </button><br>
-    
   </div>
 
-  <div class="pane"> 
+  <div class="view"> 
     <div class="cookieLoose">
         Cookies on the loose!! This site uses cookies! - If you don't like cookies don't use this site! <br>
-        : <?=$R['session']?> : <?=$R['func']?> : <br>
+        : <?=$R['session']?> : <?=$R['func']?> : <br>        
+    </div>
+    <div>     
+      <a href="https://www.w3schools.com/w3css/w3css_tabulators.asp"> W3School on tabs (Javascript/CSS) </a>
     </div>
   </div>
 

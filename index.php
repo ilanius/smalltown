@@ -186,9 +186,7 @@ function expressRelation( &$R, &$p ) {
         $o = isset( $p[$o] ) && $p[$o] ? $C->opposites[ $o ] : $o;
         $op = isset( $C->prettyPrint[$o] ) ? $C->prettyPrint[$o] : $o;
         $str = $str . <<<html
-        <span class="button"> 
-          <span onclick="changeRelation('row_$p[uId]','$o','$R[uId]','$p[uId]')"> $op </span>
-        </span>
+          <button class="relButton" onclick="changeRelation('row_$p[uId]','$o','$R[uId]','$p[uId]')"> $op </button>
 html;
     }
     return $str;
