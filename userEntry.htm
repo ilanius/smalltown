@@ -2,12 +2,30 @@
 <html>
 <head>
   <?php require 'head.htm'; ?>
+  <script>
+
+function modalView( e, view ) {
+  var i;
+  var x = document.getElementsByClassName("view");
+  for ( i = 0; i < x.length; i++ ) {
+    x[i].style.display = "none";  
+  }
+  document.getElementById( view ).style.display = "block";  
+}
+
+  </script>
 </head>
 
 <body class="login">
     <a href="https://www.w3schools.com/w3css/w3css_tabulators.asp"> tabs css </a>
     
-  <div id="paneLogin" class="pane">
+    <nav class="black">
+      <button class="modalButton" onclick="modalView(event, 'login')">Login</button>
+      <button class="modalButton" onclick="modalView(event, 'lost')">Lost Password</button>
+      <button class="modalButton" onclick="modalView(event, 'signup')">Sign Up!</button>
+    </nav>
+
+  <div id="login" class="view">
     <h1>User Login</h1>
     <?= $R['badLogin'] ?>
     <form action="index.php" method="post">
@@ -23,7 +41,8 @@
 
   </div>                       
  
-  <div id="paneLost" class="pane">
+  <div id="lost" class="view">
+    <h1>Lost password </h1>
     <label for="uEmail"> User Email </label> <input type="email" id="reqUEmail" name="uEmail" required> <br>
     <span id="reqLoginMail"> <button onclick="reqLoginMail('reqLoginMail','reqUEmail')"> Request password </button> </span>
 
@@ -34,7 +53,7 @@
 
   </div>
 
-  <div id="paneSignup" class="pane">
+  <div id="signup" class="view">
     <h1>User Sign Up</h1>
     <form action="index.php" method="post">
       <input type="hidden" name="func" value="userSignup">

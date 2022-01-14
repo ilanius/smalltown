@@ -43,13 +43,18 @@ span.postComment, div.post {
     margin:  2px;
     text-align:center;
 }
-.pane {
+.view {
     border: 4px blue solid;
 }
-.pane label {
+.view label {
     width: 20%;
     display: inline-block;
     padding: 4px;
+}
+.black, .modalButton {
+    background-color: black;
+    color: white;
+    border: 0;
 }
 .updateNow {
     border: 4px red dashed;
