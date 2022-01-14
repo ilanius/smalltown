@@ -6,20 +6,23 @@
   <body>
   <?php require 'headPane.htm' ?>
   <div class="contPane"> 
-    <h2>Matches found </h2>
   <?php 
-    if ( sizeof( $posts ) == 0 ) {
-      $posts[] = [ 'uFirstName' => 'No match found', 'uLastName' => '' ];
-    }
-
-    foreach( $posts as &$p ) {
-      echo <<<html
+    if ( sizeof( $posts ) == 0 ) { 
+  ?>
+      <h2>No match found</h2>
+  <?php
+    } else {
+  ?>
+      <h2>Matches found ( <?=sizeof($posts)?> ) </h2>
+  <?php
+      foreach( $posts as &$p ) {
+        echo <<<html
       <p>
         <a  href="?func=userProfile&profileId=$p[uId]"> $p[uFirstName] $p[uLastName] </a>
         <span id="row_$p[uId]">
 html; 
-      echo expressRelation( $R, $p ) . "\n</span> \n</p>";
-
+        echo expressRelation( $R, $p ) . "\n</span> \n</p>";
+      }
     }
   ?>
   </div>
