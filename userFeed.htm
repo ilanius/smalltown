@@ -4,7 +4,8 @@
 <?php require 'head.htm'; ?>
 
   <script>
-    var profileId    = <?=$R['profileId']?>;
+    var profileId    = '<?=$R['profileId']?>';
+    var profileImage = '<?=$R['profile']['uImageId']?>';
     var feedType     = '<?=$R['feedType']?>';
     var feedPosition = 0;
     var maxScrollY   = window.scrollY;
@@ -32,6 +33,7 @@
 </head>
 
 <body class="feed">
+  
   <?php require 'headPane.htm' ?>
   <div id="pId" class="contPane"> <!-- pId is used by script -->
     <img src="img/<?=$R['profile']['uImageId']?>" width="100"> 
