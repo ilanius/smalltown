@@ -86,6 +86,10 @@ function userAccount(&$R, &$DB ) {
 function userEntry(&$R, &$DB ) {  // login signup page
     require 'userEntry.htm';
 }
+
+/* ************************************************************************** */
+/* Används av userEventFeed och userProfileFeed  för att bygga kommentarsträd */
+/* ************************************************************************** */
 function buildTree( &$posts ) {
     $postHash = [];
     $tree     = [];
@@ -101,6 +105,12 @@ function buildTree( &$posts ) {
     }
     return $tree; // a recursive tree structure
 }
+/* ********************************************************************* */
+/* Detta är den inloggade användarens feed som innehåller                */
+/* ett urval (omvänd kronologisk ordning) av egna och vänners inlägg     */
+/* userEvent levererar sidan. userEventFeed leverar data till            */
+/* clienten (browsern) i JSON format                                     */
+/* ********************************************************************* */
 function userEventFeed( &$R, &$DB ) {
     $stmnt   = "uId2 from friend where uId1='$R[uId]' and relation & 6";   // 6 == friend and follow
     $friends = $DB->select( $stmnt );
@@ -125,6 +135,12 @@ function userEvent( &$R, &$DB ) {
     $R['feedType'] = 'userEventFeed';
     require 'userFeed.htm'; // same template file used by userProfile
 }
+/* ********************************************************************* */
+/* Detta är en användares (kanske vän) feed som innehåller dennes        */
+/* inlägg i omvänd kronologisk ordning                                   */
+/* userProfile levererar sidan. userProfileFeed leverar data till        */
+/* clienten (browsern) i JSON format                                     */
+/* ********************************************************************* */
 function userProfileFeed( &$R, &$DB ) {
     $feedPosition = $R['feedPosition'];
     // We may need to reconsider hard coding the number 100 here
@@ -149,6 +165,8 @@ function userProfile( &$R, &$DB) {
     $R['feedType'] = 'userProfileFeed';
     require 'userFeed.htm';
 }
+/* ********************************************************************** */
+
 function userLogout( &$R, &$DB ) {
     $DB->delete("session", "uId='$R[uId]'");
     setCookie('session', '');
