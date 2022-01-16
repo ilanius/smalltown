@@ -179,6 +179,16 @@ function userLogout( &$R, &$DB ) {
 /* userAccount function                        */
 /* ******************************************* */
 
+/* ******************************************************************* */
+/* The following code is used to manipulate the relation column
+/* in table friend. The column relation uses 8 bytes and where values
+/* block (=1 ), follow (=2), friend (=4), request (=8), occupies one 
+/* bit each. Bits are set and unset using | (or) or & /* (and) operations.
+/* For example setting friend and unsetting request in one operation 
+/* can be done with the following expression: (relation|4)&7  where 
+/* | sets a bit and & unsets the bits that are not overlapping the bits
+/* of 7, i.e. 111 in binary
+/* ******************************************************************* */
 function friendRelation( &$R, &$DB ) {
     global $C;
     $action = [
