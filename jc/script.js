@@ -74,8 +74,11 @@ function postSubmit( e, o ) {
 }
 
 /* ************************************************ */
-function reqLoginMail( contId, uEmailId ) {
+function reqLoginMail( event, contId, uEmailId ) {
+    // event.preventDefault();                                // cancel event bubble here
     var uEmail = gid( uEmailId ).value;
     var sendTxt = "func=userLostPass0&uEmail="+uEmail;
-    httpPost( sendTxt, function( txt ) { gid( contId ).innerHTML = '  Mail requested ' + txt; } );
+    httpPost( sendTxt, function( txt ) { 
+        gid( contId ).innerHTML = '  Mail requested ' + txt; 
+    } );
 }
