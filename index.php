@@ -3,6 +3,29 @@
 /* Smalltown a.k.a facebook light      */
 /* no ads                              */
 /* *********************************** */
+function userLostPass0( &$R, &$DB ) {
+    if ( $R['func'] != 'userLostPass0' ) return 0;
+    $body = '';
+    if ( isset( $R['uEmail'] ) ) {
+        $U = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
+        $U['uPassword0'] = urlencode( $U['uPassword'] );
+        $to_email = "leonard.ilanius@gmail.com";
+        $subject = "Password reset";
+        $body = '';
+        $body = $body . <<<html
+         "Hi,\n This is test email send by PHP Script. 
+        <a href="?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]"> Access Token </a>
+html;
+        $headers = "From: admin@smalltown.com";
+        /* ***************************************************** */
+        /* we need a working e-mail server for this line to work */
+        /* mail($R['uEmail'], $subject, $body, $headers);        */
+        /* ***************************************************** */
+        echo $body; 
+        return 1;
+    } 
+    return 0;
+}
 function checkLogin(&$R, &$DB ) {
     if ( isset( $_COOKIE['session'] ) ) {
         $session = $DB->selectOne("* from session where sHash='$_COOKIE[session]'");
@@ -10,15 +33,16 @@ function checkLogin(&$R, &$DB ) {
             $R['sTime']= 'now()';
             $R['uId'] = $session['uId']; 
             $R['user'] = $DB->selectOne("* from user where uId='$R[uId]'");        
+            if ( !isset( $R['user']['uImageId']) ) { /* if user has not yet uploaded image we set default here */
+                $R['user']['uImageId'] = $R['userImage'];
+            } 
             $DB->update('session', $R, "sHash='$_COOKIE[session]'");
             if ( !isset($R['func']) || $R['func']=='userLogin' ) {
                 $R['func'] = 'userEvent';
             }
             return 1;
         }
-    } else if ( $R['func'] == 'userLostPass0' ) {
-        return userLostPass0($R, $DB );
-    } 
+    }
     return 0;
 }
 function createSession( &$R, &$DB ) {
@@ -35,6 +59,8 @@ function userAccount(&$R, &$DB ) {
     if ( isset( $R['subFunc'] ) && $R['subFunc'] == 'update' ) {
         if ( $_FILES['profileImage']['name'] > "0" ) {
             $imgType = strtolower(pathinfo($_FILES['profileImage']['name'], PATHINFO_EXTENSION)) ;
+            // in order to prevent harvesting of images by foreign machines we hash the filename,
+            // but we keep the filetype. 
             $R['uImageId'] = substr( md5( $R['uId'] ), 5).'.'.$imgType; // $_FILES['profileImage']['name'];
             if ( is_uploaded_file($_FILES['profileImage']['tmp_name'] ) ) {
                 // resize image if needed
@@ -94,7 +120,7 @@ function userEventFeed( &$R, &$DB ) {
     }
 }
 function userEvent( &$R, &$DB ) {
-    $R['profile']   = $R['user'];
+    $R['profile']   = &$R['user'];
     $R['profileId'] = $R['uId'];
     $R['feedType'] = 'userEventFeed';
     require 'userFeed.htm'; // same template file used by userProfile
@@ -104,17 +130,15 @@ function userProfileFeed( &$R, &$DB ) {
     // We may need to reconsider hard coding the number 100 here
     $stmnt = "rpId from post where ruId='$R[profileId]' order by pTime desc limit $feedPosition,100";
     $posts = $DB->select( $stmnt );
-    if ( sizeof( $posts ) > 0 ) {
-        // $posts[] = [ 'rpId' => '-1'];
-        $rpId  = $DB->implodeSelection( $posts, 'rpId');    
-        $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
-        $posts = $DB->select( $stmnt );
-        $tree = buildTree( $posts );
-        echo json_encode( $tree );
-    } else {
+    if ( sizeof( $posts ) == 0 ) {
         echo "[]";
+        return;
     }
-    // $R['posts'] = $posts; // buildTree( $posts );
+    $rpId  = $DB->implodeSelection( $posts, 'rpId');    
+    $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
+    $posts = $DB->select( $stmnt );
+    $tree = buildTree( $posts );
+    echo json_encode( $tree );
 }
 function userProfile( &$R, &$DB) {
     $R['profileId'] = isset( $R['profileId']) ? $R['profileId'] : $R['uId'];
@@ -131,10 +155,11 @@ function userLogout( &$R, &$DB ) {
     require 'userEntry.htm';
 }
 
-/* ************************* */
-/* friend suggestions        */
-/* not implemented           */
-/* ************************* */
+/* ******************************************* */
+/* friend suggestions not yet implemented      */
+/* but should probably be added to             */
+/* userAccount function                        */
+/* ******************************************* */
 
 function friendRelation( &$R, &$DB ) {
     global $C;
@@ -199,54 +224,6 @@ function changeRelation( &$R, &$DB ) {
         $p[$type] = strpos( ' '.$r['relation'], $type );
     }
     echo expressRelation( $R, $p );
-}
-function userLostPass0( &$R, &$DB ) {
-    if ( isset( $R['uEmail'] ) ) {
-        $U = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
-        $U['uPassword0'] = urlencode( $U['uPassword'] );
-        $to_email = "leonard.ilanius@gmail.com";
-        $subject = "Password reset";
-        $body = '';
-        $body = $body . <<<html
-         "Hi,\n This is test email send by PHP Script. 
-        <a href="?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]"> Access Token </a>
-html;
-        $headers = "From: admin@smalltown.com";
-        /* ***************************************************** */
-        /* we need a working e-mail server for this line to work */
-        /* mail($R['uEmail'], $subject, $body, $headers);        */
-        /* ***************************************************** */
-    } 
-    echo $body; 
-}
-function userLogin(&$R, &$DB) {
-    $badLoginHtml = '<span class="badLogin">Bad login!</span> <br>';
-    if ( ! ( isset( $R['uEmail'] ) && isset( $R['uPassword0'] ) ) ) {
-        $R['badLogin'] = '';
-        return 0;
-    }
-    $user = $DB->selectOne("* from user where uEmail='$R[uEmail]'");        
-    if ( $R['func'] == 'userLostPass1' ) {
-        if ( !( $user && $R['uPassword0'] == $user['uPassword'] ) ) {
-            $R['badLogin'] = $badLoginHtml;
-            return 0;
-        }
-        $R['func'] = "userAccount"; // eventFeed uId
-        $R['updateNow'] = 1;
-    } else if ( $R['func'] == 'userLogin' ) { 
-        $R['uPassword'] = password_hash( $R['uPassword0'] , PASSWORD_DEFAULT);
-        if ( !( $user && password_verify( $R['uPassword0'], $user['uPassword'] ) ) ) {
-            $R['badLogin'] = $badLoginHtml;
-            return 0;
-        }
-        $R['func'] = "userEvent"; // eventFeed uId
-    } else {
-        return 0;
-    }
-    $R['uId'] = $user['uId'];
-    $R['user'] = $user;
-    createSession( $R, $DB );
-    return 1;
 }
 /* ********************************************************************** */
 /* This function allows you to post in your own feed or in a friends feed */
@@ -327,6 +304,35 @@ function userSearch(&$R, &$DB) {
     }
     require 'userSearch.htm';
 }
+function userLogin(&$R, &$DB) {
+    $badLoginHtml = '<span class="badLogin">Bad login!</span> <br>';
+    if ( ! ( isset( $R['uEmail'] ) && isset( $R['uPassword0'] ) ) ) {
+        $R['badLogin'] = '';
+        return 0;
+    }
+    $user = $DB->selectOne("* from user where uEmail='$R[uEmail]'");        
+    if ( $R['func'] == 'userLostPass1' ) {
+        if ( !( $user && $R['uPassword0'] == $user['uPassword'] ) ) {
+            $R['badLogin'] = $badLoginHtml;
+            return 0;
+        }
+        $R['func'] = "userAccount"; // eventFeed uId
+        $R['updateNow'] = 1;
+    } else if ( $R['func'] == 'userLogin' ) { 
+        $R['uPassword'] = password_hash( $R['uPassword0'] , PASSWORD_DEFAULT);
+        if ( !( $user && password_verify( $R['uPassword0'], $user['uPassword'] ) ) ) {
+            $R['badLogin'] = $badLoginHtml;
+            return 0;
+        }
+        $R['func'] = "userEvent"; // eventFeed uId
+    } else {
+        return 0;
+    }
+    $R['uId'] = $user['uId'];
+    $R['user'] = $user;
+    createSession( $R, $DB );
+    return 1;
+}
 function userSignup( &$R, &$DB ) {
     if ( $R['func'] != 'userSignup' ) { return 0; }   
     $R['uName'] = isset( $R['uName'] ) ? $R['uName'] : 'nada';
@@ -350,7 +356,7 @@ $C  = new Config();
 $DB = new Database( $C );
 
 $R = array( // $R is easier to write than $_REQUEST
-    'badLogin'  => '',     'userImage' => 'img/profile0.png',
+    'badLogin'  => '',     'userImage' => 'profileDefaultImage.png',
     'func'      => '',     'session'   => '',  );
 foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
     $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection
@@ -358,26 +364,29 @@ foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
 /* ********************** */
 /* entry                  */
 /* ********************** */
-checkLogin( $R, $DB ) ||  userLogin( $R, $DB ) || 
-userSignup($R,$DB)    ||  userEntry($R,$DB)    || exit();
+debug('A route:'.$R['func']);
+
+/* if any of these succeeds they return 1 */
+checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userLostPass0( $R, $DB) || 
+/* userEntry returns 0  then we exit */
+userEntry($R, $DB)  || exit();
 
 /* **************************** */
 /* Routing, i.e. determine which function/model (view) to call  */
 /* change to switch: https://www.php.net/manual/en/control-structures.switch.php  */
 /* **************************** */
-debug('route:'.$R['func']);
+debug('B route:'.$R['func']);
 $allowed = [  /* only functions followed by 1 can be called if you are logged in */
     ''               => 0,     'userAccount'    => 1, 
     'userLogout'     => 1,     'postSubmit'     => 1, 
     'userProfile'    => 1,     'userSearch'     => 1, 
     'friendRelation' => 1,     'userEvent'      => 1,     
     'postDelete'     => 1,     'changeRelation' => 1, 
-    'userEventFeed'  => 1,     'userProfileFeed' => 1 ];
-
-if ( $allowed[ $R['func'] ] ) {
+    'userEventFeed'  => 1,     'userProfileFeed' => 1,
+    'userLostPass0'  => 0 ];
+   
+if ( $allowed[ $R['func'] ] > 0 ) {
     $R['func']($R, $DB );
-} else {
-    debug('unallowed func: $R[func]'); /* silence */
-    userEvent($R, $DB ); 
+    return; 
 }
 ?>
