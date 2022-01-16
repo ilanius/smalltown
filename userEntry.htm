@@ -3,16 +3,14 @@
 <head>
   <?php require 'head.htm'; ?>
   <script>
-
-function modalView( e, view ) {
-  var i;
-  var x = document.getElementsByClassName("view");
-  for ( i = 0; i < x.length; i++ ) {
-    x[i].style.display = "none";  
+    function modalView( event, view ) { // we keep event just in case
+      var i;
+      var x = document.getElementsByClassName("view");
+      for ( i = 0; i < x.length; i++ ) {
+        x[i].style.display = "none";  
+      }
+    document.getElementById( view ).style.display = "block";  
   }
-  document.getElementById( view ).style.display = "block";  
-}
-
   </script>
 </head>
 
@@ -38,7 +36,9 @@ function modalView( e, view ) {
   <div id="lost" class="view">
     <h1>Lost Password </h1>
     <label for="uEmail"> User Email </label> <input type="email" id="reqUEmail" name="uEmail" required> <br>
-    <span id="reqLoginMail"> <button onclick="reqLoginMail('reqLoginMail','reqUEmail')"> Request password </button> </span>
+    <span id="reqLoginMail"> 
+      <button onclick="reqLoginMail(event, 'reqLoginMail','reqUEmail')"> Request password </button> 
+    </span>
     <br>  <br>
     
   </div>
