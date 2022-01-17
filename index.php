@@ -84,12 +84,14 @@ function userAccount(&$R, &$DB ) {
     require 'userAccount.htm';
 }
 function userEntry(&$R, &$DB ) {  // login signup page
+    // require 'userEntry.htm' || 'userEntry0.htm' ;  // <= obs pseudokod!
     require 'userEntry.htm';
 }
 
-/* ************************************************************************** */
-/* Används av userEventFeed och userProfileFeed  för att bygga kommentarsträd */
-/* ************************************************************************** */
+/* ******************************************************************************** */
+/* buildTree används av userEventFeed och userProfileFeed                           */
+/* för att bygga träd av inlägg                                                     */
+/* ******************************************************************************** */
 function buildTree( &$posts ) {
     $postHash = [];
     $tree     = [];
@@ -112,13 +114,13 @@ function buildTree( &$posts ) {
 /* clienten (browsern) i JSON format                                     */
 /* ********************************************************************* */
 function userEventFeed( &$R, &$DB ) {
-    $stmnt   = "uId2 from friend where uId1='$R[uId]' and relation & 6";   // 6 == friend and follow
-    $friends = $DB->select( $stmnt );
+    $stmnt        = "uId2 from friend where uId1='$R[uId]' and relation & 6";   // 6 == friend and follow
+    $friends      = $DB->select( $stmnt );
     array_push( $friends, [ 'uId2' => '-1'], ['uId2' => $R['uId'] ] );
-    $fU      = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
+    $fU           = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
     $feedPosition = $R['feedPosition'];
-    $stmnt = "rpId from post where ruId in ($fU) order by pTime desc limit $feedPosition,100";
-    $posts = $DB->select( $stmnt );
+    $stmnt        = "rpId from post where ruId in ($fU) order by pTime desc limit $feedPosition,100";
+    $posts        = $DB->select( $stmnt );
     if ( sizeof( $posts ) > 0 ) {
         $rpId  = $DB->implodeSelection( $posts, 'rpId');
         $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
@@ -363,13 +365,15 @@ function userLogin(&$R, &$DB) {
 }
 function userSignup( &$R, &$DB ) {
     if ( $R['func'] != 'userSignup' ) { return 0; }   
-    $R['uName'] = isset( $R['uName'] ) ? $R['uName'] : 'nada';
+    $R['uName']     = isset( $R['uName'] ) ? $R['uName'] : 'nada';
     $R['uPassword'] = password_hash( $R['uPassword0'] , PASSWORD_DEFAULT);
-    $R['stmnt'] = $DB->insert( 'user', $R );
-    $user = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
-    $R['uId'] = $user['uId'];
-    $R['user'] = $user;
-    $R['func'] = 'userEvent';
+    $R['stmnt']     = $DB->insert( 'user', $R );
+    $user           = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
+    $R['uId']       = $user['uId'];
+    $R['user']      = &$user;
+    $R['profile']   = &$R['user'];
+    $R['user']['uImageId'] = $R['userImage'];
+    $R['func']      = 'userEvent';
     createSession( $R, $DB );
     return 1;
 }
