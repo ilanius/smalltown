@@ -27,7 +27,9 @@
 # grant all privileges to smalltown.* to user 'smalltown'@'%' identified by password 'smalltown';
 # [exit mysql shell]
 # in ordinary shell in directory /htdocs/smalltown/ write: 
-# mysql -usmalltown -psmalltown -hlocalhost smalltown < smalltown.sql 
+# "[path]\mysql.exe" -usmalltown -psmalltown -hlocalhost smalltown < smalltown.sql 
+# On your system likely:
+# "C:\Program Files\MariaDB 10.6\bin\mysql.exe" -usmalltown -psmalltown -hlocalhost smalltown < smalltown.sql
 #
 #
 # Improvements
