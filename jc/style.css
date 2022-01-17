@@ -61,6 +61,11 @@ span.postComment, div.post {
 /* ******************** */
 /* userEntry.htm        */
 /* ******************** */
+.view0 {
+    border: 4px rgb(50, 74, 82) dashed;
+    margin-top:2px;
+    padding: 4px;
+}
 .view {
     border: 4px rgb(50, 74, 82) solid;
     margin-top:2px;
@@ -81,8 +86,12 @@ span.postComment, div.post {
 .viewButton {
     width: 25%;
     border-bottom:2px green solid;
-    border-top: 2px red solid;
+    border-top: 2px green solid;
     cursor: grab;
+}
+.viewButton.active {
+    border-bottom:2px red solid;
+    border-top: 2px red solid;
 }
 #lost, #signup {
     display:none;
