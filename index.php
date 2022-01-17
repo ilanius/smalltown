@@ -45,6 +45,9 @@ function checkLogin(&$R, &$DB ) {
     }
     return 0;
 }
+/* ************************************************** */
+/* We set session cookie here 
+/* ************************************************** */
 function createSession( &$R, &$DB ) {
     $R['sHash'] = sha1( time().$R['uEmail'] );
     $R['sTime'] = 'now()';
@@ -53,6 +56,17 @@ function createSession( &$R, &$DB ) {
 }
 function debug( $mess ) {
     error_log( $mess."\n" , 3, './debugLog.txt');
+}
+
+/* ****************************************************** */
+/* This method will allow us to add customized template files
+/* that will supercede the core template files
+/* i.e. entry.htm supercedes entry0.htm
+/* search.htm > search0.htm and so on
+/* Also it constrains template access to system variables in $R
+/* ****************************************************** */
+function requir0( $fileName, &$R ) { 
+    file_exists( $fileName.'.htm') ? require $fileName.'.htm' : require $fileName.'0.htm';
 }
 function userAccount(&$R, &$DB ) {
     // friend requests
@@ -81,11 +95,12 @@ function userAccount(&$R, &$DB ) {
     $fid       = $DB->implodeSelection( $request, 'uId1' );
     $stmnt     = "* from user where uId in ($fid)";
     $R['requester'] = $DB->select( $stmnt );
-    require 'userAccount.htm';
+    // require 'userAccount.htm'; // require0('userAccount');
+    requir0( 'account', $R );
 }
 function userEntry(&$R, &$DB ) {  // login signup page
-    // require 'userEntry.htm' || 'userEntry0.htm' ;  // <= obs pseudokod!
-    require 'userEntry.htm';
+    requir0( 'entry', $R );
+    // require 'userEntry.htm';
 }
 
 /* ******************************************************************************** */
@@ -135,7 +150,8 @@ function userEvent( &$R, &$DB ) {
     $R['profile']   = &$R['user'];
     $R['profileId'] = $R['uId'];
     $R['feedType'] = 'userEventFeed';
-    require 'userFeed.htm'; // same template file used by userProfile
+    requir0( 'feed', $R );
+    // require 'userFeed.htm'; // same template file used by userProfile
 }
 /* ********************************************************************* */
 /* Detta är en användares (kanske vän) feed som innehåller dennes        */
@@ -165,14 +181,16 @@ function userProfile( &$R, &$DB) {
         $R['profile']['uImageId'] = 'profileDefaultImage.png';
     }
     $R['feedType'] = 'userProfileFeed';
-    require 'userFeed.htm';
+    requir0( 'feed', $R );
+    // require 'userFeed.htm';
 }
 /* ********************************************************************** */
 
 function userLogout( &$R, &$DB ) {
     $DB->delete("session", "uId='$R[uId]'");
     setCookie('session', '');
-    require 'userEntry.htm';
+    requir0( 'entry', $R );
+    // require 'userEntry.htm';
 }
 
 /* ******************************************* */
@@ -317,13 +335,13 @@ function userSearch(&$R, &$DB) {
     // TODO: dont show users that have blocked you
     // Facebook allows you to search your own account but this complicates logic somewhat
     $R['stmnt'] = "* from user where uId!='$R[uId]' && (uLastName like '$R[search]%' or uFirstName like '$R[search]%')";
-    $posts     = $DB->select( $R['stmnt'] );
+    $R['posts'] = $DB->select( $R['stmnt'] ); // copies
     $relHash   = [];
     $relations = $DB->select( "* from friend where uId1='$R[uId]'");
     foreach ( $relations as $r ) {  
         $relHash[ $r['uId2'] ] = $r['relation'];
     }
-    foreach ( $posts as &$p ) { // we need to skip posts who have blocked user
+    foreach ( $R['posts'] as &$p ) { // we need to skip posts who have blocked user
         foreach ( ['block','friend','follow','request'] as $type ) {
             if ( isset( $relHash[ $p['uId'] ] ) ) {
             $p[$type] = strpos( ' '.$relHash[$p['uId']], $type );
@@ -332,7 +350,8 @@ function userSearch(&$R, &$DB) {
             }
         }
     }
-    require 'userSearch.htm';
+    // require 'userSearch.htm';
+    requir0( 'search', $R ); 
 }
 function userLogin(&$R, &$DB) {
     $badLoginHtml = '<span class="badLogin">Bad login!</span> <br>';

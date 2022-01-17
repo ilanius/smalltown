@@ -4,13 +4,13 @@
   <?php require 'head.htm'; ?>
   <script>
     function modalView( event, view ) { // we keep event just in case
-      var i;
-      var x = document.getElementsByClassName("view");
-      for ( i = 0; i < x.length; i++ ) {
-        x[i].style.display = "none";  
+      var i, tab, viewButton;
+      var tab = document.getElementsByClassName("view");
+      for ( i = 0; i < tab.length; i++ ) {
+        tab[i].style.display = "none";  
       }
       var viewButton = document.getElementsByClassName("viewButton");
-      for (i = 0; i < viewButton.length; i++) {
+      for ( i = 0; i < viewButton.length; i++) {
         viewButton[i].className = viewButton[i].className.replace(" active", "");
       }
       event.currentTarget.className += " active";

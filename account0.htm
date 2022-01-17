@@ -6,11 +6,14 @@
 </head>  
 <body class="userAccount">
 
-  <?php require 'headPane.htm' ?>
+  <?php 
+  // require 'headPane.htm' 
+  ?>
+  <?php requir0('headPane', $R ); ?>
 
   <div class="contPane"> 
     <?php 
-      $U = $R['user']; 
+      $U = &$R['user']; 
     ?>
     <form action="?func=userAccount" method="post" enctype="multipart/form-data">
       <input type="hidden" name="subFunc" value="update">
