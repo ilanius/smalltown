@@ -37,12 +37,12 @@ function checkLogin(&$R, &$DB ) {
                 $R['user']['uImageId'] = $R['userImage'];
             } 
             $DB->update('session', $R, "sHash='$_COOKIE[session]'");
-            if ( !isset($R['func']) || $R['func']=='userLogin' ) {
+            if ( !isset($R['func']) || strlen($R['func'])==0 || $R['func']=='userLogin' ) {            
                 $R['func'] = 'userEvent';
             }
             return 1;
         }
-    }
+    }        
     return 0;
 }
 /* ************************************************** */
