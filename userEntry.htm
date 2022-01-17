@@ -9,14 +9,19 @@
       for ( i = 0; i < x.length; i++ ) {
         x[i].style.display = "none";  
       }
-    document.getElementById( view ).style.display = "block";  
-  }
+      var viewButton = document.getElementsByClassName("viewButton");
+      for (i = 0; i < viewButton.length; i++) {
+        viewButton[i].className = viewButton[i].className.replace(" active", "");
+      }
+      event.currentTarget.className += " active";
+      document.getElementById( view ).style.display = "block";  
+    }
   </script>
 </head>
 
 <body class="login">
   <nav class="black">
-    <button class="viewButton" onclick="modalView(event, 'login')">  Login         </button>
+    <button class="viewButton active" onclick="modalView(event, 'login')">  Login         </button>
     <button class="viewButton" onclick="modalView(event, 'lost')">   Lost Password </button>
     <button class="viewButton" onclick="modalView(event, 'signup')"> Sign Up!      </button>
   </nav>
@@ -57,7 +62,7 @@
     <br>  <br>
   </div>
 
-  <div class="view"> 
+  <div class="view0"> 
     <div class="cookieLoose">
         Cookies on the loose!! This site uses cookies! - If you don't like cookies don't use this site! <br>
         : <?=$R['session']?> : <?=$R['func']?> : <br>        
