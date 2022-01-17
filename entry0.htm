@@ -1,7 +1,10 @@
 <!doctype html>
 <html>
 <head>
-  <?php require 'head.htm'; ?>
+  <?php 
+    // require 'head.htm'; 
+    requir0('head', $R);
+  ?>
   <script>
     function modalView( event, view ) { // we keep event just in case
       var i, tab, viewButton;
@@ -45,7 +48,6 @@
       <button onclick="reqLoginMail(event, 'reqLoginMail','reqUEmail')"> Request password </button> 
     </span>
     <br>  <br>
-    
   </div>
 
   <div id="signup" class="view">
