@@ -33,7 +33,7 @@ function checkLogin(&$R, &$DB ) {
             $R['sTime']= 'now()';
             $R['uId'] = $session['uId']; 
             $R['user'] = $DB->selectOne("* from user where uId='$R[uId]'");        
-            if ( !isset( $R['user']['uImageId']) ) { /* if user has not yet uploaded image we set default here */
+            if ( !isset( $R['user']['uImageId']) || strlen($R['user']['uImageId'] ) < 3 ) { /* if user has not yet uploaded image we set default here */
                 $R['user']['uImageId'] = $R['userImage'];
             } 
             $DB->update('session', $R, "sHash='$_COOKIE[session]'");
@@ -379,7 +379,9 @@ function userLogin(&$R, &$DB) {
     }
     $R['uId'] = $user['uId'];
     $R['user'] = $user;
-    $R['user']['uImageId'] = $R['userImage'];
+    if ( !isset( $R['user']['uImageId']) || strlen($R['user']['uImageId'] ) < 3 ) { /* if user has not yet uploaded image we set default here */
+        $R['user']['uImageId'] = $R['userImage'];
+    }
     createSession( $R, $DB );
     return 1;
 }
