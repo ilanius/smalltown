@@ -1,36 +1,28 @@
 <!doctype html>
 <html>
   <head>
-  <?php 
-    // require 'head.htm'; 
-    requir0('head', $R );
-  ?>
+  <?php requir0('head', $R ); ?>
   <script></script>
 </head>  
 <body class="userAccount">
-
-  <?php 
-  // require 'headPane.htm' 
-  requir0('headPane', $R ); 
-  ?>
-
+  <?php requir0('headPane', $R );   ?>
   <div class="contPane"> 
-    <?php 
-      $U = &$R['user']; 
-    ?>
+    <?php $U = &$R['user']; ?>
     <form action="?func=userAccount" method="post" enctype="multipart/form-data">
       <input type="hidden" name="subFunc" value="update">
       <img src="img/<?=$U['uImageId']?>"> <br>
-      Select image to upload:  <input type="file" name="profileImage" id="fileToUpload"> <br>
+      Select image to upload:  
+      <input type="file" name="profileImage" id="fileToUpload"> <br>
     <?php  
     $userFields = [ 
-      'uFirstName' => 'First name',     'uLastName'  => 'Last name', 
-      'uEmail'     => 'Email',          'uYear'      => 'Year', 
+      'uFirstName' => 'First name',  'uLastName'  => 'Last name', 
+      'uEmail'     => 'Email',       'uYear'      => 'Year', 
       'uCourse'    => 'Course'  ];
 
     foreach ( $userFields as $key => $val ) {
       echo <<<html
-      <label class="uLabel" for="$key">$val </label><input type="text" id="$key" name="$key" value="$U[$key]"> <br>
+      <label class="uLabel" for="$key">$val </label>
+      <input id="$key" class="uInput" name="$key" type="text" value="$U[$key]"> <br>
 html;
     }
     ?>
@@ -64,11 +56,8 @@ html;
   } else {
     echo "<h2> No friend requests </h2>";
   }
-
   ?>
-  <br> &nbsp; <br> 
-
-
+    <br> &nbsp; <br> 
   </div>
   <div class="footPane"> 
     
