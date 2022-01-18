@@ -21,7 +21,7 @@
 # mail might work. Webhotels provide email-servers.
 #
 # Sendmail.php is for testing email function and settings in 
-# C:\Program FIles\PHP7\php.ini
+# C:\Program Files\PHP7\php.ini
 #
 #
 # Initializing system
