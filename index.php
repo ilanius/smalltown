@@ -379,6 +379,7 @@ function userLogin(&$R, &$DB) {
     }
     $R['uId'] = $user['uId'];
     $R['user'] = $user;
+    $R['user']['uImageId'] = $R['userImage'];
     createSession( $R, $DB );
     return 1;
 }
