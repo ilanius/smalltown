@@ -37,26 +37,29 @@ html;
     <br>
     <button type="submit"> Update Account </button>
     </form>
-  <?php
-  if ( sizeof( $R['friendRequest'] ) > 0 ) {
-    echo "<h2> Friend requests </h2>";
-    foreach( $R['friendRequest'] as $f ) {
-      echo <<<html
+
+    <!-- friend request list -->
+    <?php
+    if ( sizeof( $R['friendRequest'] ) > 0 ) {
+      echo "<h2> Friend requests </h2>";
+      foreach( $R['friendRequest'] as $f ) {
+        echo <<<html
       <div>
         <a href=""> $f[uFirstName] $f[uLastName] </a>
-        <span id="nokok$R[uId]_$u[uId]">
+        <span id="nokok$R[uId]_$f[uId]">
         <span class="button" onclick="requestAccept('$R[uId]', '$f[uId]');"> Accept   </span>
         <span class="button" onclick="requestDeny('$R[uId]', '$f[uId]');">  Deny  </span>
         </span>
       </div>
 html;
-    }
-    echo "<br>";
-  } 
-  ?>
-  <br>
-  <!-- friends list -->   
-  <?php
+      }
+      echo "<br>";
+    } 
+    ?>
+    <br>
+
+    <!-- friends list -->   
+    <?php
     if ( sizeof( $R['friend'] ) > 0 ) {
       echo "<h2> Friends </h2>";
       foreach( $R['friend'] as $f ) {
@@ -69,11 +72,12 @@ html;
       }
       echo "<br>";
     } 
-  ?>
+    ?>
+
     <!-- friends suggestions -->
     <?php
     if ( sizeof( $R['friendSuggestion'] ) > 0 ) {
-      echo "<h2> Friend suggesions </h2>";
+      echo "<h2> Friend suggestions </h2>";
       foreach( $R['friendSuggestion'] as $f ) {
         echo <<<html
         <a class="friendBox" href="?func=userProfile&profileId=$f[uId]">
