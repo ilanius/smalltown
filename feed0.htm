@@ -40,7 +40,17 @@
   <?php requir0( 'headPane', $R ); ?>
   
   <div id="pId" class="contPane"> <!-- pId is used by script -->
+    <div class="feedProfileBox">
     <img src="img/<?=$R['profile']['uImageId']?>" width="100"> 
+    <?php 
+    if ( $R['uId'] != $R['profileId'] ) {
+      echo '<span id="row_'.$R['profileId'].'">';
+      echo expressRelation( $R, $R['profile']);
+      echo "</span>";
+    }
+    ?>
+    </div>
+
     <span onclick="postSubmit0('');"> -comment- </span>
     <span class="postComment" id="comment">  </span> 
   </div>
