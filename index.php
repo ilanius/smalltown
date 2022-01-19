@@ -99,7 +99,9 @@ function userAccount(&$R, &$DB ) {
     $R['friendRequest'] = $DB->select( $stmnt );
 
     // list of friends
-    $friend             = $DB->select("uId2 from friend where uId1='$R[uId]' and relation&4"); 
+    // sql join here !!!!!!!!!!!
+    $stmnt              = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1=$R[uId] and friend.relation&4";
+    $friend             = $DB->select( $stmnt); 
     array_push( $friend, ['uId2' => '-1'] ); // in case request is empty
     $fId                = $DB->implodeSelection( $friend, 'uId2' );
     $stmnt              = "* from user where uId in ($fId)";
@@ -190,10 +192,20 @@ function userProfileFeed( &$R, &$DB ) {
 }
 function userProfile( &$R, &$DB) {
     $R['profileId'] = isset( $R['profileId']) ? $R['profileId'] : $R['uId'];
-    $R['profile'] = $DB->selectOne("* from user where uId='$R[profileId]'");
-    if ( strlen( $R['profile']['uImageId']) < 3 ) {
-        $R['profile']['uImageId'] = 'profileDefaultImage.png';
+    $stmnt = "* from user where uId='$R[profileId]'";
+    if ( $R['profileId'] != $R['uId'] ) { 
+        $stmnt = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1='$R[uId]' and friend.uId2='$R[profileId]'";       
     }
+    $p = $DB->selectOne( $stmnt );
+    if ( isset( $p['relation'] ) ) { // compare userSearch
+        foreach ( ['block','friend','follow','request'] as $type ) {
+            $p[$type] = strpos( ' '.$p['relation'], $type );
+        }
+    }
+    if ( strlen( $p['uImageId']) < 3 ) {
+        $p['uImageId'] = 'profileDefaultImage.png';
+    }
+    $R['profile'] = &$p;
     $R['feedType'] = 'userProfileFeed';
     requir0( 'feed', $R );
 }
@@ -356,13 +368,12 @@ function userSearch(&$R, &$DB) {
     foreach ( $R['posts'] as &$p ) { // we need to skip posts who have blocked user
         foreach ( ['block','friend','follow','request'] as $type ) {
             if ( isset( $relHash[ $p['uId'] ] ) ) {
-            $p[$type] = strpos( ' '.$relHash[$p['uId']], $type );
+                $p[$type] = strpos( ' '.$relHash[$p['uId']], $type );
             } else {
                 $p[$type] = 0;
             }
         }
     }
-    // require 'userSearch.htm';
     requir0( 'search', $R ); 
 }
 function userLogin(&$R, &$DB) {
