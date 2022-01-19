@@ -60,8 +60,8 @@ function debug( $mess ) {
 
 /* ****************************************************** */
 /* This method will allow us to add customized template files
-/* that will supercede the core template files
-/* i.e. entry.htm supercedes entry0.htm
+/* that will supersede the core template files
+/* i.e. entry.htm supersedes entry0.htm
 /* search.htm > search0.htm and so on
 /* Also it constrains template access to system variables in $R
 /* ****************************************************** */
@@ -90,17 +90,31 @@ function userAccount(&$R, &$DB ) {
         $DB->update("user", $R, "uId=$R[uId]");    
         $R['user'] = $DB->selectOne("* from user where uId=$R[uId]");
     }
-    $request   = $DB->select("uId1 from friend where uId2='$R[uId]' and relation&8");
-    array_push( $request, ['uId1' => '-1'] ); // in case request is empty
-    $fid       = $DB->implodeSelection( $request, 'uId1' );
-    $stmnt     = "* from user where uId in ($fid)";
-    $R['requester'] = $DB->select( $stmnt );
-    // require 'userAccount.htm'; // require0('userAccount');
+
+    // list of friend requests
+    $friendRequest      = $DB->select("uId1 from friend where uId2='$R[uId]' and relation&8");
+    array_push( $friendRequest, ['uId1' => '-1'] ); // in case request is empty
+    $fId                = $DB->implodeSelection( $friendRequest, 'uId1' );
+    $stmnt              = "* from user where uId in ($fId)";
+    $R['friendRequest'] = $DB->select( $stmnt );
+
+    // list of friends
+    $friend             = $DB->select("uId2 from friend where uId1='$R[uId]' and relation&4"); 
+    array_push( $friend, ['uId2' => '-1'] ); // in case request is empty
+    $fId                = $DB->implodeSelection( $friend, 'uId2' );
+    $stmnt              = "* from user where uId in ($fId)";
+    $R['friend']        = $DB->select( $stmnt );
+
+    // friend suggestion
+    $R['friendSuggestion'] = [];
+    if ( isset( $R['user']['uYear'] ) ) {
+        // not yet implemented
+    }
+
     requir0( 'account', $R );
 }
 function userEntry(&$R, &$DB ) {  // login signup page
     requir0( 'entry', $R );
-    // require 'userEntry.htm';
 }
 
 /* ******************************************************************************** */
@@ -182,7 +196,6 @@ function userProfile( &$R, &$DB) {
     }
     $R['feedType'] = 'userProfileFeed';
     requir0( 'feed', $R );
-    // require 'userFeed.htm';
 }
 /* ********************************************************************** */
 
@@ -190,7 +203,6 @@ function userLogout( &$R, &$DB ) {
     $DB->delete("session", "uId='$R[uId]'");
     setCookie('session', '');
     requir0( 'entry', $R );
-    // require 'userEntry.htm';
 }
 
 /* ******************************************* */

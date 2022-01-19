@@ -105,3 +105,11 @@ span.postComment, div.post {
     margin: 4px;
     padding: 4px;
 }
+.uLabel {
+    display: inline-block;
+    width: 100px;
+    padding: 2px; 
+}
+.friendBox img {
+    width: 40px;
+}
