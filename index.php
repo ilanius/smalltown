@@ -163,9 +163,8 @@ function userEventFeed( &$R, &$DB ) {
 function userEvent( &$R, &$DB ) {
     $R['profile']   = &$R['user'];
     $R['profileId'] = $R['uId'];
-    $R['feedType'] = 'userEventFeed';
+    $R['feedType']  = 'userEventFeed';
     requir0( 'feed', $R );
-    // require 'userFeed.htm'; // same template file used by userProfile
 }
 /* ********************************************************************* */
 /* Detta är en användares (kanske vän) feed som innehåller dennes        */
