@@ -99,7 +99,6 @@ function userAccount(&$R, &$DB ) {
     $R['friendRequest'] = $DB->select( $stmnt );
 
     // list of friends
-    // sql join here !!!!!!!!!!!
     $stmnt              = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1=$R[uId] and friend.relation&4";
     $friend             = $DB->select( $stmnt); 
     array_push( $friend, ['uId2' => '-1'] ); // in case request is empty
@@ -112,7 +111,6 @@ function userAccount(&$R, &$DB ) {
     if ( isset( $R['user']['uYear'] ) ) {
         // not yet implemented
     }
-
     requir0( 'account', $R );
 }
 function userEntry(&$R, &$DB ) {  // login signup page
