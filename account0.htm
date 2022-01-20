@@ -63,6 +63,9 @@ html;
     if ( sizeof( $R['friend'] ) > 0 ) {
       echo "<h2> Friends </h2>";
       foreach( $R['friend'] as $f ) {
+        if ( !isset( $f['uImageId'] ) ) {
+          $f['uImageId'] = $R['userImage'];
+        }
         echo <<<html
         <a class="friendBox" href="?func=userProfile&profileId=$f[uId]">
           <img src="img/$f[uImageId]">

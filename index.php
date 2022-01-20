@@ -189,17 +189,23 @@ function userProfileFeed( &$R, &$DB ) {
 }
 function userProfile( &$R, &$DB) {
     $R['profileId'] = isset( $R['profileId']) ? $R['profileId'] : $R['uId'];
-    $stmnt = "* from user where uId='$R[profileId]'";
+    $p = 0;
     if ( $R['profileId'] != $R['uId'] ) { 
         $stmnt = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1='$R[uId]' and friend.uId2='$R[profileId]'";       
+        $p = $DB->selectOne( $stmnt );
+    } 
+    debug('userProfile stmnt:'. $stmnt );
+    if ( $p == 0 ) { // friend may lack values for profileId
+        $stmnt = "* from user where uId='$R[profileId]'";
+        $p = $DB->selectOne( $stmnt );
     }
-    $p = $DB->selectOne( $stmnt );
     if ( isset( $p['relation'] ) ) { // compare userSearch
         foreach ( ['block','friend','follow','request'] as $type ) {
             $p[$type] = strpos( ' '.$p['relation'], $type );
         }
     }
-    if ( strlen( $p['uImageId']) < 3 ) {
+    debug('userProfile:'. print_r( $p, 1 ) );
+    if ( !isset($p['uImageId']) && strlen( $p['uImageId'] ) < 3 ) {
         $p['uImageId'] = 'profileDefaultImage.png';
     }
     $R['profile'] = &$p;
@@ -271,7 +277,7 @@ function expressRelation( &$R, &$p ) {
         'request' => [ 'block', 'follow', 'request' ] ];
     $opts = $optss['block'];
     foreach ( $optss as $key => $val ) {
-        if ( $p[$key] ) {
+        if ( isset( $p[$key] ) && $p[$key] ) {
             $opts = $val;  break;
         }
     }
