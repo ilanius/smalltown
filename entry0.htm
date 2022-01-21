@@ -4,21 +4,7 @@
   <?php 
     requir0('head', $R);
   ?>
-  <script>
-    function modalView( event, view ) { // we keep event just in case
-      var i, tab, viewButton;
-      var tab = document.getElementsByClassName("view");
-      for ( i = 0; i < tab.length; i++ ) {
-        tab[i].style.display = "none";  
-      }
-      var viewButton = document.getElementsByClassName("viewButton");
-      for ( i = 0; i < viewButton.length; i++) {
-        viewButton[i].className = viewButton[i].className.replace(" active", "");
-      }
-      event.currentTarget.className += " active";
-      document.getElementById( view ).style.display = "block";  
-    }
-  </script>
+  <script>  </script>
 </head>
 
 <body class="login">

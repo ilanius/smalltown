@@ -43,7 +43,8 @@ function postCreate( p, children ) {
     let str = `<div id="pId${p['pId']}" class="post">` + 
     `<span class="fromTo">${p['fromTo']} </span> ` +
     `<div class="pTxt"> ${p['pTxt']}     </div>`   + 
-    `<span id="emot_${p['pId']}" onclick="alert(${p['pId']})"> -like/dislike- </span>` +     
+    `<span id="emotion${p['pId']}" class="emotion"></span>` + 
+    `<span id="emot_${p['pId']}" onclick="emotion0(event,${p['pId']},1)"> -like/dislike- </span>` +     
     `<span id="emot_${p['pId']}" onclick="postDelete(${p['pId']}, ${p['ppId']})"> -delete - </span>` +  
     `<span onclick="postSubmit0(${p['pId']})"> -comment- </span>`;
     str += children; // ~buildTree( p['child'] );
@@ -72,6 +73,16 @@ function postSubmit( e, o ) {
     var sendTxt = "func=postSubmit&profileId="+profileId+"&ppId="+ppId+"&pTxt="+ o.value;
     httpPost( sendTxt, postSubmitAddNewNode );
 }
+function emotion( txt ) {
+    alert( txt );
+    var p = JSON.parse( txt );
+    var emotion = gid( 'emotion'+p['pId']);
+    emotion.innerHTML = p['emotion'];
+}
+function emotion0( e, pId, emot ) {
+    var sendTxt = "func=postSubmit&profileId="+profileId+"&pId="+pId+"&emot="+ emot;
+    httpPost( sendTxt, emotion );
+}
 
 /* ************************************************ */
 function reqLoginMail( event, contId, uEmailId ) {
@@ -82,3 +93,16 @@ function reqLoginMail( event, contId, uEmailId ) {
         gid( contId ).innerHTML = '  Mail requested ' + txt; 
     } );
 }
+function modalView( event, view ) { // we keep event just in case
+    var i, tab, viewButton;
+    var tab = document.getElementsByClassName("view");
+    for ( i = 0; i < tab.length; i++ ) {
+      tab[i].style.display = "none";  
+    }
+    var viewButton = document.getElementsByClassName("viewButton");
+    for ( i = 0; i < viewButton.length; i++) {
+      viewButton[i].className = viewButton[i].className.replace(" active", "");
+    }
+    event.currentTarget.className += " active";
+    document.getElementById( view ).style.display = "block";  
+  }

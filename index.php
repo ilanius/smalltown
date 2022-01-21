@@ -357,6 +357,20 @@ function postDelete(&$R, &$DB) {
     $DB->delete( 'post', "pId in ($colls)");
     echo "OK";
 }
+
+function emotionPost( &$R, &$DB ) {
+    $post    = $DB->selectOne( "* from post where pId='$R[pId]'");
+    $emotion = &$post['emotion'];
+    $emot    = &$R['emot'];
+    $uid     = &$R['user']['uId'];
+    /* format for like dislike smiley sad emoticons in table post field emotion */
+    /* n1 == sad, p1 == like, p2 == smiley */
+    $emotion = preg_replace( '/'.$uid.',/', "", $emotion ); // if user is present we remove otherwise
+    $emotion = preg_replace( "/$emot:", $emot.':'.$uid.',', $emotion );
+    $post['emotion'] = $emotion;
+    $DB->update( 'post', "set emotion='$emotion'", "where pId='$R[pId]'" );
+    echo "[ 'emotion': '$emotion'] ";
+}
 function userSearch(&$R, &$DB) {
     global $C;
     // TODO: dont show users that have blocked you
