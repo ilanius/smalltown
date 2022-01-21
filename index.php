@@ -189,7 +189,7 @@ function userProfileFeed( &$R, &$DB ) {
 }
 function userProfile( &$R, &$DB) {
     $R['profileId'] = isset( $R['profileId']) ? $R['profileId'] : $R['uId'];
-    $p = 0;
+    $p = 0; $stmnt = '';
     if ( $R['profileId'] != $R['uId'] ) { 
         $stmnt = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1='$R[uId]' and friend.uId2='$R[profileId]'";       
         $p = $DB->selectOne( $stmnt );

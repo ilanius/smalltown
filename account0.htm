@@ -2,7 +2,11 @@
 <html>
   <head>
   <?php requir0('head', $R ); ?>
-  <script></script>
+  <script>
+    <!-- add your javascript here 
+      toggle password visibility on/off
+      -->
+  </script>
 </head>  
 <body class="userAccount">
   <?php requir0('headPane', $R );   ?>
@@ -45,7 +49,7 @@ html;
       foreach( $R['friendRequest'] as $f ) {
         echo <<<html
       <div>
-        <a href=""> $f[uFirstName] $f[uLastName] </a>
+        <a href="?func=userProfile&profileId=$f[uId]"> $f[uFirstName] $f[uLastName] </a>
         <span id="nokok$R[uId]_$f[uId]">
         <span class="button" onclick="requestAccept('$R[uId]', '$f[uId]');"> Accept   </span>
         <span class="button" onclick="requestDeny('$R[uId]', '$f[uId]');">  Deny  </span>
