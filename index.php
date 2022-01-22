@@ -8,15 +8,19 @@ function userLostPass0( &$R, &$DB ) {
     $body = '';
     if ( isset( $R['uEmail'] ) ) {
         $U = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
-        $U['uPassword0'] = urlencode( $U['uPassword'] );
-        $to_email = "leonard.ilanius@gmail.com";
-        $subject = "Password reset";
-        $body = '';
-        $body = $body . <<<html
+        if ( $U ) {
+            $U['uPassword0'] = urlencode( $U['uPassword'] );
+            $to_email = "leonard.ilanius@gmail.com";
+            $subject = "Password reset";
+            $body = '';
+            $body = $body . <<<html
          "Hi,\n This is test email send by PHP Script. 
         <a href="?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]"> Access Token </a>
 html;
-        $headers = "From: admin@smalltown.com";
+            $headers = "From: admin@smalltown.com";
+        } else {
+            $body = '';
+        }
         /* ***************************************************** */
         /* we need a working e-mail server for this line to work */
         /* mail($R['uEmail'], $subject, $body, $headers);        */
