@@ -14,9 +14,14 @@ button {
     background-color: rgb(50, 74, 82);
     border: 0;
     color: white;
-    padding:4px;
+    padding:2px;
     margin:4px;
     border-radius:4px;
+    border: 2px rgb(50, 74, 82) dashed;
+    cursor: pointer;
+}
+button.postButton.active {
+    border: 2px red solid;
 }
 div, span {
     box-sizing: border-box;
@@ -38,6 +43,9 @@ span.postComment, div.post {
     display: inline-block;
     background-color: rgb(200, 183, 152);
     padding:4px;
+}
+.emoticonLike::before {
+    content: '\1f44d'; /* thumbs up entity &#128077; */
 }
 
 /* **************************** */
@@ -87,7 +95,7 @@ span.postComment, div.post {
     width: 25%;
     border-bottom:2px green solid;
     border-top: 2px green solid;
-    cursor: grab;
+    cursor: pointer;
 }
 .viewButton.active {
     border-bottom:2px red solid;

@@ -179,6 +179,7 @@ function postSubmit( &$R, &$DB ) {
         $post = [
             'uId' => $R['user']['uId'],    'ruId' => $R['profileId'], // $R['user']['uId'],
             'rpId' => 'null',              'pTxt' => $R['pTxt'],
+            'comment' => '',
         ]; 
         $DB->insert( "post", $post ); /* untaint input */
         $DB->query( "update post set rpId=pId where rpId is NULL" );
@@ -189,16 +190,16 @@ function postSubmit( &$R, &$DB ) {
         $post['uId']  = $R['user']['uId'];
         unset( $post['pId'] );
         unset( $post['pTime']);
+        $post['emotion'] = '';
         if ( $post['ppId'] != '' ) {
             unset( $post['ruId'] );
-        }    
+        }
         $DB->insert( 'post', $post ); /* untaint input */
     }
     // auto_increment is convenient but we need to know pId
     // https://www.w3schools.com/sql/func_mysql_last_insert_id.asp
     $rslt = $DB->selectOne("last_insert_id()");
     $post['pId'] = $rslt['last_insert_id()'];
-
     echo json_encode( $post );
 }
 
@@ -229,17 +230,22 @@ function postDelete(&$R, &$DB) {
 }
 function postEmotion( &$R, &$DB ) {
     $post    = $DB->selectOne( "* from post where pId='$R[pId]'");
-    [$emotion, $uId, $emot ] = [ $post['emotion'], $R['uId'], $R['emot'] ];
+    [$emotion, $uId, $emot, $pId ] = [ &$post['emotion'], $R['uId'], $R['emot'], $R['pId'] ];
     /* ******************************************* */
     /* toggle emotion                              */
     /* format for emotion /n1:\d+,p1:\d+,p2:\d+,/  */
     /* n1 == sad, p1 == like, p2 == smiley         */
     /* ******************************************* */
     $emotion = $emotion ? $emotion : 'n1:p1:p2:';
+    $set     = !preg_match( "/$emot:(\d+,)*($uId),/", $emotion );
     $emotion = preg_replace( "/([:,])$uId,/", '$1', $emotion );
-    $emotion = preg_replace( "/$emot:/", "$emot:$uId,", $emotion );
-    $DB->update( 'post', "set emotion='$emotion'", "where pId='$R[pId]'" );
-    echo "[ 'emotion': '$emotion'] ";
+    if ( $set ) {
+        $emotion = preg_replace( "/$emot:/", "$emot:$uId,", $emotion );
+    }
+    $post['emotion'] = $emotion;
+    debug( 'emotion:'. $emotion );
+    $DB->update( 'post', $post /*[ 'emotion' => '$emotion' ]*/ , "pId='$pId'" );
+    echo json_encode( $post );
 }
 
 /* ********************************************************************* */
