@@ -3,15 +3,9 @@ class Database {
     var $DB;
 
     function __construct( $C ) {
-        $this->DB = new mysqli( $C->host, $C->user, $C->password, $C->database );
-    }
-    function getReg( $stmnt, $keyfield ) {
-        $_r = $this->select( $stmnt );
-        $r = array();
-        foreach ( $_r as $i => $sitm ) {
-            $r[ $sitm[$keyfield] ] = $sitm;
+        if ( $C ) {
+            $this->DB = new mysqli( $C->host, $C->user, $C->password, $C->database );
         }
-        return $r;
     }
     function sqlQuote( $entry ) {
         if ( preg_match( "/^(NULL|NOW\(\))$/i", $entry ) ) {
@@ -79,18 +73,18 @@ class Database {
         $stmnt ="select ".$query;
         $rslt =  $this->DB->query( $stmnt ) or die('###select### '. mysqli_error($this->DB ) );
         $ret = [];
-        while ( $row= mysqli_fetch_array( $rslt ) ) {
+        while ( $row= mysqli_fetch_array( $rslt ) ) { // by default key=>val as well
             array_push( $ret, $row );
         }
         return $ret;
     }
-    function query( $stmnt ) {
-        $rslt =  $this->DB->query( $stmnt ) or die('###query### '. mysqli_error($this->DB ) );
-        return $rslt;
-    }
     function selectOne( $query ) {
         $res = $this->select($query);
         return count($res)? $res[0] : 0;
+    }
+    function query( $stmnt ) {
+        $rslt =  $this->DB->query( $stmnt ) or die('###query### '. mysqli_error($this->DB ) );
+        return $rslt;
     }
     function implodeSelection( $collection, $field ) {
         $coll = array();
@@ -99,5 +93,15 @@ class Database {
         }
         return implode( ',', $coll );
     }
+    /* ************* utilities not used ***********/
+    function getReg( $stmnt, $keyfield ) {
+        $_r = $this->select( $stmnt );
+        $r = array();
+        foreach ( $_r as $i => $sitm ) {
+            $r[ $sitm[$keyfield] ] = $sitm;
+        }
+        return $r;
+    }
+    
 }
 ?>

@@ -68,54 +68,6 @@ function debug( $mess ) {
 function requir0( $fileName, &$R ) { 
     file_exists( $fileName.'.htm') ? require $fileName.'.htm' : require $fileName.'0.htm';
 }
-function userAccount(&$R, &$DB ) {
-    // friend requests
-    if ( isset( $R['subFunc'] ) && $R['subFunc'] == 'update' ) {
-        if ( $_FILES['profileImage']['name'] > "0" ) {
-            $imgType = strtolower(pathinfo($_FILES['profileImage']['name'], PATHINFO_EXTENSION)) ;
-            // in order to prevent harvesting of images by foreign machines we hash the filename,
-            // but we keep the filetype. 
-            $R['uImageId'] = substr( md5( $R['uId'] ), 5).'.'.$imgType; // $_FILES['profileImage']['name'];
-            if ( is_uploaded_file($_FILES['profileImage']['tmp_name'] ) ) {
-                // resize image if needed
-                // https://stackoverflow.com/questions/14649645/resize-image-in-php
-                copy($_FILES['profileImage']['tmp_name'], 'img/'.$R['uImageId'] );
-            }
-        }
-        if ( isset( $R['uPassword'] ) && strlen( $R['uPassword'] ) > 0 ) {
-            $R['uPassword'] = password_hash( $R['uPassword'] , PASSWORD_DEFAULT);
-        } else {
-            unset($R['uPassword'] );
-        }
-        $DB->update("user", $R, "uId=$R[uId]");    
-        $R['user'] = $DB->selectOne("* from user where uId=$R[uId]");
-    }
-
-    // list of friend requests
-    $friendRequest      = $DB->select("uId1 from friend where uId2='$R[uId]' and relation&8");
-    array_push( $friendRequest, ['uId1' => '-1'] ); // in case request is empty
-    $fId                = $DB->implodeSelection( $friendRequest, 'uId1' );
-    $stmnt              = "* from user where uId in ($fId)";
-    $R['friendRequest'] = $DB->select( $stmnt );
-
-    // list of friends
-    $stmnt              = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1=$R[uId] and friend.relation&4";
-    $friend             = $DB->select( $stmnt); 
-    array_push( $friend, ['uId2' => '-1'] ); // in case request is empty
-    $fId                = $DB->implodeSelection( $friend, 'uId2' );
-    $stmnt              = "* from user where uId in ($fId)";
-    $R['friend']        = $DB->select( $stmnt );
-
-    // friend suggestion
-    $R['friendSuggestion'] = [];
-    if ( isset( $R['user']['uYear'] ) ) {
-        // not yet implemented
-    }
-    requir0( 'account', $R );
-}
-function userEntry(&$R, &$DB ) {  // login signup page
-    requir0( 'entry', $R );
-}
 
 /* ******************************************************************************** */
 /* buildTree används av userEventFeed och userProfileFeed                           */
@@ -136,89 +88,7 @@ function buildTree( &$posts ) {
     }
     return $tree; // a recursive tree structure
 }
-/* ********************************************************************* */
-/* Detta är den inloggade användarens feed som innehåller                */
-/* ett urval (omvänd kronologisk ordning) av egna och vänners inlägg     */
-/* userEvent levererar sidan. userEventFeed leverar data till            */
-/* clienten (browsern) i JSON format                                     */
-/* ********************************************************************* */
-function userEventFeed( &$R, &$DB ) {
-    $stmnt        = "uId2 from friend where uId1='$R[uId]' and relation & 6";   // 6 == friend and follow
-    $friends      = $DB->select( $stmnt );
-    array_push( $friends, [ 'uId2' => '-1'], ['uId2' => $R['uId'] ] );
-    $fU           = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
-    $feedPosition = $R['feedPosition'];
-    $stmnt        = "rpId from post where ruId in ($fU) order by pTime desc limit $feedPosition,100";
-    $posts        = $DB->select( $stmnt );
-    if ( sizeof( $posts ) > 0 ) {
-        $rpId  = $DB->implodeSelection( $posts, 'rpId');
-        $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
-        $posts = $DB->select( $stmnt );
-        $tree  = buildTree( $posts );
-        echo json_encode( $tree );
-    } else {
-        echo "[]";
-    }
-}
-function userEvent( &$R, &$DB ) {
-    $R['profile']   = &$R['user'];
-    $R['profileId'] = $R['uId'];
-    $R['feedType']  = 'userEventFeed';
-    requir0( 'feed', $R );
-}
-/* ********************************************************************* */
-/* Detta är en användares (kanske vän) feed som innehåller dennes        */
-/* inlägg i omvänd kronologisk ordning                                   */
-/* userProfile levererar sidan. userProfileFeed leverar data till        */
-/* clienten (browsern) i JSON format                                     */
-/* ********************************************************************* */
-function userProfileFeed( &$R, &$DB ) {
-    $feedPosition = $R['feedPosition'];
-    // We may need to reconsider hard coding the number 100 here
-    $stmnt = "rpId from post where ruId='$R[profileId]' order by pTime desc limit $feedPosition,100";
-    $posts = $DB->select( $stmnt );
-    if ( sizeof( $posts ) == 0 ) {
-        echo "[]";
-        return;
-    }
-    $rpId  = $DB->implodeSelection( $posts, 'rpId');    
-    $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
-    $posts = $DB->select( $stmnt );
-    $tree = buildTree( $posts );
-    echo json_encode( $tree );
-}
-function userProfile( &$R, &$DB) {
-    $R['profileId'] = isset( $R['profileId']) ? $R['profileId'] : $R['uId'];
-    $p = 0; $stmnt = '';
-    if ( $R['profileId'] != $R['uId'] ) { 
-        $stmnt = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1='$R[uId]' and friend.uId2='$R[profileId]'";       
-        $p = $DB->selectOne( $stmnt );
-    } 
-    debug('userProfile stmnt:'. $stmnt );
-    if ( $p == 0 ) { // friend may lack values for profileId
-        $stmnt = "* from user where uId='$R[profileId]'";
-        $p = $DB->selectOne( $stmnt );
-    }
-    if ( isset( $p['relation'] ) ) { // compare userSearch
-        foreach ( ['block','friend','follow','request'] as $type ) {
-            $p[$type] = strpos( ' '.$p['relation'], $type );
-        }
-    }
-    debug('userProfile:'. print_r( $p, 1 ) );
-    if ( !isset($p['uImageId']) && strlen( $p['uImageId'] ) < 3 ) {
-        $p['uImageId'] = 'profileDefaultImage.png';
-    }
-    $R['profile'] = &$p;
-    $R['feedType'] = 'userProfileFeed';
-    requir0( 'feed', $R );
-}
-/* ********************************************************************** */
 
-function userLogout( &$R, &$DB ) {
-    $DB->delete("session", "uId='$R[uId]'");
-    setCookie('session', '');
-    requir0( 'entry', $R );
-}
 
 /* ******************************************* */
 /* friend suggestions not yet implemented      */
@@ -357,20 +227,150 @@ function postDelete(&$R, &$DB) {
     $DB->delete( 'post', "pId in ($colls)");
     echo "OK";
 }
-
-function emotionPost( &$R, &$DB ) {
+function postEmotion( &$R, &$DB ) {
     $post    = $DB->selectOne( "* from post where pId='$R[pId]'");
-    $emotion = &$post['emotion'];
-    $emot    = &$R['emot'];
-    $uid     = &$R['user']['uId'];
-    /* format for like dislike smiley sad emoticons in table post field emotion */
-    /* n1 == sad, p1 == like, p2 == smiley */
-    $emotion = preg_replace( '/'.$uid.',/', "", $emotion ); // if user is present we remove otherwise
-    $emotion = preg_replace( "/$emot:", $emot.':'.$uid.',', $emotion );
-    $post['emotion'] = $emotion;
+    [$emotion, $uId, $emot ] = [ $post['emotion'], $R['uId'], $R['emot'] ];
+    /* ******************************************* */
+    /* toggle emotion                              */
+    /* format for emotion /n1:\d+,p1:\d+,p2:\d+,/  */
+    /* n1 == sad, p1 == like, p2 == smiley         */
+    /* ******************************************* */
+    $emotion = $emotion ? $emotion : 'n1:p1:p2:';
+    $emotion = preg_replace( "/([:,])$uId,/", '$1', $emotion );
+    $emotion = preg_replace( "/$emot:/", "$emot:$uId,", $emotion );
     $DB->update( 'post', "set emotion='$emotion'", "where pId='$R[pId]'" );
     echo "[ 'emotion': '$emotion'] ";
 }
+
+/* ********************************************************************* */
+/* Detta är den inloggade användarens feed som innehåller                */
+/* ett urval (omvänd kronologisk ordning) av egna och vänners inlägg     */
+/* userEvent levererar sidan. userEventFeed leverar data till            */
+/* clienten (browsern) i JSON format                                     */
+/* ********************************************************************* */
+function userEventFeed( &$R, &$DB ) {
+    $stmnt        = "uId2 from friend where uId1='$R[uId]' and relation & 6";   // 6 == friend and follow
+    $friends      = $DB->select( $stmnt );
+    array_push( $friends, [ 'uId2' => '-1'], ['uId2' => $R['uId'] ] );
+    $fU           = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
+    $feedPosition = $R['feedPosition'];
+    $stmnt        = "rpId from post where ruId in ($fU) order by pTime desc limit $feedPosition,100";
+    $posts        = $DB->select( $stmnt );
+    if ( sizeof( $posts ) > 0 ) {
+        $rpId  = $DB->implodeSelection( $posts, 'rpId');
+        $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
+        $posts = $DB->select( $stmnt );
+        $tree  = buildTree( $posts );
+        echo json_encode( $tree );
+    } else {
+        echo "[]";
+    }
+}
+function userEvent( &$R, &$DB ) {
+    $R['profile']   = &$R['user'];
+    $R['profileId'] = $R['uId'];
+    $R['feedType']  = 'userEventFeed';
+    requir0( 'feed', $R );
+}
+/* ********************************************************************* */
+/* Detta är en användares (kanske vän) feed som innehåller dennes        */
+/* inlägg i omvänd kronologisk ordning                                   */
+/* userProfile levererar sidan. userProfileFeed leverar data till        */
+/* clienten (browsern) i JSON format                                     */
+/* ********************************************************************* */
+function userProfileFeed( &$R, &$DB ) {
+    $feedPosition = $R['feedPosition'];
+    // We may need to reconsider hard coding the number 100 here
+    $stmnt = "rpId from post where ruId='$R[profileId]' order by pTime desc limit $feedPosition,100";
+    $posts = $DB->select( $stmnt );
+    if ( sizeof( $posts ) == 0 ) {
+        echo "[]";
+        return;
+    }
+    $rpId  = $DB->implodeSelection( $posts, 'rpId');    
+    $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
+    $posts = $DB->select( $stmnt );
+    $tree = buildTree( $posts );
+    echo json_encode( $tree );
+}
+function userProfile( &$R, &$DB) {
+    $R['profileId'] = isset( $R['profileId']) ? $R['profileId'] : $R['uId'];
+    $p = 0; $stmnt = '';
+    if ( $R['profileId'] != $R['uId'] ) { 
+        $stmnt = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1='$R[uId]' and friend.uId2='$R[profileId]'";       
+        $p = $DB->selectOne( $stmnt );
+    } 
+    debug('userProfile stmnt:'. $stmnt );
+    if ( $p == 0 ) { // friend may lack values for profileId
+        $stmnt = "* from user where uId='$R[profileId]'";
+        $p = $DB->selectOne( $stmnt );
+    }
+    if ( isset( $p['relation'] ) ) { // compare userSearch
+        foreach ( ['block','friend','follow','request'] as $type ) {
+            $p[$type] = strpos( ' '.$p['relation'], $type );
+        }
+    }
+    debug('userProfile:'. print_r( $p, 1 ) );
+    if ( !isset($p['uImageId']) && strlen( $p['uImageId'] ) < 3 ) {
+        $p['uImageId'] = 'profileDefaultImage.png';
+    }
+    $R['profile'] = &$p;
+    $R['feedType'] = 'userProfileFeed';
+    requir0( 'feed', $R );
+}
+/* ********************************************************************** */
+
+
+function userAccount(&$R, &$DB ) {
+    // friend requests
+    if ( isset( $R['subFunc'] ) && $R['subFunc'] == 'update' ) {
+        if ( $_FILES['profileImage']['name'] > "0" ) {
+            $imgType = strtolower(pathinfo($_FILES['profileImage']['name'], PATHINFO_EXTENSION)) ;
+            // in order to prevent harvesting of images by foreign machines we hash the filename,
+            // but we keep the filetype. 
+            $R['uImageId'] = substr( md5( $R['uId'] ), 5).'.'.$imgType; // $_FILES['profileImage']['name'];
+            if ( is_uploaded_file($_FILES['profileImage']['tmp_name'] ) ) {
+                // resize image if needed
+                // https://stackoverflow.com/questions/14649645/resize-image-in-php
+                copy($_FILES['profileImage']['tmp_name'], 'img/'.$R['uImageId'] );
+            }
+        }
+        if ( isset( $R['uPassword'] ) && strlen( $R['uPassword'] ) > 0 ) {
+            $R['uPassword'] = password_hash( $R['uPassword'] , PASSWORD_DEFAULT);
+        } else {
+            unset($R['uPassword'] );
+        }
+        $DB->update("user", $R, "uId=$R[uId]");    
+        $R['user'] = $DB->selectOne("* from user where uId=$R[uId]");
+    }
+
+    // list of friend requests
+    $friendRequest      = $DB->select("uId1 from friend where uId2='$R[uId]' and relation&8");
+    array_push( $friendRequest, ['uId1' => '-1'] ); // in case request is empty
+    $fId                = $DB->implodeSelection( $friendRequest, 'uId1' );
+    $stmnt              = "* from user where uId in ($fId)";
+    $R['friendRequest'] = $DB->select( $stmnt );
+
+    // list of friends
+    $stmnt              = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1=$R[uId] and friend.relation&4";
+    $friend             = $DB->select( $stmnt); 
+    array_push( $friend, ['uId2' => '-1'] ); // in case request is empty
+    $fId                = $DB->implodeSelection( $friend, 'uId2' );
+    $stmnt              = "* from user where uId in ($fId)";
+    $R['friend']        = $DB->select( $stmnt );
+
+    // friend suggestion
+    $R['friendSuggestion'] = [];
+    if ( isset( $R['user']['uYear'] ) ) {
+        // not yet implemented
+    }
+    requir0( 'account', $R );
+}
+function userEntry(&$R, &$DB ) {  // login signup page
+    requir0( 'entry', $R );
+}
+
+
 function userSearch(&$R, &$DB) {
     global $C;
     // TODO: dont show users that have blocked you
@@ -425,6 +425,11 @@ function userLogin(&$R, &$DB) {
     createSession( $R, $DB );
     return 1;
 }
+function userLogout( &$R, &$DB ) {
+    $DB->delete("session", "uId='$R[uId]'");
+    setCookie('session', '');
+    requir0( 'entry', $R );
+}
 function userSignup( &$R, &$DB ) {
     if ( $R['func'] != 'userSignup' ) { return 0; }   
     $R['uName']     = isset( $R['uName'] ) ? $R['uName'] : 'nada';
@@ -471,16 +476,20 @@ userEntry($R, $DB)  || exit();
 /* **************************** */
 debug('B route:'.$R['func']);
 $allowed = [  /* only functions followed by 1 can be called if you are logged in */
-    ''               => 0,     'userAccount'    => 1, 
-    'userLogout'     => 1,     'postSubmit'     => 1, 
-    'userProfile'    => 1,     'userSearch'     => 1, 
-    'friendRelation' => 1,     'userEvent'      => 1,     
-    'postDelete'     => 1,     'changeRelation' => 1, 
-    'userEventFeed'  => 1,     'userProfileFeed' => 1,
-    'userLostPass0'  => 0 ];
+    ''               => 0,     
+    'postSubmit'     => 1,      'postDelete'        => 1,
+    'postEmotion'    => 1,
+    'changeRelation' => 1,      'friendRelation'    => 1,      
+    'userEventFeed'  => 1,      'userProfileFeed'   => 1,
+    'userLostPass0'  => 0,      'userEvent'         => 1,   
+    'userAccount'    => 1,      'userLogout'        => 1,     
+    'userProfile'    => 1,      'userSearch'        => 1,   
+ ];
    
 if ( $allowed[ $R['func'] ] > 0 ) {
     $R['func']($R, $DB );
     return; 
 }
+debug('C unauthorized :'.$R['func']);
+
 ?>

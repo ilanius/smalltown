@@ -73,15 +73,16 @@ function postSubmit( e, o ) {
     var sendTxt = "func=postSubmit&profileId="+profileId+"&ppId="+ppId+"&pTxt="+ o.value;
     httpPost( sendTxt, postSubmitAddNewNode );
 }
-function emotion( txt ) {
+function setEmotion( txt ) {
     alert( txt );
     var p = JSON.parse( txt );
     var emotion = gid( 'emotion'+p['pId']);
     emotion.innerHTML = p['emotion'];
 }
-function emotion0( e, pId, emot ) {
-    var sendTxt = "func=postSubmit&profileId="+profileId+"&pId="+pId+"&emot="+ emot;
-    httpPost( sendTxt, emotion );
+function postEmotion( e, pId, emot ) {
+    alert( 'emot:' + emot );
+    var sendTxt = "func=postEmotion&pId="+pId+"&emot="+ emot;
+    httpPost( sendTxt, setEmotion );
 }
 
 /* ************************************************ */
