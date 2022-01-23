@@ -1,8 +1,6 @@
 <div class="headPane">
     <span class="item">
-    <a href="?func=userEvent">
-      <img src="img/<?=$R['user']['uImageId']?>" width="30" height="30"> 
-    </a> 
+      <a href="?func=userEvent" class="home"></a> 
     </span> 
     <span class="item">
     <form action="?func=userSearch" method="post">
@@ -11,13 +9,16 @@
     </form>
     </span >
     <span class="item">
-      <a href="?func=userAccount"> Account </a> 
+      <a href="?func=userProfile"> 
+        <img src="img/<?=$R['user']['uImageId']?>" width="30" height="30"> 
+      </a> 
     </span>
     <span class="item">
-      <a href="?func=userProfile"> Me </a> 
-      </span>
+      <a class="setting" href="?func=userAccount"> 
+      </a> 
+    </span>
     <span class="item">
-      <a href="?func=userLogout">Logout</a>
+      <a class="logout" href="?func=userLogout"> </a>
     </span>
   </div>
   

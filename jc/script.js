@@ -23,7 +23,7 @@ function changeRelation( contId, rAction, uId1, uId2 ) {
 function requestAccept( uId1, uId2 ) {
     var contId = 'nokok'+uId1+'_'+uId2;
     var sendTxt = "func=friendRelation&subFunc=requestAccept&uId1="+uId1+"&uId2="+uId2+"&contId="+contId;
-    httpPost( sendTxt, function( txt ) { gid( contId ).innerHTML = '  &lt;-- friends :-) '; } );
+    httpPost( sendTxt, function( txt ) { gid( contId ).innerHTML = ' <span class="check"></span>'; } );
 }
 function requestDeny( uId1, uId2 ) {
     var contId = 'nokok'+uId1+'_'+uId2;
@@ -46,10 +46,11 @@ function emotionCreate( p ) {
         if ( p > p2 ) c++;
         p++;
     }
-    var out = '';
-    if ( b > 0 ) out += '<span class="emoticonLike">'+b+'</span>'; // <== insert your own icons here
-    if ( a > 0 ) out += ' disl:'+a;
-    if ( c > 0 ) out += ' smil:'+c;
+    var out = '<span class="dropPlate"><div class="userPlate">'+ emotion +'</div>';
+    if ( b > 0 ) out += '<span class="emotLike">' + b + '</span>'; // <== insert your own icons here
+    if ( a > 0 ) out += '<span class="emotDisl">' + a + '</span>';
+    if ( c > 0 ) out += '<span class="emotSmil">' + c + '</span>';
+    out += '</span>';
     return out;
 }
 function likeButtonCreate( p ) {
@@ -121,15 +122,15 @@ function reqLoginMail( event, contId, uEmailId ) {
         gid( contId ).innerHTML = '  Mail requested ' + txt; 
     } );
 }
-function modalView( event, view ) { // we keep event just in case
+function tabView( event, view ) { // we keep event just in case
     var i, tab, viewButton;
-    var tab = document.getElementsByClassName("view");
+    var tab = document.getElementsByClassName("tab");
     for ( i = 0; i < tab.length; i++ ) {
       tab[i].style.display = "none";  
     }
-    var viewButton = document.getElementsByClassName("viewButton");
-    for ( i = 0; i < viewButton.length; i++) {
-      viewButton[i].className = viewButton[i].className.replace(" active", "");
+    var tabButton = document.getElementsByClassName("tabButton");
+    for ( i = 0; i < tabButton.length; i++) {
+      tabButton[i].className = tabButton[i].className.replace(" active", "");
     }
     event.currentTarget.className += " active";
     document.getElementById( view ).style.display = "block";  

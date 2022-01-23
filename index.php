@@ -379,8 +379,6 @@ function userAccount(&$R, &$DB ) {
 function userEntry(&$R, &$DB ) {  // login signup page
     requir0( 'entry', $R );
 }
-
-
 function userSearch(&$R, &$DB) {
     global $C;
     // TODO: dont show users that have blocked you
@@ -404,15 +402,14 @@ function userSearch(&$R, &$DB) {
     requir0( 'search', $R ); 
 }
 function userLogin(&$R, &$DB) {
-    $badLoginHtml = '<span class="badLogin">Bad login!</span> <br>';
+    $R['error'] = 'BadLogin'; 
     if ( ! ( isset( $R['uEmail'] ) && isset( $R['uPassword0'] ) ) ) {
-        $R['badLogin'] = '';
+        $R['error'] = '';
         return 0;
     }
     $user = $DB->selectOne("* from user where uEmail='$R[uEmail]'");        
     if ( $R['func'] == 'userLostPass1' ) {
         if ( !( $user && $R['uPassword0'] == $user['uPassword'] ) ) {
-            $R['badLogin'] = $badLoginHtml;
             return 0;
         }
         $R['func'] = "userAccount"; // eventFeed uId
@@ -420,7 +417,6 @@ function userLogin(&$R, &$DB) {
     } else if ( $R['func'] == 'userLogin' ) { 
         $R['uPassword'] = password_hash( $R['uPassword0'] , PASSWORD_DEFAULT);
         if ( !( $user && password_verify( $R['uPassword0'], $user['uPassword'] ) ) ) {
-            $R['badLogin'] = $badLoginHtml;
             return 0;
         }
         $R['func'] = "userEvent"; // eventFeed uId
@@ -441,7 +437,12 @@ function userLogout( &$R, &$DB ) {
     requir0( 'entry', $R );
 }
 function userSignup( &$R, &$DB ) {
-    if ( $R['func'] != 'userSignup' ) { return 0; }   
+    if ( $R['func'] != 'userSignup' ) { return 0; }  
+    $user           = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
+    if ( $user ) { 
+        $R['error'] = 'UserExists'; 
+        return 0; 
+    } 
     $R['uName']     = isset( $R['uName'] ) ? $R['uName'] : 'nada';
     $R['uPassword'] = password_hash( $R['uPassword0'] , PASSWORD_DEFAULT);
     $R['stmnt']     = $DB->insert( 'user', $R );

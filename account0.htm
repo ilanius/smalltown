@@ -47,10 +47,10 @@ html;
       foreach( $R['friendRequest'] as $f ) {
         echo <<<html
       <div>
-        <a href="?func=userProfile&profileId=$f[uId]"> $f[uFirstName] $f[uLastName] </a>
+        <a href="?func=userProfile&profileId=$f[uId]"> $f[uFirstName] $f[uLastName] </a> &nbsp;
         <span id="nokok$R[uId]_$f[uId]">
-        <span class="button" onclick="requestAccept('$R[uId]', '$f[uId]');"> Accept   </span>
-        <span class="button" onclick="requestDeny('$R[uId]', '$f[uId]');">  Deny  </span>
+        <button class="relButton" onclick="requestAccept('$R[uId]', '$f[uId]');"> Accept </button>
+        <button class="relButton" onclick="requestDeny('$R[uId]', '$f[uId]');">  Deny  </button>
         </span>
       </div>
 html;
