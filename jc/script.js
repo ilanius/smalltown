@@ -54,8 +54,8 @@ function emotionCreate( p ) {
     return out;
 }
 function likeButtonCreate( p ) {
-    var re = new RegExp( 'p1:(\d+,)*(' + uId +'),' );
-    var bclass = (p['emotion'] || '').match( re ) ? ' active' : '';
+    var re = new RegExp( 'p1:(\\d+,)*(' + uId +'),' );
+    var bclass = (p['emotion'] || '').match(re) ? ' active' : '';
     var out = '<button class="postButton' + bclass + 
     `"  onclick="postEmotion(event,${p['pId']},'p1')"> like </button>`;    
     return out;
