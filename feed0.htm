@@ -14,10 +14,21 @@
     var maxScrollY   = window.scrollY;
     var cTimeOut     = 0;
 
+    /* ***************************************** */
+    /* We need to adapt this for efficient auto update of 
+    /* relevant parts of feed. When we build and add to 
+    /* tree we gather a collection of rpId. 
+    /* When auto updating we select 
+    /* posts whose pId > maxPid && (rpId in collection)
+    /* We add them in order of increasing pId to existing DOM objects
+    /* Discuss: ruId, rpId, ppId, pId
+    /* ***************************************** */
     function buildTree( tree ) {
       let str = '';
       for ( var i in tree ) {
         var p = tree[i];
+        // we could add rpId to a hash here
+        // we could also check for maxpId
         str += postCreate( p, buildTree( p['child'] )  );
       }
       return str;
