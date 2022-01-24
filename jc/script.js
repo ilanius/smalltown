@@ -31,6 +31,12 @@ function requestDeny( uId1, uId2 ) {
     o = gid( contId ).style.display = 'none';
 }
 function postDelete( pId ) {  
+    /* https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes */
+    let post = document.querySelector('#pId'+pId );
+    let data = post.dataset;
+    if ( parseInt(data.owner) != parseInt(uId) ) {
+         return;
+    }
     var sendTxt = "func=postDelete&pId="+pId;
     // https://developer.mozilla.org/en-US/docs/Web/API/Element/remove
     httpPost( sendTxt, function() { gid('pId'+pId).remove() } );    
@@ -65,7 +71,7 @@ function postCreate( p, children ) {
     if ( p['ruId'] && p['ruId'] != p['uId'] ) {
       p['fromTo'] += '=>' + p['ruId'];
     }        
-    let str = `<div id="pId${p['pId']}" class="post">` + 
+    let str = `<div data-owner="${p['uId']}" id="pId${p['pId']}" class="post">` + 
     `<span class="fromTo">${p['fromTo']} </span> ` +
     `<div class="pTxt"> ${p['pTxt']}     </div>`   + 
     `<div id="emotion${p['pId']}" class="emotion">` +
@@ -73,9 +79,11 @@ function postCreate( p, children ) {
     `</div>` + 
     `<span id="postEmotion${p['pId']}">` +
     likeButtonCreate( p ) + 
-    `</span>` +
-    `<button class="postButton" id="postDelete${p['pId']}" onclick="postDelete(${p['pId']}, ${p['ppId']})"> delete </button>` +  
-    `<button class="postButton" onclick="postSubmit0(${p['pId']})"> comment </button>`;
+    `</span>`;
+    if ( uId == p['uId'] ) { 
+        str += `<button class="postButton" id="postDelete${p['pId']}" onclick="postDelete(${p['pId']})"> delete </button>`;
+    }
+    str += `<button class="postButton" onclick="postSubmit0(${p['pId']})"> comment </button>`;
     str += children; // ~buildTree( p['child'] );
     str += `<span class="postComment" id="comment${p['pId']}"> </span>` + 
     '</div>';
