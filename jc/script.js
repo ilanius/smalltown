@@ -34,7 +34,7 @@ function postDelete( pId ) {
     /* https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes */
     let post = document.querySelector('#pId'+pId );
     let data = post.dataset;
-    if ( parseInt(data.owner) != parseInt(uId) ) {
+    if ( !(data.uid == uId || data.ruid == uId )  ) { // if you are not owner of post or feed you may not delete
          return;
     }
     var sendTxt = "func=postDelete&pId="+pId;
@@ -66,12 +66,18 @@ function likeButtonCreate( p ) {
     `"  onclick="postEmotion(event,${p['pId']},'p1')"> like </button>`;    
     return out;
 }
+/* *************************************** */
+/* parameter children has already been created recursively 
+/* i.e. if child nodes exist 
+/* See buildTree in feed0.htm
+/* a new level of recursiveness
+/* *************************************** */
 function postCreate( p, children ) {
     p['fromTo'] = p['uId'];
     if ( p['ruId'] && p['ruId'] != p['uId'] ) {
       p['fromTo'] += '=>' + p['ruId'];
     }        
-    let str = `<div data-owner="${p['uId']}" id="pId${p['pId']}" class="post">` + 
+    let str = `<div data-ruid="${p['ruId']}" data-uid="${p['uId']}" id="pId${p['pId']}" class="post">` + 
     `<span class="fromTo">${p['fromTo']} </span> ` +
     `<div class="pTxt"> ${p['pTxt']}     </div>`   + 
     `<div id="emotion${p['pId']}" class="emotion">` +
@@ -80,7 +86,7 @@ function postCreate( p, children ) {
     `<span id="postEmotion${p['pId']}">` +
     likeButtonCreate( p ) + 
     `</span>`;
-    if ( uId == p['uId'] ) { 
+    if ( uId == p['uId'] || uId == parseInt(p['ruId']) ) { // if you own the post or the feed you are allowed to delete
         str += `<button class="postButton" id="postDelete${p['pId']}" onclick="postDelete(${p['pId']})"> delete </button>`;
     }
     str += `<button class="postButton" onclick="postSubmit0(${p['pId']})"> comment </button>`;
@@ -143,3 +149,9 @@ function tabView( event, view ) { // we keep event just in case
     event.currentTarget.className += " active";
     document.getElementById( view ).style.display = "block";  
   }
+
+/* ************** */
+/* Adding drag and drop of image to input field
+/* https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/^M
+/* ********************************** */
+
