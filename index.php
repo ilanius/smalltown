@@ -3,33 +3,6 @@
 /* Smalltown a.k.a facebook light      */
 /* no ads                              */
 /* *********************************** */
-function userLostPass0( &$R, &$DB ) {
-    if ( $R['func'] != 'userLostPass0' ) return 0;
-    $body = '';
-    if ( isset( $R['uEmail'] ) ) {
-        $U = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
-        if ( $U ) {
-            $U['uPassword0'] = urlencode( $U['uPassword'] );
-            $to_email = "leonard.ilanius@gmail.com";
-            $subject = "Password reset";
-            $body = '';
-            $body = $body . <<<html
-         "Hi,\n This is test email send by PHP Script. 
-        <a href="?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]"> Access Token </a>
-html;
-            $headers = "From: admin@smalltown.com";
-        } else {
-            $body = '';
-        }
-        /* ***************************************************** */
-        /* we need a working e-mail server for this line to work */
-        /* mail($R['uEmail'], $subject, $body, $headers);        */
-        /* ***************************************************** */
-        echo $body; 
-        return 1;
-    } 
-    return 0;
-}
 function checkLogin(&$R, &$DB ) {
     if ( isset( $_COOKIE['session'] ) ) {
         $session = $DB->selectOne("* from session where sHash='$_COOKIE[session]'");
@@ -67,15 +40,16 @@ function debug( $mess ) {
 /* that will supersede the core template files
 /* i.e. entry.htm supersedes entry0.htm
 /* search.htm > search0.htm and so on
-/* Also it constrains template access to system variables in $R
+/* Templates can only access system variables via $R
 /* ****************************************************** */
 function requir0( $fileName, &$R ) { 
     file_exists( $fileName.'.htm') ? require $fileName.'.htm' : require $fileName.'0.htm';
 }
 
 /* ******************************************************************************** */
-/* buildTree används av userEventFeed och userProfileFeed                           */
-/* för att bygga träd av inlägg                                                     */
+/* buildTree is used by userEventFeed and userProfileFeed                           */
+/* to build a tree of posts. TODO: just send JSON of SQL results to client          */
+/* and let client spend cpu building tree.
 /* ******************************************************************************** */
 function buildTree( &$posts ) {
     $postHash = [];
@@ -93,11 +67,10 @@ function buildTree( &$posts ) {
     return $tree; // a recursive tree structure
 }
 
-
 /* ******************************************* */
-/* friend suggestions not yet implemented      */
-/* but should probably be added to             */
-/* userAccount function                        */
+/* TODO:                                       */
+/* friend suggestions not yet implemented.     */
+/* Add function userAccount function           */
 /* ******************************************* */
 
 /* ******************************************************************* */
@@ -145,8 +118,8 @@ function friendRelation( &$R, &$DB ) {
 }
 function expressRelation( &$R, &$p ) {
     global $C;
-    $optss = [  /* mutually exclusive options. follow is ubiqitous */
-        'block'   => [ 'block', 'follow', 'request' ], /* you actually can follow someone even when you have blocked them, presupposing of course they haven't blocked you :-) */
+    $optss = [  /* block, friend, request are mutually exclusive options. Follow will always be an option */
+        'block'   => [ 'block', 'follow', 'request' ], /* You can follow someone you have blocked, i.e. if the person has not blocked you */
         'friend'  => [ 'block', 'follow', 'friend'  ],
         'request' => [ 'block', 'follow', 'request' ] ];
     $opts = $optss['block'];
@@ -222,12 +195,12 @@ function postDelete(&$R, &$DB) {
     $pars[ $posts[0]['pId'] ] = 'X';  // $posts[0]['ppId']; // parent of post pId is X
     $dels[] = $posts[0]['pId'];       // root post with post id = pId
     foreach ( $posts as &$p ) {
-        if ( $pars[ $p['ppId'] ] ) {  // if parent exists we should delete this post
-            $pars[ $p['pId'] ] = $p['ppId']; // we add this post to chain of posts to delete
-            $dels[] = $p['pId'];      // we add post id to our list of deletions
+        if ( $pars[ $p['ppId'] ] ) {  // If parent exists we delete this post
+            $pars[ $p['pId'] ] = $p['ppId']; // We add this post to chain of posts to delete
+            $dels[] = $p['pId'];      // We add post id to our list of deletions
         }
     }
-    $dels[] = '-1';     // of our list is empty the code will crash so we add a dummy value here
+    $dels[] = '-1';                   // If list is empty code will crash so we add dummy value here
     $colls = implode(',', $dels ); 
     $DB->delete( 'post', "pId in ($colls)");
     echo "OK";
@@ -251,13 +224,40 @@ function postEmotion( &$R, &$DB ) {
     $DB->update( 'post', $post /*[ 'emotion' => '$emotion' ]*/ , "pId='$pId'" );
     echo json_encode( $post );
 }
+function userLostPass0( &$R, &$DB ) {
+    if ( $R['func'] != 'userLostPass0' ) return 0;
+    $body = '';
+    if ( isset( $R['uEmail'] ) ) {
+        $U = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
+        if ( $U ) {
+            $U['uPassword0'] = urlencode( $U['uPassword'] );
+            $to_email = "leonard.ilanius@gmail.com";
+            $subject = "Password reset";
+            $body = '';
+            $body = $body . <<<html
+         "Hi,\n This is test email send by PHP Script. 
+        <a href="?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]"> Access Token </a>
+html;
+            $headers = "From: admin@smalltown.com";
+        } else {
+            $body = '';
+        }
+        /* ***************************************************** */
+        /* we need a working e-mail server for this line to work */
+        /* mail($R['uEmail'], $subject, $body, $headers);        */
+        /* ***************************************************** */
+        echo $body; 
+        return 1;
+    } 
+    return 0;
+}
 
-/* ********************************************************************* */
-/* Detta är den inloggade användarens feed som innehåller                */
-/* ett urval (omvänd kronologisk ordning) av egna och vänners inlägg     */
-/* userEvent levererar sidan. userEventFeed leverar data till            */
-/* clienten (browsern) i JSON format                                     */
-/* ********************************************************************* */
+/* ********************************************************************** */
+/* Feed of a logged in user                                               */
+/* Contains a selecttion (reverse time order) of posts by friends (and you own!?)   */
+/* function userEvent delivers page. Function userEventFeed delivers data */
+/* for page in JSON format                                                */
+/* ********************************************************************** */
 function userEventFeed( &$R, &$DB ) {
     $stmnt        = "uId2 from friend where uId1='$R[uId]' and relation & 6";   // 6 == friend and follow
     $friends      = $DB->select( $stmnt );
@@ -283,10 +283,10 @@ function userEvent( &$R, &$DB ) {
     requir0( 'feed', $R );
 }
 /* ********************************************************************* */
-/* Detta är en användares (kanske vän) feed som innehåller dennes        */
-/* inlägg i omvänd kronologisk ordning                                   */
-/* userProfile levererar sidan. userProfileFeed leverar data till        */
-/* clienten (browsern) i JSON format                                     */
+/* Function userProfileFeed delivers your own or a friends posts         */
+/* sorted in reverse chronological order                                 */
+/* Function userProfile delivers page. Function userProfileFeed delivers */
+/* JSON data to page                                                     */
 /* ********************************************************************* */
 function userProfileFeed( &$R, &$DB ) {
     $feedPosition = $R['feedPosition'];
@@ -329,7 +329,6 @@ function userProfile( &$R, &$DB) {
     requir0( 'feed', $R );
 }
 /* ********************************************************************** */
-
 
 function userAccount(&$R, &$DB ) {
     // friend requests
