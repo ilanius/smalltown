@@ -357,14 +357,14 @@ function userAccount(&$R, &$DB ) {
         $R['user'] = $DB->selectOne("* from user where uId=$R[uId]");
     }
 
-    // list of friend requests
+    // List of friend requests
     $friendRequest      = $DB->select("uId1 from friend where uId2='$R[uId]' and relation&8");
     array_push( $friendRequest, ['uId1' => '-1'] ); // in case request is empty
     $fId                = $DB->implodeSelection( $friendRequest, 'uId1' );
     $stmnt              = "* from user where uId in ($fId)";
     $R['friendRequest'] = $DB->select( $stmnt );
 
-    // list of friends
+    // List of friends
     $stmnt              = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1=$R[uId] and friend.relation&4";
     $friend             = $DB->select( $stmnt); 
     array_push( $friend, ['uId2' => '-1'] ); // in case request is empty
@@ -372,7 +372,7 @@ function userAccount(&$R, &$DB ) {
     $stmnt              = "* from user where uId in ($fId)";
     $R['friend']        = $DB->select( $stmnt );
 
-    // friend suggestion
+    // Friend suggestion
     $R['friendSuggestion'] = [];
     if ( isset( $R['user']['uYear'] ) ) {
         // not yet implemented
