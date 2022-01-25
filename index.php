@@ -102,9 +102,9 @@ function buildTree( &$posts ) {
 
 /* ******************************************************************* */
 /* The following code is used to manipulate the relation column
-/* in table friend. The column relation uses 8 bytes and where values
-/* block (=1 ), follow (=2), friend (=4), request (=8), occupies one 
-/* bit each. Bits are set and unset using | (or) or & /* (and) operations.
+/* in table friend. The database column relation uses 8 bytes per row. 
+/* Set values: 'block' (=1 ), 'follow' (=2), 'friend' (=4), 'request' (=8), 
+/* occupies one bit each. Bits are set and unset using | (or) or & /* (and) operations.
 /* For example setting friend and unsetting request in one operation 
 /* can be done with the following expression: (relation|4)&7  where 
 /* | sets a bit and & unsets the bits that are not overlapping the bits
@@ -330,21 +330,24 @@ function userProfile( &$R, &$DB) {
 }
 /* ********************************************************************** */
 
-
 function userAccount(&$R, &$DB ) {
     // friend requests
     if ( isset( $R['subFunc'] ) && $R['subFunc'] == 'update' ) {
-        if ( $_FILES['profileImage']['name'] > "0" ) {
-            $imgType = strtolower(pathinfo($_FILES['profileImage']['name'], PATHINFO_EXTENSION)) ;
-            // in order to prevent harvesting of images by foreign machines we hash the filename,
-            // but we keep the filetype. 
-            $R['uImageId'] = substr( md5( $R['uId'] ), 5).'.'.$imgType; // $_FILES['profileImage']['name'];
-            if ( is_uploaded_file($_FILES['profileImage']['tmp_name'] ) ) {
-                // resize image if needed
-                // https://stackoverflow.com/questions/14649645/resize-image-in-php
-                copy($_FILES['profileImage']['tmp_name'], 'img/'.$R['uImageId'] );
-            }
-        }
+        $fTmp    = $_FILES['profileImage']['tmp_name'];
+        $fName   = $_FILES['profileImage']['name'];
+        if ( $fTmp > "0" && is_uploaded_file($fTmp) && preg_match( "/(jpeg|jpg|png|gif)$/",$fName)) { // Can only handle jpg,gif,png
+            $iType = strtolower(pathinfo($fName, PATHINFO_EXTENSION)) ;
+            // In order to prevent harvesting of images by foreign machines we hash the filename, but we keep the filetype
+            $R['uImageId'] = substr( md5( $R['uId'].$iType.$fTmp ), 5).'.'.$iType; // sufficiently complicated
+            // https://stackoverflow.com/questions/14649645/resize-image-in-php
+            // https://www.php.net/manual/en/function.imagecreatefromjpeg.php
+            $iType = $iType == 'jpg' ? 'jpeg' : $iType; 
+            $image = ('imagecreatefrom'.$iType)($fTmp); 
+            // https://www.php.net/manual/en/function.getimagesize.php
+            // https://www.php.net/manual/en/function.imagescale.php        
+            $imgResized = imagescale($image , 128, 128); // brutal resizing 
+            ('image'.$iType)( $imgResized, 'img/'.$R['uImageId'] );      
+        }        
         if ( isset( $R['uPassword'] ) && strlen( $R['uPassword'] ) > 0 ) {
             $R['uPassword'] = password_hash( $R['uPassword'] , PASSWORD_DEFAULT);
         } else {
