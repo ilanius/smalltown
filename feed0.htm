@@ -73,8 +73,8 @@
   <script>   
     /* **************************************************************** */
     /* When user has a long feed it is not convenient to load everything.
-    It wastes bandwidth, server resources and if the feed is long enough
-    it may be too much for the browser to hande. We try to deliver parts
+    It would waste server resources (bandwidth,cpu) and if the feed is too long
+    neither server nor browser could handle the load. Instead we deliver parts
     of the feed on request. When the user scrolls down we try to catch
     up and fill the feed */
     /* **************************************************************** */
