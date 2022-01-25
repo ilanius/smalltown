@@ -346,7 +346,7 @@ function userAccount(&$R, &$DB ) {
             // https://www.php.net/manual/en/function.getimagesize.php
             // https://www.php.net/manual/en/function.imagescale.php        
             $imgResized = imagescale($image , 128, 128); // brutal resizing 
-            ('image'.$iType)( $imgResized, 'img/'.$R['uImageId'] );      
+            ('image'.$iType)( $imgResized, 'img/'.$R['uImageId'] );   // perhaps all images should be saved as jpg   
         }        
         if ( isset( $R['uPassword'] ) && strlen( $R['uPassword'] ) > 0 ) {
             $R['uPassword'] = password_hash( $R['uPassword'] , PASSWORD_DEFAULT);
