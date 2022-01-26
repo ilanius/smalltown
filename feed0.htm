@@ -34,6 +34,7 @@
       return str;
     }  
     function buildPostTree( txt ) {
+      console.log( txt );
        var tree = JSON.parse( txt );
        if ( tree.length > 0 ) feedPosition+= 100; 
        var contPane = gid( 'pId' );
