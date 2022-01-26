@@ -254,12 +254,12 @@ html;
 
 /* ********************************************************************** */
 /* Feed of a logged in user                                               */
-/* Contains a selecttion (reverse time order) of posts by friends (and you own!?)   */
+/* Contains a selecttion (reverse time order) of posts by friends (and your own!?)   */
 /* function userEvent delivers page. Function userEventFeed delivers data */
-/* for page in JSON format                                                */
+/* for page in JSON format                      
 /* ********************************************************************** */
 function userEventFeed( &$R, &$DB ) {
-    $stmnt        = "uId2 from friend where uId1='$R[uId]' and relation & 6";   // 6 == friend and follow
+    $stmnt        = "uId2 from friend where uId1='$R[uId]' and relation & 2";   // 2 == follow 4 == friend
     $friends      = $DB->select( $stmnt );
     array_push( $friends, [ 'uId2' => '-1'], ['uId2' => $R['uId'] ] );
     $fU           = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
@@ -269,8 +269,35 @@ function userEventFeed( &$R, &$DB ) {
     if ( sizeof( $posts ) > 0 ) {
         $rpId  = $DB->implodeSelection( $posts, 'rpId');
         $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
-        $posts = $DB->select( $stmnt );
+        $posts = $DB->select( $stmnt ); 
+        // we need to augment posts with post.uId uImageId and post.ruId uImageId
+        // Tricky
+        // u1
+        //   u2         <============= not yet complete
+        //     u3
+        $coll = [];
+        $DB->collection( $posts, 'uId',  $coll );
+        $DB->collection( $posts, 'ruId', $coll );
+        $DB->collection( $posts, 'ppId', $coll );
+        $ids = implode( ',', array_keys($coll) );
+        debug('ids:'. $ids );
+        $uReg  = $DB->getReg("uId, uImageId,uFirstName,uLastName from user where uId in ($ids)", 'uId');
+        debug( print_r( $uReg, 1) );
+        foreach ( $posts as &$p ) {
+            $p['uImageId'] = $uReg[ $p['uId'] ]['uImageId'];
+            $p['uFirstName'] = $uReg[ $p['uId'] ]['uFirstName'];
+            $p['uLastName'] = $uReg[ $p['uId'] ]['uLastName'];
+            
+            if ( $p['ppId'] && isset( $uReg[ $p['ppId']] ) ) {
+                $u = $uReg[ $p['ppId'] ];
+                $p['puImageId']   = isset($u['uImageId'])   ? $u['uImageId']   : 'default';    
+                $p['puFirstName'] = isset($u['uFirstName']) ? $u['uFirstName'] : '-';    
+                $p['puLastName']  = isset($u['uLastName'])  ? $u['uLastName']  : '-';    
+            }
+        }
+        debug( print_r( $posts, 1 ) );
         $tree  = buildTree( $posts );
+        // if $feedPosition > 0 then we query postChanges table
         echo json_encode( $tree );
     } else {
         echo "[]";
