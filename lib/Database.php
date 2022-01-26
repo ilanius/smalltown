@@ -86,12 +86,16 @@ class Database {
         $rslt =  $this->DB->query( $stmnt ) or die('###query### '. mysqli_error($this->DB ) );
         return $rslt;
     }
-    function implodeSelection( $collection, $field ) {
-        $coll = array();
-        foreach  ( $collection as $c ) {
-            array_push( $coll, $c[$field] );
+    function collection( &$posts, $field, &$coll ) {
+        foreach  ( $posts as $p ) {
+            if ( !$p[$field] ) continue;
+            $coll[ $p[$field] ] =1;
         }
-        return implode( ',', $coll );
+    }
+    function implodeSelection( &$posts, $field ) {
+        $coll = [];
+        $this->collection( $posts, $field, $coll );
+        return implode( ',', array_keys($coll) );
     }
     /* ************* utilities not used ***********/
     function getReg( $stmnt, $keyfield ) {
