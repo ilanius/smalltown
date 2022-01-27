@@ -47,7 +47,9 @@ html;
       foreach( $R['friendRequest'] as $f ) {
         echo <<<html
       <div>
-        <a href="?func=userProfile&profileId=$f[uId]"> $f[uFirstName] $f[uLastName] </a> &nbsp;
+        <a href="?func=userProfile&profileId=$f[uId]"> 
+          <img width="48" src="img/$f[uImageId]"> $f[uFirstName] $f[uLastName] 
+        </a> &nbsp; 
         <span id="nokok$R[uId]_$f[uId]">
         <button class="relButton" onclick="requestAccept('$R[uId]', '$f[uId]');"> Accept </button>
         <button class="relButton" onclick="requestDeny('$R[uId]', '$f[uId]');">  Deny  </button>

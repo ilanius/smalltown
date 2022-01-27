@@ -23,7 +23,7 @@ function changeRelation( contId, rAction, uId1, uId2 ) {
 function requestAccept( uId1, uId2 ) {
     var contId = 'nokok'+uId1+'_'+uId2;
     var sendTxt = "func=friendRelation&subFunc=requestAccept&uId1="+uId1+"&uId2="+uId2+"&contId="+contId;
-    httpPost( sendTxt, function( txt ) { gid( contId ).innerHTML = ' <span class="check"></span>'; } );
+    httpPost( sendTxt, function( txt ) { gid( contId ).innerHTML = ' <span class="check"></span>'; reloadPage(); } );
 }
 function requestDeny( uId1, uId2 ) {
     var contId = 'nokok'+uId1+'_'+uId2;
