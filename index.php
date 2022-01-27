@@ -373,6 +373,10 @@ function userAccount(&$R, &$DB ) {
             // https://www.php.net/manual/en/function.getimagesize.php
             // https://www.php.net/manual/en/function.imagescale.php        
             $imgResized = imagescale($image , 128, 128); // brutal resizing 
+            if ( preg_match("/(png)$/", $iType )) {
+                imagealphablending($imgResized, false);
+                imagesavealpha($imgResized, true);
+            }
             ('image'.$iType)( $imgResized, 'img/'.$R['uImageId'] );   // perhaps all images should be saved as jpg   
         }        
         if ( isset( $R['uPassword'] ) && strlen( $R['uPassword'] ) > 0 ) {
