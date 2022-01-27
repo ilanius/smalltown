@@ -362,7 +362,7 @@ function userAccount(&$R, &$DB ) {
     if ( isset( $R['subFunc'] ) && $R['subFunc'] == 'update' ) {
         $fTmp    = $_FILES['profileImage']['tmp_name'];
         $fName   = $_FILES['profileImage']['name'];
-        if ( $fTmp > "0" && is_uploaded_file($fTmp) && preg_match( "/(jpeg|jpg|png|gif)$/",$fName)) { // Can only handle jpg,gif,png
+        if ( strlen($fTmp) > 0 && is_uploaded_file($fTmp) && preg_match( "/(jpeg|jpg|png|gif)$/",$fName)) { // Can only handle jpg,gif,png
             $iType = strtolower(pathinfo($fName, PATHINFO_EXTENSION)) ;
             // In order to prevent harvesting of images by foreign machines we hash the filename, but we keep the filetype
             $R['uImageId'] = substr( md5( $R['uId'].$iType.$fTmp ), 5).'.'.$iType; // sufficiently complicated
