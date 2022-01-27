@@ -358,7 +358,6 @@ function userProfile( &$R, &$DB) {
 /* ********************************************************************** */
 
 function userAccount(&$R, &$DB ) {
-    // friend requests
     if ( isset( $R['subFunc'] ) && $R['subFunc'] == 'update' ) {
         $fTmp    = $_FILES['profileImage']['tmp_name'];
         $fName   = $_FILES['profileImage']['name'];
@@ -372,7 +371,7 @@ function userAccount(&$R, &$DB ) {
             $image = ('imagecreatefrom'.$iType)($fTmp); 
             // https://www.php.net/manual/en/function.getimagesize.php
             // https://www.php.net/manual/en/function.imagescale.php        
-            $imgResized = imagescale($image , 128, 128); // brutal resizing 
+            $imgResized = imagescale($image , 128, 128); // brutal resizing to 128x128 format
             if ( preg_match("/(png)$/", $iType )) {
                 imagealphablending($imgResized, false);
                 imagesavealpha($imgResized, true);
