@@ -67,11 +67,6 @@ function buildTree( &$posts ) {
     return $tree; // a recursive tree structure
 }
 
-/* ******************************************* */
-/* TODO:                                       */
-/* friend suggestions not yet implemented.     */
-/* Add function userAccount function           */
-/* ******************************************* */
 
 /* ******************************************************************* */
 /* The following code is used to manipulate the relation column
@@ -402,7 +397,7 @@ function userAccount(&$R, &$DB ) {
     $stmnt              = "* from user where uId in ($fId)";
     $R['friend']        = $DB->select( $stmnt );
 
-    // Friend suggestion
+    // TODO: Friend suggestion
     $R['friendSuggestion'] = [];
     if ( isset( $R['user']['uYear'] ) ) {
         // not yet implemented
