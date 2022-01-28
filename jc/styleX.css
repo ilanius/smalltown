@@ -1,0 +1,214 @@
+/* *************** */
+/* General         */
+/* *************** */
+body {
+    width: 90%;
+    max-width: 600px;
+    margin: auto;
+    margin-top: 10px;
+    gap: 4px;
+    border: 1px lightgray dashed;
+    font-size: 12px;
+}
+button {
+    background-color: rgb(50, 74, 82);
+    border: 0;
+    color: white;
+    padding:2px;
+    margin:4px;
+    border-radius:4px;
+    border: 2px rgb(50, 74, 82) dashed;
+    cursor: pointer;
+}
+button.postButton.active {
+    border: 2px red solid;
+}
+div, span {
+    box-sizing: border-box;
+}
+form {
+    display:inline;
+}
+.home, .setting, .logout {
+    text-decoration: none;
+    font-size: 2em;
+    color: white;
+}
+.home::before {
+    content: '\27F0'; /* https://www.toptal.com/designers/htmlarrows/arrows/up-quadruple-arrow/ */
+}
+.setting::before {
+    content: '\2699';
+}
+.logout::before {
+    content: '\27FE';
+}
+.search {
+    width: 80px;
+}
+.search::before {
+    /* TODO: content: ''; */
+}
+input {
+    background-color:white; /* User Agent Stylesheet går före */
+    border:0;
+    border-bottom: 1px gray dashed;
+    font-size:1em;
+    font-family: courier;
+}
+.center {
+    text-align:center;
+}
+.right {
+    text-align: right;
+}
+.link {
+    border:0;
+    background-color: transparent;
+    text-decoration: none;
+    color: navy;
+    font-weight:bold;
+    font-size:1.2em;
+}
+.link:hover {
+    color:crimson;  
+    text-decoration: underline;  
+}
+.center button {
+    width: 30%;
+}
+.center button:hover {
+    border: 2px red solid;
+}
+/* ************* */
+/* userFeed      */
+/* ************* */
+span.postComment, div.post { 
+    display:block;
+    text-align:left;
+    margin-left:10px;
+    background-color: lightgray; 
+}
+.pTxt {
+    display: inline-block;
+    background-color: rgb(200, 183, 152);
+    padding:4px;
+}
+.emotLike::before { /* https://unicode-table.com/en/1F44D/ */
+    content: '\1f44d'; /* number is in hex-form */
+}
+.emotDisl::before { /* https://unicode-table.com/en/1F44E/ */
+    content: '\1f44e';
+}
+.emotSmil::before { /* https://unicode-table.com/en/1F600/ */
+    content: '\1f600';
+}
+.userPlate {
+    display:none;
+}
+.dropPlate:hover .userPlate {
+    display:block;
+}
+
+/* **************************** */
+/* headPane.htm                 */
+/* **************************** */
+.headPane {
+    border: 1px rgb(50, 74, 82) solid;
+    display: flex;
+    justify-content: left;
+    align-items: stretch; 
+}
+.headPane .item {
+    border-radius:4px;
+    background-color: rgb(50, 74, 82);
+    padding: 12px;
+    padding-bottom:0px;
+    margin:  2px;
+    text-align:center;
+}
+
+/* ******************** */
+/* entry0.htm        */
+/* ******************** */
+.tab0 {
+    border: 10px rgb(50, 74, 82) solid;
+    margin-top:1em;
+    padding: 4px;
+    text-align:center;
+    font-size:0.8em;
+}
+.tab {
+    border: 10px rgb(50, 74, 82) solid;
+    margin-top:2px;
+    padding: 1em;
+    padding-top:0;
+    background-image: url('../img/smalltown.png');
+    background-size: 100% 50%;
+    background-repeat: no-repeat;
+    background-position: bottom;
+}
+.tab label {
+    width: 30%;
+    display: inline-block;
+    padding: 4px;
+}
+.tab input {
+    width: 60%;    
+}
+.black, .tabButton {
+    background-color: rgb(50, 74, 82);
+    color: white;
+    border: 0;
+    padding:2px;
+    border-bottom:2px white solid;
+    border-top: 2px white solid;
+}
+.tabButton {
+    width: 25%;
+    border-bottom:2px green solid;
+    border-top: 2px green solid;
+    cursor: pointer;
+}
+.tabButton.active {
+    border-bottom:2px red solid;
+    border-top: 2px red solid;
+}
+#lost, #signup {
+    display:none;
+}
+.error, .errorUserExists, .errorBadLogin {
+    text-align:center;
+    background-color:brown;
+    padding: 2px; 
+}
+.error {
+    display: none;
+}
+.errorUserExists::before {
+    content: 'User Exists';
+    display: block;
+}
+.errorBadLogin::before {
+    content: 'Bad Login';
+    display: blocK;
+}
+/* ************************* */
+/* userAccount.htm           */
+/* ************************* */
+.updateNow {
+    border: 4px red dashed;
+    margin: 4px;
+    padding: 4px;
+}
+.uLabel {
+    display: inline-block;
+    width: 100px;
+    padding: 2px; 
+}
+.friendBox img {
+    width: 40px;
+}
+.check::before {
+    content: '\2713';
+}
