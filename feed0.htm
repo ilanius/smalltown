@@ -3,11 +3,13 @@
 <head>
   <?php 
     requir0('head', $R);
+    $pr = $R['profile'];
   ?>
 
   <script>
-    var profileId    = '<?=$R['profileId']?>';
-    var uId          = '<?=$R['uId']?>';
+    var profileId    = "<?=$R['profileId']?>";
+    var uId          = "<?=$R['uId']?>";
+    var uImageId     = "<?=$R['user']['uImageId']?>";
     var profileImage = '<?=$R['profile']['uImageId']?>';
     var feedType     = '<?=$R['feedType']?>';
     var feedPosition = 0;
@@ -34,7 +36,6 @@
       return str;
     }  
     function buildPostTree( txt ) {
-      console.log( txt );
        var tree = JSON.parse( txt );
        if ( tree.length > 0 ) feedPosition+= 100; 
        var contPane = gid( 'pId' );
@@ -51,20 +52,22 @@
   
   <?php requir0( 'headPane', $R ); ?>
   
-  <div id="pId" class="contPane"> <!-- pId is used by script -->
-    <div class="feedProfileBox">
+  <div class="profileBox">
     <img src="img/<?=$R['profile']['uImageId']?>" width="100"> 
-    <?php 
-    if ( $R['uId'] != $R['profileId'] ) {
-      echo '<span id="row_'.$R['profileId'].'">';
-      echo expressRelation( $R, $R['profile']);
-      echo "</span>";
-    }
-    ?>
-    </div>
-
-    <button class="postButton" onclick="postSubmit0('');"> comment </button>
-    <span class="postComment" id="comment">  </span> 
+    <span> <?php echo $pr['uFirstName']. ' '. $pr['uLastName']; ?> </span>
+      <?php 
+      if ( $R['uId'] != $R['profileId'] ) {
+        echo '<span id="row_'.$R['profileId'].'" class="relationBox">';
+        echo expressRelation( $R, $R['profile']);
+        echo "</span>";
+      }
+      ?>
+      <br>
+    <input type="text" id="commentInput" name="commentInput" class="comment" onkeyup="postSubmitTop(event,this);" placeholder="What is on your mind">
+  </div>
+  
+  <div id="pId" class="contPane"> <!-- pId is used by script -->
+  
   </div>
 
   <div class="footPane"> 

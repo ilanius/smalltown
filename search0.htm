@@ -5,10 +5,11 @@
     requir0('head', $R);
   ?>
   </head>
-  <body>
+  <body class="search">
   <?php 
     requir0( 'headPane', $R ); 
   ?>
+
   <div class="contPane"> 
   <?php 
     if ( sizeof( $R['posts'] ) == 0 ) { 
@@ -21,10 +22,12 @@
   <?php
       foreach( $R['posts'] as &$p ) {
         echo <<<html
-      <p>
-        <a  href="?func=userProfile&profileId=$p[uId]"> $p[uFirstName] $p[uLastName] </a>
+        <a class="friendBox" href="?func=userProfile&profileId=$p[uId]">
+          <img src="img/$p[uImageId]">
+          <span class="friendBoxName">$p[uFirstName] $p[uLastName] </span>
+        </a>
         <span id="row_$p[uId]">
-html; 
+  html;
         echo expressRelation( $R, $p ) . "\n</span> \n</p>";
       }
     }

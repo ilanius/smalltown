@@ -20,6 +20,7 @@ class Config {
     public    $thumbwidth  = 180;
     public    $thumbheight = 180;
     public    $decimals    = 0;
+    public    $defaultImage = "profileDefaultImage.png";
 
     // --- newsletter --not used --- legacy code ------------------- */
     public    $newstest   = "XXX@XXXX.XXX";

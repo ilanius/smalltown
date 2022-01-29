@@ -46,27 +46,6 @@ function requir0( $fileName, &$R ) {
     file_exists( $fileName.'.htm') ? require $fileName.'.htm' : require $fileName.'0.htm';
 }
 
-/* ******************************************************************************** */
-/* buildTree is used by userEventFeed and userProfileFeed                           */
-/* to build a tree of posts. TODO: just send JSON of SQL results to client          */
-/* and let client spend cpu building tree.
-/* ******************************************************************************** */
-function buildTree( &$posts ) {
-    $postHash = [];
-    $tree     = [];
-    foreach ( $posts as &$p ) {
-        $postHash[ $p['pId'] ] = &$p; // reference
-        $p['child'] = [];
-        if ( $p['ppId'] > 0 ) {
-            $parc = &$postHash[ $p['ppId'] ]['child']; // reference
-            $parc[] = &$p;  // pushing reference - php copies alot :-(
-        } else {
-            $tree[] = &$p; // pushing roots
-        }
-    }
-    return $tree; // a recursive tree structure
-}
-
 
 /* ******************************************************************* */
 /* The following code is used to manipulate the relation column
@@ -215,7 +194,6 @@ function postEmotion( &$R, &$DB ) {
         $emotion = preg_replace( "/$emot:/", "$emot:$uId,", $emotion );
     }
     $post['emotion'] = $emotion;
-    debug( 'emotion:'. $emotion );
     $DB->update( 'post', $post /*[ 'emotion' => '$emotion' ]*/ , "pId='$pId'" );
     echo json_encode( $post );
 }
@@ -249,7 +227,7 @@ html;
 
 /* ********************************************************************** */
 /* Feed of a logged in user                                               */
-/* Contains a selecttion (reverse time order) of posts by friends (and your own!?)   */
+/* Contains a descending order in time of posts (friends and your own).   */
 /* function userEvent delivers page. Function userEventFeed delivers data */
 /* for page in JSON format                      
 /* ********************************************************************** */
@@ -263,35 +241,9 @@ function userEventFeed( &$R, &$DB ) {
     $posts        = $DB->select( $stmnt );
     if ( sizeof( $posts ) > 0 ) {
         $rpId  = $DB->implodeSelection( $posts, 'rpId');
-        $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
+        $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc"; 
         $posts = $DB->select( $stmnt ); 
-        // we need to augment posts with post.uId uImageId and post.ruId uImageId
-        // Tricky
-        // u1
-        //   u2         <============= not yet complete
-        //     u3
-        $coll = [];
-        $DB->collection( $posts, 'uId',  $coll );
-        $DB->collection( $posts, 'ruId', $coll );
-        $DB->collection( $posts, 'ppId', $coll );
-        $ids = implode( ',', array_keys($coll) );
-        debug('ids:'. $ids );
-        $uReg  = $DB->getReg("uId, uImageId,uFirstName,uLastName from user where uId in ($ids)", 'uId');
-        debug( print_r( $uReg, 1) );
-        foreach ( $posts as &$p ) {
-            $p['uImageId'] = $uReg[ $p['uId'] ]['uImageId'];
-            $p['uFirstName'] = $uReg[ $p['uId'] ]['uFirstName'];
-            $p['uLastName'] = $uReg[ $p['uId'] ]['uLastName'];
-            
-            if ( $p['ppId'] && isset( $uReg[ $p['ppId']] ) ) {
-                $u = $uReg[ $p['ppId'] ];
-                $p['puImageId']   = isset($u['uImageId'])   ? $u['uImageId']   : 'default';    
-                $p['puFirstName'] = isset($u['uFirstName']) ? $u['uFirstName'] : '-';    
-                $p['puLastName']  = isset($u['uLastName'])  ? $u['uLastName']  : '-';    
-            }
-        }
-        debug( print_r( $posts, 1 ) );
-        $tree  = buildTree( $posts );
+        $tree  = buildTreeDesc( $posts );
         // if $feedPosition > 0 then we query postChanges table
         echo json_encode( $tree );
     } else {
@@ -304,6 +256,37 @@ function userEvent( &$R, &$DB ) {
     $R['feedType']  = 'userEventFeed';
     requir0( 'feed', $R );
 }
+/* ******************************************************************************** */
+/* buildTree is used by userEventFeed and userProfileFeed                           */
+/* to build a tree of posts. TODO: just send JSON of SQL results to client          */
+/* and let client spend cpu building tree.
+/* buildTree require root posts to come in sorted order
+/* ******************************************************************************** */
+function buildTree( &$posts ) {
+    $postHash = [];
+    $tree     = [];
+    foreach ( $posts as &$p ) {
+        $postHash[ $p['pId'] ] = &$p; // reference
+        $p['child'] = [];
+        if ( $p['ppId'] > 0 ) {
+            $parc = &$postHash[ $p['ppId'] ]['child']; // reference
+            $parc[] = &$p;  // pushing reference - php copies alot :-(
+        } else {
+            $tree[] = &$p; // pushing roots
+        }
+    }
+    return $tree; // a recursive tree structure
+}
+/* ****************************************** */
+/* Only root posts are reversed               */
+/* root posts should come in descending order */
+/* ****************************************** */
+function buildTreeDesc( &$posts ) {
+    $posts = array_reverse( $posts );
+    $tree = buildTree( $posts );
+    return array_reverse( $tree );
+}
+
 /* ********************************************************************* */
 /* Function userProfileFeed delivers your own or a friends posts         */
 /* sorted in reverse chronological order                                 */
@@ -320,9 +303,9 @@ function userProfileFeed( &$R, &$DB ) {
         return;
     }
     $rpId  = $DB->implodeSelection( $posts, 'rpId');    
-    $stmnt = "* from post where rpId in ($rpId) order by pTime"; 
+    $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc"; 
     $posts = $DB->select( $stmnt );
-    $tree = buildTree( $posts );
+    $tree = buildTreeDesc( $posts );
     echo json_encode( $tree );
 }
 function userProfile( &$R, &$DB) {
@@ -332,7 +315,6 @@ function userProfile( &$R, &$DB) {
         $stmnt = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1='$R[uId]' and friend.uId2='$R[profileId]'";       
         $p = $DB->selectOne( $stmnt );
     } 
-    debug('userProfile stmnt:'. $stmnt );
     if ( $p == 0 ) { // friend may lack values for profileId
         $stmnt = "* from user where uId='$R[profileId]'";
         $p = $DB->selectOne( $stmnt );
@@ -342,7 +324,6 @@ function userProfile( &$R, &$DB) {
             $p[$type] = strpos( ' '.$p['relation'], $type );
         }
     }
-    debug('userProfile:'. print_r( $p, 1 ) );
     if ( !isset($p['uImageId']) && strlen( $p['uImageId'] ) < 3 ) {
         $p['uImageId'] = 'profileDefaultImage.png';
     }
@@ -425,6 +406,9 @@ function userSearch(&$R, &$DB) {
             } else {
                 $p[$type] = 0;
             }
+            if ( !isset( $p['uImageId']) || strlen($p['uImageId'])<4 ) {
+                $p['uImageId'] = $R['defaultImage'];
+            }
         }
     }
     requir0( 'search', $R ); 
@@ -494,7 +478,7 @@ $C  = new Config();
 $DB = new Database( $C );
 
 $R = array( // $R is easier to write than $_REQUEST
-    'badLogin'  => '',     'userImage' => 'profileDefaultImage.png',
+    'badLogin'  => '',     'defaultImage' => $C->defaultImage,
     'func'      => '',     'session'   => '',  );
 foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
     $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection

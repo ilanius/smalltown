@@ -72,13 +72,14 @@ function likeButtonCreate( p ) {
 /* See buildTree in feed0.htm
 /* a new level of recursiveness
 /* *************************************** */
-function postCreate( p, children ) {
-    p['fromTo'] = p['uId'];
-    if ( p['ruId'] && p['ruId'] != p['uId'] ) {
-      p['fromTo'] += '=>' + p['ruId'];
-    }        
-    let str = `<div data-ruid="${p['ruId']}" data-uid="${p['uId']}" id="pId${p['pId']}" class="post">` + 
-    `<span class="fromTo">${p['fromTo']} </span> ` +
+function postInnerHtml( p, children ) {
+    if ( !p['uImageId'] ) { p['uImageId'] ='profileDefaultImage.png' };
+    let str = 
+    `<span class="fromTo">
+      <!-- ${p['fromTo']} -->
+      <a href="?func=userProfile&profileId=${p['uId']}" title="${p['uFirstName']+' '+p['uLastName']}">
+        <img class="pImg" src="img/${p['uImageId']}"></a>
+    </span> ` +
     `<div class="pTxt"> ${p['pTxt']}     </div>`   + 
     `<div id="emotion${p['pId']}" class="emotion">` +
     emotionCreate( p ) +
@@ -89,9 +90,18 @@ function postCreate( p, children ) {
     if ( uId == p['uId'] || uId == parseInt(p['ruId']) ) { // if you own the post or the feed you are allowed to delete
         str += `<button class="postButton" id="postDelete${p['pId']}" onclick="postDelete(${p['pId']})"> delete </button>`;
     }
-    str += `<button class="postButton" onclick="postSubmit0(${p['pId']})"> comment </button>`;
+    str += `<button class="postButton" onclick="postSubmit0(event, ${p['pId']})"> comment </button>`;
     str += children; // ~buildTree( p['child'] );
-    str += `<span class="postComment" id="comment${p['pId']}"> </span>` + 
+    str += `<span class="postComment" id="comment${p['pId']}"> </span>`;
+    return str;
+}
+function postCreate( p, children ) {
+    p['fromTo'] = p['uId'];
+    if ( p['ruId'] && p['ruId'] != p['uId'] ) {
+      p['fromTo'] += '=>' + p['ruId'];
+    }        
+    let str = `<div data-ruid="${p['ruId']}" data-uid="${p['uId']}" id="pId${p['pId']}" class="post">` + 
+    postInnerHtml( p, children ) + 
     '</div>';
     return str;
 }
@@ -105,27 +115,40 @@ function postEmotion( e, pId, emot ) {
     var sendTxt = "func=postEmotion&pId="+pId+"&emot="+ emot;
     httpPost( sendTxt, setEmotion );
 }
-function postSubmit0( pId ) {
+function postSubmitAddNewNode( txt ) {
+    var p = JSON.parse( txt );
+    console.log( p );
+    if ( p['ppId'] == undefined ) { p['ppId'] = ''; }
+    if ( p['uImageId'] == undefined ) { p['uImageId'] = uImageId; } // uImageId is defined in feed0.htm
+    var newNode = postCreate( p, '' );
+    var parentNode = gid( 'pId' + p['ppId'] );
+    if ( p['ppId'].length==0 ) { 
+        parentNode.innerHTML = newNode + parentNode.innerHTML;
+    } else {
+        parentNode.innerHTML += newNode;
+    }
+}
+function postSubmitTop(e,o) {
+    if ( e.keyCode != 13 || o.value == '' ) return;
+    e.preventDefault();                                // cancel event bubble here
+    var ppId = o.name.substring( 'commentInput'.length );    
+    var sendTxt = "func=postSubmit&profileId="+profileId+"&ppId="+ppId+"&pTxt="+ o.value;  
+    gid( 'commentInput'+ppId).value= '';
+    httpPost( sendTxt, postSubmitAddNewNode );
+}
+function postSubmit( e, o ) {
+    if ( e.keyCode != 13 || o.value == '' ) return;
+    var ppId = o.name.substring( 'commentInput'.length );    
+    postSubmitTop(e,o);
+    gid( 'commentInput'+ppId).remove();
+}
+function postSubmit0( event, pId ) {
     comment = gid( 'comment' + pId);
     comment.innerHTML = `<input type="text" id="commentInput${pId}" name="commentInput${pId}"` + 
     ' placeholder="opinion" onkeyUp="postSubmit(event, this);">';
     gid( 'commentInput'+pId ).focus();
 }
-function postSubmitAddNewNode( txt ) {
-    var p = JSON.parse( txt );
-    if ( p['ppId'] == undefined ) { p['ppId'] = ''; }
-    gid( 'commentInput'+p['ppId']).remove();
-    var newNode = postCreate( p, '' );
-    var parentNode = gid( 'pId' + p['ppId'] );
-    parentNode.innerHTML += newNode;
-}
-function postSubmit( e, o ) {
-    if ( e.keyCode != 13 || o.value == '' ) return;
-    e.preventDefault();                                // cancel event bubble here
-    var ppId = o.name.substring( 'commentInput'.length );    
-    var sendTxt = "func=postSubmit&profileId="+profileId+"&ppId="+ppId+"&pTxt="+ o.value;
-    httpPost( sendTxt, postSubmitAddNewNode );
-}
+
 /* ************************************************ */
 function reqLoginMail( event, contId, uEmailId ) {
     // event.preventDefault();                                // cancel event bubble here
@@ -136,6 +159,10 @@ function reqLoginMail( event, contId, uEmailId ) {
         gid( contId ).innerHTML = '  Mail requested ' + txt; 
     } );
 }
+
+/* ****************************************** */
+/* https://css-tricks.com/cycle-through-classes-html-element/ */
+/* ****************************************** */
 function tabView( event, view ) { // we keep event just in case
     var i, tab, viewButton;
     var tab = document.getElementsByClassName("tab");

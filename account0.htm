@@ -12,9 +12,13 @@
     <?php $U = &$R['user']; ?>
     <form action="?func=userAccount" method="post" enctype="multipart/form-data">
       <input type="hidden" name="subFunc" value="update">
-      <img src="img/<?=$U['uImageId']?>"> <br>
-      Select image to upload:  
-      <input type="file" name="profileImage" id="fileToUpload"> <br>
+      <div class="fulf0">
+        <img src="img/<?=$U['uImageId']?>"> 
+        <div class="fulf1">
+          Select image to upload: <br>
+          <input type="file" name="profileImage" id="fileToUpload"> 
+        </div>
+      </div>
     <?php  
     $userFields = [ 
       'uFirstName' => 'First name',  'uLastName'  => 'Last name', 
@@ -68,7 +72,7 @@ html;
       echo "<h2> Friends </h2>";
       foreach( $R['friend'] as $f ) {
         if ( !isset( $f['uImageId'] ) ) {
-          $f['uImageId'] = $R['userImage'];
+          $f['uImageId'] = $R['defaultImage'];
         }
         echo <<<html
         <a class="friendBox" href="?func=userProfile&profileId=$f[uId]">
