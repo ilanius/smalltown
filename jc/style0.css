@@ -34,7 +34,7 @@ div, span {
 form {
     display:inline;
 }
-input[type=text] {
+input[type=text], input[type=email], input[type=password] {
     background-color:white; /* User Agent Stylesheet går före */
     border:0;
     border-bottom: 1px gray dashed;
