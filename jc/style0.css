@@ -74,7 +74,7 @@ input[type=text]:focus {
     border: 2px red solid;
 }
 /* ************* */
-/* userFeed      */
+/* feed0.htm     */
 /* ************* */
 span.postComment, div.post { 
     display:block;
@@ -269,4 +269,3 @@ span.postComment, div.post {
 .friendBox:hover {
     color:red;    
 }
-
