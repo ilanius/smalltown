@@ -99,13 +99,13 @@ function postInnerHtml( p, children ) {
     str += `<span class="postComment" id="comment${p['pId']}"> </span>`;
     return str;
 }
-function postCreate( p, children ) {
+function postCreate( p, child ) {
     p['fromTo'] = p['uId'];
     if ( p['ruId'] && p['ruId'] != p['uId'] ) {
       p['fromTo'] += '=>' + p['ruId'];
     }        
     let str = `<div data-ruid="${p['ruId']}" data-uid="${p['uId']}" id="pId${p['pId']}" class="post">` + 
-    postInnerHtml( p, children ) + 
+    postInnerHtml( p, child ) + 
     '</div>';
     return str;
 }
@@ -125,8 +125,7 @@ function postEmotion( e, pId, emot ) {
     httpPost( sendTxt, setEmotion );
 }
 function postSubmitAddNewNode0( p ) {
-    console.log('postSubmitAddNedNode' + p );
-    if ( gid( 'pId' + p['pId'] ) ) return; 
+    if ( gid( 'pId' + p['pId'] ) ) return;  // failSafe: already there no need to add again
     if ( p['ppId'] == undefined ) { p['ppId'] = ''; }
     if ( p['uImageId'] == undefined ) { p['uImageId'] = uImageId; } // uImageId is defined in feed0.htm
     var newNode = postCreate( p, '' );
@@ -135,7 +134,6 @@ function postSubmitAddNewNode0( p ) {
     if ( p['ppId'].length==0 ) { 
         parentNode.innerHTML = newNode + parentNode.innerHTML;
     } else {
-        console.log( 'postSubmitAddNewNode0:' + p['ppId'] );
         parentNode.innerHTML += newNode;
     }
 }

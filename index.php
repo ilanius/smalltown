@@ -150,8 +150,15 @@ function postSubmit( &$R, &$DB ) {
     $post['pId'] = $rslt['last_insert_id()'];
 
     // feedUpdate update
-    $post['action' ] = 'mod'; // instead of add post we say parent has been modified => we load everything
-    $DB->insert( 'feedUpdate',  ['pId'=> $post['ppId'], 'ruId'=>$post['ruId'], 'rpId'=>$post['rpId'] ] );
+    $copy = $post;
+    if ( isset( $copy['ppId'] ) ) {
+        $copy['pId'] = $copy['ppId'];
+        $copy['action'] = 'mod';
+    } else {
+        $copy['action'] = 'add';
+        $copy['rpId']   = $copy['pId'];
+    }
+    $DB->insert( 'feedUpdate', $copy  );
 
     echo json_encode( $post );
 }
@@ -244,7 +251,6 @@ html;
 function friendsOfUser( &$R, &$DB ) {
     $stmnt        = "uId2 from friend where uId1='$R[uId]' and relation & 2";   // 2 == follow 4 == friend
     $friends      = $DB->select( $stmnt );
-    debug( 'friendOfUser stmnt:' . $stmnt );
     array_push( $friends, [ 'uId2' => '-1'], ['uId2' => $R['uId'] ] );
     $fU           = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
     return $fU;
@@ -268,9 +274,9 @@ function feedUpdate( &$R, &$DB ) {
     $friends = friendsOfUser( $R, $DB ); // this limitation important if we have a million concurrent users
     $stmnt = "*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fU inner " .
      "join user u on fU.uId=u.uId where (fU.ruId = $R[uId] or fU.uId in ($friends) and pTime > 0)"; // '$R[lastFeedTime]' )";
-    debug('feedUpdate stmnt:'.$stmnt);    
     $post = $DB->select($stmnt);
     $time = $DB->selectOne('now()+0');
+    // TODO: make this work
     //$DB->delete( "feedUpdate", "pTime < now()-60"  ); // anything older than 2 min is deleted
     echo json_encode( ['post'=> $post, 'lastFeedTime' => $time[0], 'stmnt' => $stmnt ] );
 }
@@ -309,6 +315,19 @@ function buildTreeDesc( &$posts ) {
     $posts = array_reverse( $posts );
     $tree = buildTree( $posts );
     return array_reverse( $tree );
+}
+function rebuildNode( &$R, &$DB ) {
+    $stmnt = "* from post where rpId='$R[rpId]' and pId>='$R[pId]' order by pTime desc";
+    $posts = $DB->select( $stmnt );
+    if ( sizeof( $posts ) > 0 ) {
+        $rpId  = $DB->implodeSelection( $posts, 'rpId');
+        $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc"; 
+        $posts = $DB->select( $stmnt ); 
+        $tree  = buildTreeDesc( $posts );
+        echo json_encode( $tree );
+    } else {
+        echo "[]";
+    }
 }
 /* ********************************************************************* */
 /* Function userProfileFeed delivers your own or a friends posts         */
@@ -492,6 +511,7 @@ function userSignup( &$R, &$DB ) {
 }
 /* ************************************************************* */
 /* init                                                          */
+/* https://www.php.net/manual/en/opcache.preloading.php          */
 /* ************************************************************* */
 require 'lib/Config.php';
 require 'lib/Database.php';
@@ -529,7 +549,7 @@ $allowed = [  /* only functions followed by 1 can be called if you are logged in
     'userLostPass0'  => 0,      'userEvent'         => 1,   
     'userAccount'    => 1,      'userLogout'        => 1,     
     'userProfile'    => 1,      'userSearch'        => 1,  
-    'feedUpdate'     => 1,
+    'feedUpdate'     => 1,      'rebuildNode'       => 1,
  ];
    
 if ( $allowed[ $R['func'] ] > 0 ) {

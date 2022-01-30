@@ -36,7 +36,7 @@
       }
       return str;
     }  
-    function buildPostTree( txt ) {
+    function userFeed0( txt ) {  // supplements post tree
        var tree = JSON.parse( txt );
        if ( tree.length > 0 ) feedPosition+= 100; 
        var contPane = gid( 'pId' );
@@ -44,24 +44,30 @@
     }
     function userFeed() {
       var sendTxt = `func=${feedType}&profileId=${profileId}&feedPosition=${feedPosition}`;
-      httpPost( sendTxt, buildPostTree );
+      httpPost( sendTxt, userFeed0 );
+    }
+    function rebuildNode0( txt ) {
+      var tree = JSON.parse( txt );
+      var str = buildTree( tree );
+      str = str.replace( /^<div.{10,50}post">/, "<!-- ok -->"); // ugly but...
+      str = str.replace( /<\/div>$/, "<!-- ok2 -->");
+      var node = gid('pId'+tree[0]['pId']);
+      node.innerHTML = str;
+    }
+    function rebuildNode( p ) {
+      var sendTxt = `func=rebuildNode&pId=${p['pId']}&rpId=${p['rpId']}`;
+      httpPost( sendTxt, rebuildNode0 );
     }
     function feedUpdate0( txt ) {
       var data = JSON.parse( txt );
       var post = data['post'];
-      console.log( 'data: select ' + data['stmnt']);
-      console.log( 'data lastFeedTime:' + data['lastFeedTime']);
       lastFeedTime = data['lastFeedTime'];
-      console.log( post );
       for ( var i in post ) {
           var p = post[i];
-          console.log('p action:' + p['action'] );
           if ( p['action'] == 'del' ) {
-            console.log( '-----------------');
               postDelete0( p );   // delPost0
           } else if ( p['action'] == 'mod') {
-              console.log( '---- rebuild from pId==rpId  -------------');
-              setEmotion0( p ); // modPost0
+              rebuildNode( p );
           } else if ( p['action'] == 'add' ) {
               postSubmitAddNewNode0( p );  // addPost0
           }
@@ -69,7 +75,6 @@
     }
     function feedUpdate() { // only called in userEventFeed
       // if ( feedType != 'userEventFeed' ) return;
-      console.log( 'lastFeedTime' + lastFeedTime );
       var sendTxt = "func=feedUpdate&lastFeedTime="+lastFeedTime;
       httpPost( sendTxt, feedUpdate0 );
     }
@@ -122,9 +127,7 @@
        }
       } 
     );
-
     userFeed(); // first load
-  
   </script>
 </body>
 </html>
