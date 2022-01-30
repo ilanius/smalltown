@@ -105,18 +105,20 @@ function postCreate( p, children ) {
     '</div>';
     return str;
 }
-function setEmotion( txt ) {
-    var p = JSON.parse( txt );
+function setEmotion0( p ) {
     var emoTag = emotionCreate( p );
     gid( 'emotion'+p['pId'] ).innerHTML = emoTag;
     gid( 'postEmotion'+p['pId'] ).innerHTML = likeButtonCreate( p ) ;
+}
+function setEmotion( txt ) {
+    var p = JSON.parse( txt );
+    setEmotion0( p );
 }
 function postEmotion( e, pId, emot ) {
     var sendTxt = "func=postEmotion&pId="+pId+"&emot="+ emot;
     httpPost( sendTxt, setEmotion );
 }
-function postSubmitAddNewNode( txt ) {
-    var p = JSON.parse( txt );
+function postSubmitAddNewNode0( p ) {
     console.log( p );
     if ( p['ppId'] == undefined ) { p['ppId'] = ''; }
     if ( p['uImageId'] == undefined ) { p['uImageId'] = uImageId; } // uImageId is defined in feed0.htm
@@ -127,6 +129,10 @@ function postSubmitAddNewNode( txt ) {
     } else {
         parentNode.innerHTML += newNode;
     }
+}
+function postSubmitAddNewNode( txt ) {
+    var p = JSON.parse( txt );
+    postSubmitAddNewNode0( p );
 }
 function postSubmitTop(e,o) {
     if ( e.keyCode != 13 || o.value == '' ) return;
@@ -175,10 +181,23 @@ function tabView( event, view ) { // we keep event just in case
     }
     event.currentTarget.className += " active";
     document.getElementById( view ).style.display = "block";  
-  }
+}
 
 /* ************** */
 /* Adding drag and drop of image to input field
 /* https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/^M
 /* ********************************** */
-
+function feedUpdate0( txt ) {
+    var posts = JSON.parse( txt );
+    console.log( posts );
+    for ( var i in posts ) {
+        var p = posts[i];
+        if ( p['action'] == 'del' ) {
+            postDelete( p['pId'] );   // delPost0
+        } else if ( p['action'] == 'mod') {
+            setEmotion( p ); // modPost0
+        } else if ( p['action'] == 'add' ) {
+            postSubmitAddNewNode0( p );  // addPost0
+        }
+    }
+}
