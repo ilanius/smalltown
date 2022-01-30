@@ -46,7 +46,6 @@ function requir0( $fileName, &$R ) {
     file_exists( $fileName.'.htm') ? require $fileName.'.htm' : require $fileName.'0.htm';
 }
 
-
 /* ******************************************************************* */
 /* The following code is used to manipulate the relation column
 /* in table friend. The database column relation uses 8 bytes per row. 
@@ -151,6 +150,11 @@ function postSubmit( &$R, &$DB ) {
     // https://www.w3schools.com/sql/func_mysql_last_insert_id.asp
     $rslt = $DB->selectOne("last_insert_id()");
     $post['pId'] = $rslt['last_insert_id()'];
+
+    // feedUpdate update
+    $post['action' ] = 'add';
+    $DB->insert( 'feedUpdate',  $post );
+
     echo json_encode( $post );
 }
 
@@ -177,6 +181,10 @@ function postDelete(&$R, &$DB) {
     $dels[] = '-1';                   // If list is empty code will crash so we add dummy value here
     $colls = implode(',', $dels ); 
     $DB->delete( 'post', "pId in ($colls)");
+
+     // feedUpdate update
+    $DB->insert( 'feedUpdate',  [ 'pId' => $R[pId], 'uId' => $R[uId], 'action' => 'del' ] );
+
     echo "OK";
 }
 function postEmotion( &$R, &$DB ) {
@@ -195,6 +203,11 @@ function postEmotion( &$R, &$DB ) {
     }
     $post['emotion'] = $emotion;
     $DB->update( 'post', $post /*[ 'emotion' => '$emotion' ]*/ , "pId='$pId'" );
+
+     // feedUpdate update
+     $post['action'] = 'mod';
+     $DB->insert( 'feedUpdate',  $post );
+
     echo json_encode( $post );
 }
 function userLostPass0( &$R, &$DB ) {
@@ -231,24 +244,33 @@ html;
 /* function userEvent delivers page. Function userEventFeed delivers data */
 /* for page in JSON format                      
 /* ********************************************************************** */
-function userEventFeed( &$R, &$DB ) {
+function friendsOfUser( &$R, &$DB ) {
     $stmnt        = "uId2 from friend where uId1='$R[uId]' and relation & 2";   // 2 == follow 4 == friend
     $friends      = $DB->select( $stmnt );
     array_push( $friends, [ 'uId2' => '-1'], ['uId2' => $R['uId'] ] );
     $fU           = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
+    return $fU;
+}
+function userEventFeed( &$R, &$DB ) {
+    $friends      = friendsOfUser( $R, $DB );
     $feedPosition = $R['feedPosition'];
-    $stmnt        = "rpId from post where ruId in ($fU) order by pTime desc limit $feedPosition,100";
+    $stmnt        = "rpId from post where ruId in ($friends) order by pTime desc limit $feedPosition,100";
     $posts        = $DB->select( $stmnt );
     if ( sizeof( $posts ) > 0 ) {
         $rpId  = $DB->implodeSelection( $posts, 'rpId');
         $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc"; 
         $posts = $DB->select( $stmnt ); 
         $tree  = buildTreeDesc( $posts );
-        // if $feedPosition > 0 then we query postChanges table
         echo json_encode( $tree );
     } else {
         echo "[]";
     }
+}
+function feedUpdate( &$R, &$DB ) {
+    $friends = friendsOfUser( $R, $DB ); // this limitation important if we have a million concurrent users
+    $DB->delete('feedUpdate', "pTime < now()-120 and (ruId == $R[uId] or uId in ($friends))"); // anything older than 2 min is deleted
+    $posts = $DB->select("* from feedUpdate"); //  where rpId in ($coll)");
+    echo json_encode( $post );
 }
 function userEvent( &$R, &$DB ) {
     $R['profile']   = &$R['user'];
@@ -286,7 +308,6 @@ function buildTreeDesc( &$posts ) {
     $tree = buildTree( $posts );
     return array_reverse( $tree );
 }
-
 /* ********************************************************************* */
 /* Function userProfileFeed delivers your own or a friends posts         */
 /* sorted in reverse chronological order                                 */
@@ -332,7 +353,6 @@ function userProfile( &$R, &$DB) {
     requir0( 'feed', $R );
 }
 /* ********************************************************************** */
-
 function userAccount(&$R, &$DB ) {
     if ( isset( $R['subFunc'] ) && $R['subFunc'] == 'update' ) {
         $fTmp    = $_FILES['profileImage']['tmp_name'];
@@ -467,7 +487,6 @@ function userSignup( &$R, &$DB ) {
     createSession( $R, $DB );
     return 1;
 }
-
 /* ************************************************************* */
 /* init                                                          */
 /* ************************************************************* */
