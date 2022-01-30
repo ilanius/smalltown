@@ -16,6 +16,34 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `feedupdate`
+--
+
+DROP TABLE IF EXISTS `feedupdate`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `feedupdate` (
+  `pId` int(11) NOT NULL DEFAULT 0,
+  `ppId` int(11) DEFAULT NULL,
+  `uId` int(11) NOT NULL,
+  `ruId` int(11) DEFAULT NULL,
+  `rpId` int(11) DEFAULT NULL,
+  `pTime` timestamp NOT NULL DEFAULT current_timestamp(),
+  `pTxt` varchar(255) DEFAULT NULL,
+  `emotion` varchar(255) NOT NULL DEFAULT '',
+  `action` enum('add','mod','del') DEFAULT 'del',
+  KEY `pId` (`pId`),
+  KEY `pTime` (`pTime`),
+  KEY `rpId` (`rpId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `feedupdate`
+--
+
+
+--
 -- Table structure for table `friend`
 --
 
@@ -36,11 +64,6 @@ CREATE TABLE `friend` (
 -- Dumping data for table `friend`
 --
 
-LOCK TABLES `friend` WRITE;
-/*!40000 ALTER TABLE `friend` DISABLE KEYS */;
-INSERT INTO `friend` VALUES (7,2,'friend'),(2,7,'friend');
-/*!40000 ALTER TABLE `friend` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `post`
@@ -62,8 +85,12 @@ CREATE TABLE `post` (
   KEY `uId` (`uId`),
   KEY `rpId` (`rpId`),
   KEY `ruId` (`ruId`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `post`
+--
 
 
 --
@@ -81,6 +108,10 @@ CREATE TABLE `session` (
   KEY `sHash` (`sHash`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `session`
+--
 
 
 --
@@ -102,8 +133,12 @@ CREATE TABLE `user` (
   `uImageId` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`uId`),
   UNIQUE KEY `uEmail` (`uEmail`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user`
+--
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -115,4 +150,4 @@ CREATE TABLE `user` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-01-02  2:06:47
+-- Dump completed on 2022-01-29 21:22:14
