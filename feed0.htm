@@ -45,6 +45,11 @@
       var sendTxt = `func=${feedType}&profileId=${profileId}&feedPosition=${feedPosition}`;
       httpPost( sendTxt, buildPostTree );
     }
+    function feedUpdate() { // only called in userEventFeed
+      if ( feedType != 'userEventFeed' ) return;
+      var sendTxt = "func=feedUpdate";
+      httpPost( sendTxt, feedUpdate0 );
+    }
   </script>
 </head>
 
@@ -72,6 +77,7 @@
 
   <div class="footPane"> 
   -- empty foot pane
+  <button onclick="feedUpdate()">feedUpdate</button>
   </div>
 
   <script>   
@@ -95,6 +101,7 @@
     );
 
     userFeed(); // first load
+  
   </script>
 </body>
 </html>
