@@ -34,7 +34,6 @@ function createSession( &$R, &$DB ) {
 function debug( $mess ) {
     error_log( $mess."\n" , 3, './debugLog.txt');
 }
-
 /* ****************************************************** */
 /* This method will allow us to add customized template files
 /* that will supersede the core template files
@@ -45,7 +44,6 @@ function debug( $mess ) {
 function requir0( $fileName, &$R ) { 
     file_exists( $fileName.'.htm') ? require $fileName.'.htm' : require $fileName.'0.htm';
 }
-
 /* ******************************************************************* */
 /* The following code is used to manipulate the relation column
 /* in table friend. The database column relation uses 8 bytes per row. 
@@ -142,7 +140,7 @@ function postSubmit( &$R, &$DB ) {
         unset( $post['pTime']);
         $post['emotion'] = '';
         if ( $post['ppId'] != '' ) {
-            unset( $post['ruId'] );
+            // unset( $post['ruId'] ); // why?
         }
         $DB->insert( 'post', $post ); /* untaint input */
     }
@@ -152,12 +150,11 @@ function postSubmit( &$R, &$DB ) {
     $post['pId'] = $rslt['last_insert_id()'];
 
     // feedUpdate update
-    $post['action' ] = 'add';
-    $DB->insert( 'feedUpdate',  $post );
+    $post['action' ] = 'mod'; // instead of add post we say parent has been modified => we load everything
+    $DB->insert( 'feedUpdate',  ['pId'=> $post['ppId'], 'ruId'=>$post['ruId'], 'rpId'=>$post['rpId'] ] );
 
     echo json_encode( $post );
 }
-
 /* ****************************************************************************** */
 /* The algorithm below is not easy to understand so it has been heavily commented */
 /* ****************************************************************************** */
@@ -165,7 +162,8 @@ function postDelete(&$R, &$DB) {
     /* We want to delete element with post id pId.
     /* We select pId and ppId where post id > pId  >= we select parent id and root parent id
     /* children of pId have post ids > pId and we make certain we own pId by selecting for uId as wel */
-    $stmnt = "pId, ppId from post where pId>='$R[pId]' and rpId in (select rpId from post where pId='$R[pId]' and uId='$R[uId]' )";
+    $stmnt = "pId, ppId from post where pId>='$R[pId]' and rpId in ". 
+    "(select rpId from post where pId='$R[pId]' and (uId='$R[uId]' or ruId='$R[uId]') )";
     $posts = $DB->select( $stmnt );   // sizeof ( $posts ) may be empty if uId is wrong 
 
     $prev = $posts[0]['ppId'];
@@ -182,7 +180,7 @@ function postDelete(&$R, &$DB) {
     $colls = implode(',', $dels ); 
     $DB->delete( 'post', "pId in ($colls)");
 
-     // feedUpdate update
+     // feedUpdate update del
     $DB->insert( 'feedUpdate',  [ 'pId' => $R[pId], 'uId' => $R[uId], 'action' => 'del' ] );
 
     echo "OK";
@@ -237,7 +235,6 @@ html;
     } 
     return 0;
 }
-
 /* ********************************************************************** */
 /* Feed of a logged in user                                               */
 /* Contains a descending order in time of posts (friends and your own).   */
@@ -247,6 +244,7 @@ html;
 function friendsOfUser( &$R, &$DB ) {
     $stmnt        = "uId2 from friend where uId1='$R[uId]' and relation & 2";   // 2 == follow 4 == friend
     $friends      = $DB->select( $stmnt );
+    debug( 'friendOfUser stmnt:' . $stmnt );
     array_push( $friends, [ 'uId2' => '-1'], ['uId2' => $R['uId'] ] );
     $fU           = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
     return $fU;
@@ -254,7 +252,7 @@ function friendsOfUser( &$R, &$DB ) {
 function userEventFeed( &$R, &$DB ) {
     $friends      = friendsOfUser( $R, $DB );
     $feedPosition = $R['feedPosition'];
-    $stmnt        = "rpId from post where ruId in ($friends) order by pTime desc limit $feedPosition,100";
+    $stmnt        = "unique(rpId) from post where ruId in ($friends) order by pTime desc limit $feedPosition,100";
     $posts        = $DB->select( $stmnt );
     if ( sizeof( $posts ) > 0 ) {
         $rpId  = $DB->implodeSelection( $posts, 'rpId');
@@ -268,9 +266,13 @@ function userEventFeed( &$R, &$DB ) {
 }
 function feedUpdate( &$R, &$DB ) {
     $friends = friendsOfUser( $R, $DB ); // this limitation important if we have a million concurrent users
-    $DB->delete('feedUpdate', "pTime < now()-120 and (ruId == $R[uId] or uId in ($friends))"); // anything older than 2 min is deleted
-    $posts = $DB->select("* from feedUpdate"); //  where rpId in ($coll)");
-    echo json_encode( $post );
+    $stmnt = "*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fU inner " .
+     "join user u on fU.uId=u.uId where (fU.ruId = $R[uId] or fU.uId in ($friends) and pTime > 0)"; // '$R[lastFeedTime]' )";
+    debug('feedUpdate stmnt:'.$stmnt);    
+    $post = $DB->select($stmnt);
+    $time = $DB->selectOne('now()+0');
+    //$DB->delete( "feedUpdate", "pTime < now()-60"  ); // anything older than 2 min is deleted
+    echo json_encode( ['post'=> $post, 'lastFeedTime' => $time[0], 'stmnt' => $stmnt ] );
 }
 function userEvent( &$R, &$DB ) {
     $R['profile']   = &$R['user'];
@@ -317,7 +319,7 @@ function buildTreeDesc( &$posts ) {
 function userProfileFeed( &$R, &$DB ) {
     $feedPosition = $R['feedPosition'];
     // We may need to reconsider hard coding the number 100 here
-    $stmnt = "rpId from post where ruId='$R[profileId]' order by pTime desc limit $feedPosition,100";
+    $stmnt = "unique(rpId) from post where ruId='$R[profileId]' order by pTime desc limit $feedPosition,100";
     $posts = $DB->select( $stmnt );
     if ( sizeof( $posts ) == 0 ) {
         echo "[]";
@@ -469,6 +471,7 @@ function userLogout( &$R, &$DB ) {
     requir0( 'entry', $R );
 }
 function userSignup( &$R, &$DB ) {
+    global $C;
     if ( $R['func'] != 'userSignup' ) { return 0; }  
     $user           = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
     if ( $user ) { 
@@ -477,12 +480,12 @@ function userSignup( &$R, &$DB ) {
     } 
     $R['uName']     = isset( $R['uName'] ) ? $R['uName'] : 'nada';
     $R['uPassword'] = password_hash( $R['uPassword0'] , PASSWORD_DEFAULT);
+    $R['uImageId']  = $C->defaultImage;
     $R['stmnt']     = $DB->insert( 'user', $R );
     $user           = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
     $R['uId']       = $user['uId'];
     $R['user']      = &$user;
     $R['profile']   = &$R['user'];
-    $R['user']['uImageId'] = $R['userImage'];
     $R['func']      = 'userEvent';
     createSession( $R, $DB );
     return 1;
@@ -525,7 +528,8 @@ $allowed = [  /* only functions followed by 1 can be called if you are logged in
     'userEventFeed'  => 1,      'userProfileFeed'   => 1,
     'userLostPass0'  => 0,      'userEvent'         => 1,   
     'userAccount'    => 1,      'userLogout'        => 1,     
-    'userProfile'    => 1,      'userSearch'        => 1,   
+    'userProfile'    => 1,      'userSearch'        => 1,  
+    'feedUpdate'     => 1,
  ];
    
 if ( $allowed[ $R['func'] ] > 0 ) {

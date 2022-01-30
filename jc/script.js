@@ -30,6 +30,10 @@ function requestDeny( uId1, uId2 ) {
     friendRelation( contId, 'requestDeny', uId1, uId2 );
     o = gid( contId ).style.display = 'none';
 }
+function postDelete0( p ) {
+    let post = document.querySelector('#pId'+p['pId'] );
+    if ( post ) post.remove();
+}
 function postDelete( pId ) {  
     /* https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes */
     let post = document.querySelector('#pId'+pId );
@@ -107,7 +111,9 @@ function postCreate( p, children ) {
 }
 function setEmotion0( p ) {
     var emoTag = emotionCreate( p );
-    gid( 'emotion'+p['pId'] ).innerHTML = emoTag;
+    var o0 = gid( 'emotion'+p['pId'] );
+    if ( !o0 ) return;
+    o0.innerHTML = emoTag;
     gid( 'postEmotion'+p['pId'] ).innerHTML = likeButtonCreate( p ) ;
 }
 function setEmotion( txt ) {
@@ -119,14 +125,17 @@ function postEmotion( e, pId, emot ) {
     httpPost( sendTxt, setEmotion );
 }
 function postSubmitAddNewNode0( p ) {
-    console.log( p );
+    console.log('postSubmitAddNedNode' + p );
+    if ( gid( 'pId' + p['pId'] ) ) return; 
     if ( p['ppId'] == undefined ) { p['ppId'] = ''; }
     if ( p['uImageId'] == undefined ) { p['uImageId'] = uImageId; } // uImageId is defined in feed0.htm
     var newNode = postCreate( p, '' );
     var parentNode = gid( 'pId' + p['ppId'] );
+    if ( ! parentNode ) return;
     if ( p['ppId'].length==0 ) { 
         parentNode.innerHTML = newNode + parentNode.innerHTML;
     } else {
+        console.log( 'postSubmitAddNewNode0:' + p['ppId'] );
         parentNode.innerHTML += newNode;
     }
 }
@@ -187,17 +196,3 @@ function tabView( event, view ) { // we keep event just in case
 /* Adding drag and drop of image to input field
 /* https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/^M
 /* ********************************** */
-function feedUpdate0( txt ) {
-    var posts = JSON.parse( txt );
-    console.log( posts );
-    for ( var i in posts ) {
-        var p = posts[i];
-        if ( p['action'] == 'del' ) {
-            postDelete( p['pId'] );   // delPost0
-        } else if ( p['action'] == 'mod') {
-            setEmotion( p ); // modPost0
-        } else if ( p['action'] == 'add' ) {
-            postSubmitAddNewNode0( p );  // addPost0
-        }
-    }
-}

@@ -12,6 +12,7 @@
     var uImageId     = "<?=$R['user']['uImageId']?>";
     var profileImage = '<?=$R['profile']['uImageId']?>';
     var feedType     = '<?=$R['feedType']?>';
+    var lastFeedTime = 0;
     var feedPosition = 0;
     var maxScrollY   = window.scrollY;
     var cTimeOut     = 0;
@@ -45,9 +46,31 @@
       var sendTxt = `func=${feedType}&profileId=${profileId}&feedPosition=${feedPosition}`;
       httpPost( sendTxt, buildPostTree );
     }
+    function feedUpdate0( txt ) {
+      var data = JSON.parse( txt );
+      var post = data['post'];
+      console.log( 'data: select ' + data['stmnt']);
+      console.log( 'data lastFeedTime:' + data['lastFeedTime']);
+      lastFeedTime = data['lastFeedTime'];
+      console.log( post );
+      for ( var i in post ) {
+          var p = post[i];
+          console.log('p action:' + p['action'] );
+          if ( p['action'] == 'del' ) {
+            console.log( '-----------------');
+              postDelete0( p );   // delPost0
+          } else if ( p['action'] == 'mod') {
+              console.log( '---- rebuild from pId==rpId  -------------');
+              setEmotion0( p ); // modPost0
+          } else if ( p['action'] == 'add' ) {
+              postSubmitAddNewNode0( p );  // addPost0
+          }
+      }
+    }
     function feedUpdate() { // only called in userEventFeed
-      if ( feedType != 'userEventFeed' ) return;
-      var sendTxt = "func=feedUpdate";
+      // if ( feedType != 'userEventFeed' ) return;
+      console.log( 'lastFeedTime' + lastFeedTime );
+      var sendTxt = "func=feedUpdate&lastFeedTime="+lastFeedTime;
       httpPost( sendTxt, feedUpdate0 );
     }
   </script>
