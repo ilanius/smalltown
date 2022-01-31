@@ -49,11 +49,12 @@
     function rebuildNode0( txt ) {
       var tree = JSON.parse( txt );
       if ( tree.length == 0) return;
+      console.log( tree );
       var str = buildTree( tree );
       str = str.replace( /^<div.{10,50}post">/, "<!-- ok -->"); // ugly but...
       str = str.replace( /<\/div>$/, "<!-- ok2 -->");
       var node = gid('pId'+tree[0]['pId']);
-      node.innerHTML = str;
+      if ( node ) node.innerHTML = str;
     }
     function rebuildNode( p ) {
       var sendTxt = `func=rebuildNode&pId=${p['pId']}&rpId=${p['rpId']}`;

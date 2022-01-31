@@ -258,7 +258,7 @@ function friendsOfUser( &$R, &$DB ) {
 function userEventFeed( &$R, &$DB ) {
     $friends      = friendsOfUser( $R, $DB );
     $feedPosition = $R['feedPosition'];
-    $stmnt        = "unique(rpId) from post where ruId in ($friends) order by pTime desc limit $feedPosition,100";
+    $stmnt        = "distinct(rpId) from post where ruId in ($friends) order by pTime desc limit $feedPosition,100";
     $posts        = $DB->select( $stmnt );
     if ( sizeof( $posts ) > 0 ) {
         $rpId  = $DB->implodeSelection( $posts, 'rpId');
@@ -277,7 +277,7 @@ function feedUpdate( &$R, &$DB ) {
     $post = $DB->select($stmnt);
     $time = $DB->selectOne('now()+0');
     // TODO: make this work
-    //$DB->delete( "feedUpdate", "pTime < now()-60"  ); // anything older than 2 min is deleted
+    //$DB->delete( "feedUpdate", "pTime < now()-60"  ); // anything older than x sec is deleted
     echo json_encode( ['post'=> $post, 'lastFeedTime' => $time[0], 'stmnt' => $stmnt ] );
 }
 function userEvent( &$R, &$DB ) {
@@ -338,7 +338,7 @@ function rebuildNode( &$R, &$DB ) {
 function userProfileFeed( &$R, &$DB ) {
     $feedPosition = $R['feedPosition'];
     // We may need to reconsider hard coding the number 100 here
-    $stmnt = "unique(rpId) from post where ruId='$R[profileId]' order by pTime desc limit $feedPosition,100";
+    $stmnt = "distinct(rpId) from post where ruId='$R[profileId]' order by pTime desc limit $feedPosition,100";
     $posts = $DB->select( $stmnt );
     if ( sizeof( $posts ) == 0 ) {
         echo "[]";
