@@ -141,19 +141,16 @@ function postSubmitAddNewNode( txt ) {
     var p = JSON.parse( txt );
     postSubmitAddNewNode0( p );
 }
-function postSubmitTop(e,o) {
+function postSubmit(e,o) {
     if ( e.keyCode != 13 || o.value == '' ) return;
-    e.preventDefault();                                // cancel event bubble here
-    var ppId = o.name.substring( 'commentInput'.length );    
-    var sendTxt = "func=postSubmit&profileId="+profileId+"&ppId="+ppId+"&pTxt="+ o.value;  
-    gid( 'commentInput'+ppId).value= '';
-    httpPost( sendTxt, postSubmitAddNewNode );
-}
-function postSubmit( e, o ) {
-    if ( e.keyCode != 13 || o.value == '' ) return;
-    var ppId = o.name.substring( 'commentInput'.length );    
-    postSubmitTop(e,o);
-    gid( 'commentInput'+ppId).remove();
+    e.preventDefault();                                   // cancel event bubble here
+    var pId = o.name.substring( 'commentInput'.length );  // pId will be parent of this post
+    var sendTxt = "func=postSubmit&profileId="+profileId+"&ppId="+pId+"&pTxt="+ o.value;  
+    gid( 'commentInput'+pId).value= '';
+    if ( pId.length > 0 ) {
+        gid( 'commentInput'+pId).remove(); // text input not post is removed 
+    } 
+    httpPost( sendTxt, feedUpdate); // postSubmitAddNewNode );
 }
 function postSubmit0( event, pId ) {
     comment = gid( 'comment' + pId);
