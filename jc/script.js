@@ -150,7 +150,7 @@ function postSubmit(e,o) {
     if ( pId.length > 0 ) {
         gid( 'commentInput'+pId).remove(); // text input not post is removed 
     } 
-    httpPost( sendTxt, feedUpdate); // postSubmitAddNewNode );
+    httpPost( sendTxt, feedUpdate ); // postSubmitAddNewNode );
 }
 function postSubmit0( event, pId ) {
     comment = gid( 'comment' + pId);

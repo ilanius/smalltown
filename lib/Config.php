@@ -22,6 +22,8 @@ class Config {
     public    $decimals    = 0;
     public    $defaultImage = "profileDefaultImage.png";
 
+    public    $feedClearInterval = 60; // s
+
     // --- newsletter --not used --- legacy code ------------------- */
     public    $newstest   = "XXX@XXXX.XXX";
     public    $salt       = "XXXX";

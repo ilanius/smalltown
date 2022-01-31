@@ -4,18 +4,21 @@
   <?php 
     requir0('head', $R);
     $pr = $R['profile'];
+    global $C;
   ?>
 
   <script>
-    var profileId    = "<?=$R['profileId']?>";
-    var uId          = "<?=$R['uId']?>";
-    var uImageId     = "<?=$R['user']['uImageId']?>";
-    var profileImage = '<?=$R['profile']['uImageId']?>';
-    var feedType     = '<?=$R['feedType']?>';
-    var lastFeedTime = 0;
-    var feedPosition = 0;
-    var maxScrollY   = window.scrollY;
-    var cTimeOut     = 0;
+    var profileId      = "<?=$R['profileId']?>";
+    var uId            = "<?=$R['uId']?>";
+    var uImageId       = "<?=$R['user']['uImageId']?>";
+    var profileImage   = '<?=$R['profile']['uImageId']?>';
+    var feedType       = '<?=$R['feedType']?>';
+    var lastFeedTime   = 0;   // server clock
+    var feedUpdateTime = 0;   // client timer
+    var feedClearInterval = parseInt('<?=$C->feedClearInterval/2 ?>');
+    var feedPosition   = 0;
+    var maxScrollY     = window.scrollY;
+    var cTimeOut       = 0;
 
     function buildTree( tree ) {
       let str = '';
@@ -38,7 +41,6 @@
     function rebuildNode0( txt ) {
       var tree = JSON.parse( txt );
       if ( tree.length == 0) return;
-      console.log( tree );
       var str = buildTree( tree );
       str = str.replace( /^<div.{10,50}post">/, "<!-- ok -->"); // ugly hack but works
       str = str.replace( /<\/div>$/, "<!-- ok2 -->");
@@ -66,8 +68,10 @@
     }
     function feedUpdate() { 
       /// if ( feedType != 'userEventFeed' ) return;
+      clearTimeout( feedUpdateTime );
       var sendTxt = "func=feedUpdate&lastFeedTime="+lastFeedTime;
       httpPost( sendTxt, feedUpdate0 );
+      feedUpdateTime = setTimeout( feedUpdate, 5000 );
     }
   </script>
 </head>
@@ -114,7 +118,7 @@
         if ( window.scrollY > maxScrollY ) {
           /* scroll fires a lot. These two lines works as a brake */
           clearTimeout( cTimeOut );
-          cTimeOut = setTimeout( userFeed , 1000 ); 
+          cTimeOut = setTimeout( userFeed , feedClearInterval ); 
           /* **************************************************** */   
           maxScrollY = window.scrollY;
        }

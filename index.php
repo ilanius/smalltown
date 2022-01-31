@@ -210,8 +210,9 @@ function postEmotion( &$R, &$DB ) {
     $DB->update( 'post', $post /*[ 'emotion' => '$emotion' ]*/ , "pId='$pId'" );
 
      // feedUpdate update
-     $post['action'] = 'mod';
-     $DB->insert( 'feedUpdate',  $post );
+    $post['action'] = 'mod';
+    $post['pTime']  = 'now()';
+    $DB->insert( 'feedUpdate',  $post );
 
     echo json_encode( $post );
 }
@@ -272,12 +273,16 @@ function userEventFeed( &$R, &$DB ) {
 }
 function feedUpdate( &$R, &$DB ) {
     $friends = friendsOfUser( $R, $DB ); // this limitation important if we have a million concurrent users
-    $stmnt = "*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fU inner " .
-     "join user u on fU.uId=u.uId where (fU.ruId = $R[uId] or fU.uId in ($friends) and pTime > 0)"; // '$R[lastFeedTime]' )";
+    $stmnt = "*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fu inner " .
+     "join user u on fu.uId=u.uId where 
+     (fu.ruId = $R[uId] or fu.uId in ($friends)) and pTime+0 > $R[lastFeedTime]";
+     debug( 'select '. $stmnt );
     $post = $DB->select($stmnt);
+    debug( print_r( $post,1 ) );
     $time = $DB->selectOne('now()+0');
-    // TODO: make this work
-    //$DB->delete( "feedUpdate", "pTime < now()-60"  ); // anything older than x sec is deleted
+    /* TODO: PUT THIS IN MAIN */
+    //$DB->delete( "feedUpdate", "pTime+0< now()-60"  ); // anything older than x sec is deleted
+    // we assume clients will update once every 30 s
     echo json_encode( ['post'=> $post, 'lastFeedTime' => $time[0], 'stmnt' => $stmnt ] );
 }
 function userEvent( &$R, &$DB ) {
@@ -535,6 +540,9 @@ checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userLostP
 /* userEntry returns 0  then we exit */
 userEntry($R, $DB)  || exit();
 
+$DB->delete( "feedUpdate", "pTime+0< now()- $C->feedClearInterval"  ); // anything older than x sec is deleted
+
+
 /* **************************** */
 /* Routing, i.e. determine which function/model (view) to call  */
 /* change to switch: https://www.php.net/manual/en/control-structures.switch.php  */
@@ -557,5 +565,5 @@ if ( $allowed[ $R['func'] ] > 0 ) {
     return; 
 }
 debug('C unauthorized :'.$R['func']);
-
+    
 ?>
