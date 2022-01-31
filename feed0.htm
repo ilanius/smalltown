@@ -48,6 +48,7 @@
     }
     function rebuildNode0( txt ) {
       var tree = JSON.parse( txt );
+      if ( tree.length == 0) return;
       var str = buildTree( tree );
       str = str.replace( /^<div.{10,50}post">/, "<!-- ok -->"); // ugly but...
       str = str.replace( /<\/div>$/, "<!-- ok2 -->");
