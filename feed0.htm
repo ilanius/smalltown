@@ -8,6 +8,7 @@
   ?>
 
   <script>
+    "strict";
     var profileId      = "<?=$R['profileId']?>";
     var uId            = "<?=$R['uId']?>";
     var uImageId       = "<?=$R['user']['uImageId']?>";
@@ -21,62 +22,66 @@
     var cTimeOut       = 0;
 
     function buildTree( tree ) {
-      let str = '';
-      for ( var i in tree ) {
-        var p = tree[i];
-        str += postCreate( p, buildTree( p['child'] )  );
-      }
-      return str;
+        let str = '';
+        for ( var i in tree ) {
+            var p = tree[i];
+            str += postCreate( p, buildTree( p['child'] )  );
+        }
+        return str;
     }  
     function userFeed0( txt ) {  // supplements post tree
-       var tree = JSON.parse( txt );
-       if ( tree.length > 0 ) feedPosition+= 100; 
-       var contPane = gid( 'pId' );
-       contPane.innerHTML += buildTree( tree );  
+         var tree = JSON.parse( txt );
+         if ( tree.length > 0 ) feedPosition+= 100; 
+         var contPane = gid( 'pId' );
+         contPane.innerHTML += buildTree( tree );  
     }
     function userFeed() {
-      var sendTxt = `func=${feedType}&profileId=${profileId}&feedPosition=${feedPosition}`;
-      httpPost( sendTxt, userFeed0 );
+        var sendTxt = `func=${feedType}&profileId=${profileId}&feedPosition=${feedPosition}`;
+        httpPost( sendTxt, userFeed0 );
     }
-    function rebuildNode0( txt ) {
-      var tree = JSON.parse( txt );
-      if ( tree.length == 0) return;
-      var str = buildTree( tree );
-      str = str.replace( /^<div.{10,50}post">/, "<!-- ok -->"); // ugly hack but works
-      str = str.replace( /<\/div>$/, "<!-- ok2 -->");
-      var node = gid('pId'+tree[0]['pId']);
-      if ( node ) node.innerHTML = str;
+    function rebuildNode0( txt ) { 
+        /* likes, childnode, edit txt all rebuilds node with children   */
+        /* this is because we want people who we don't follow shall     */
+        /* show in our feed if they connect with a thread we own        */
+        var tree = JSON.parse( txt );
+        if ( tree.length == 0) return;
+        var str = buildTree( tree );
+        str = str.replace( /^<div.{10,50}post">/, "<!-- ok -->"); // ugly hack but works
+        str = str.replace( /<\/div>$/, "<!-- ok2 -->");
+        var node = gid('pId'+tree[0]['pId']); // <= pId is parent to pId called in rebuildNode
+        if ( node ) node.innerHTML = str;
     }
     function rebuildNode( p ) {
-      var sendTxt = `func=rebuildNode&pId=${p['pId']}&rpId=${p['rpId']}`;
-      httpPost( sendTxt, rebuildNode0 );
+        var sendTxt = `func=rebuildNode&pId=${p['pId']}&rpId=${p['rpId']}`;
+        httpPost( sendTxt, rebuildNode0 );
     }
     function feedUpdate0( txt ) {
-      var data = JSON.parse( txt );
-      var post = data['post'];
-      console.log( 'feedUpdate0' + post );
-      lastFeedTime = data['lastFeedTime'];
-      for ( var i in post ) {
-          var p = post[i];
-          if ( p['action'] == 'del' ) {
-              console.log( 'postDelete0 pId:' + p['pId'] );
-              postDelete0( p );   // delPost0
-          } else if ( p['action'] == 'mod') {
-              console.log( 'rebuildnode mod pId:' + p['pId'] );
-              rebuildNode( p );
-          } else if ( p['action'] == 'add' ) {
-              console.log( 'add pId:' + p['pId'] + ' ' + p['pTxt'] );
-              postSubmitAddNewNode0( p );  // addPost0
-          }
-      }
+        var data = JSON.parse( txt );
+        var post = data['post'];
+        console.log( 'feedUpdate0' + post );
+        lastFeedTime = data['lastFeedTime'];
+        for ( var i in post ) {
+            var p = post[i];
+            if ( p['action'] == 'del' ) {
+                console.log( 'postDelete0 pId:' + p['pId'] );
+                postDelete0( p );   // delPost0
+            } else if ( p['action'] == 'mod') { // TODO: if feedUpdate recognizes a mod it could have built tree
+              // tree = p['tree'] ...
+                console.log( 'rebuildnode mod pId:' + p['pId'] );
+                rebuildNode( p );
+            } else if ( p['action'] == 'add' ) {
+                console.log( 'add pId:' + p['pId'] + ' ' + p['pTxt'] );
+                postSubmitAddNewNode0( p );  // addPost0
+            }
+        }
     }
     function feedUpdate() { 
-      /// if ( feedType != 'userEventFeed' ) return;
-      clearTimeout( feedUpdateTime ); // this function may be called inside call interval
-      var sendTxt = "func=feedUpdate&lastFeedTime="+lastFeedTime;
-      // console.log( sendTxt );
-      httpPost( sendTxt, feedUpdate0 );
-      feedUpdateTime = setTimeout( feedUpdate, 5000 );
+        /// if ( feedType != 'userEventFeed' ) return;
+        clearTimeout( feedUpdateTime ); // this function may be called inside call interval
+        var sendTxt = "func=feedUpdate&lastFeedTime="+lastFeedTime;
+        // console.log( sendTxt );
+        httpPost( sendTxt, feedUpdate0 );
+        feedUpdateTime = setTimeout( feedUpdate, 5000 );
     }
   </script>
 </head>

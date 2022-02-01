@@ -1,3 +1,5 @@
+"strict";
+
 function gid( id ) {
     return document.getElementById( id );
 }
@@ -41,8 +43,7 @@ function postDelete( pId ) {
     console.log( 'postDelete:' + post + ' data.uid:' + data.uid + ' d.ruid:' + data.ruid +  ' uId:' + uId );
     if ( !( +data.uid == +uId || +data.ruid == +uId )  ) { // if you are not owner of post or feed you may not delete
         console.log( 'postDelete return :' + post + ' data.uid:' + data.uid + ' d.ruid:' + data.ruid +  ' uId:' + uId );
-
-         return;
+        return;
     }
     var sendTxt = "func=postDelete&pId="+pId;
     console.log( 'postDelete sendTxt' + sendTxt );
@@ -129,7 +130,9 @@ function setEmotion( txt ) {
 }
 function postEmotion( e, pId, emot ) {
     var sendTxt = "func=postEmotion&pId="+pId+"&emot="+ emot;
-    httpPost( sendTxt, setEmotion );
+    httpPost( sendTxt, feedUpdate ); 
+    // this works as well but now the function call is identical on all clients
+    // httpPost( sendTxt, setEmotion );
 }
 function postSubmitAddNewNode0( p ) {
     if ( gid( 'pId' + p['pId'] ) ) return;  // failSafe: already there no need to add again
