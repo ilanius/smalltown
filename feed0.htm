@@ -60,6 +60,7 @@
           if ( p['action'] == 'del' ) {
               postDelete0( p );   // delPost0
           } else if ( p['action'] == 'mod') {
+              console.log( 'rebuildnode add pId:' + p['pId'] );
               rebuildNode( p );
           } else if ( p['action'] == 'add' ) {
               console.log( 'add pId:' + p['pId'] );
