@@ -126,7 +126,7 @@ function postEmotion( e, pId, emot ) {
 }
 function postSubmitAddNewNode0( p ) {
     if ( gid( 'pId' + p['pId'] ) ) return;  // failSafe: already there no need to add again
-    console.log( gid( p['pId']) + ' ' + p['pId'] );
+    console.log( gid( 'pId'+p['pId']) + ' ' + p['pId'] );
     if ( p['ppId'] == undefined ) { p['ppId'] = ''; }
     if ( p['uImageId'] == undefined ) { p['uImageId'] = uImageId; } // uImageId is defined in feed0.htm
     var newNode = postCreate( p, '' );
