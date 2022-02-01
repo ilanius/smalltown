@@ -70,6 +70,7 @@
       /// if ( feedType != 'userEventFeed' ) return;
       clearTimeout( feedUpdateTime );
       var sendTxt = "func=feedUpdate&lastFeedTime="+lastFeedTime;
+      console.log( sendTxt );
       httpPost( sendTxt, feedUpdate0 );
       feedUpdateTime = setTimeout( feedUpdate, 5000 );
     }

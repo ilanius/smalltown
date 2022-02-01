@@ -3,7 +3,7 @@
 /* Smalltown a.k.a facebook light      */
 /* no ads                              */
 /* *********************************** */
-function checkLogin(&$R, &$DB ) {
+function checkLogin( &$R, &$DB ) {
     if ( isset( $_COOKIE['session'] ) ) {
         $session = $DB->selectOne("* from session where sHash='$_COOKIE[session]'");
         if ( $session ) {
@@ -11,6 +11,7 @@ function checkLogin(&$R, &$DB ) {
             $R['uId'] = $session['uId']; 
             $R['user'] = $DB->selectOne("* from user where uId='$R[uId]'");        
             if ( !isset( $R['user']['uImageId']) || strlen($R['user']['uImageId'] ) < 3 ) { /* if user has not yet uploaded image we set default here */
+                // TODO: change to $C->defaultProfileImage;
                 $R['user']['uImageId'] = $R['userImage'];
             } 
             $DB->update('session', $R, "sHash='$_COOKIE[session]'");
@@ -524,11 +525,11 @@ require 'lib/Database.php';
 $C  = new Config();
 $DB = new Database( $C );
 
-$R = array( // $R is easier to write than $_REQUEST
+$R = array( // $R is easier to write than $_REQUEST 
     'badLogin'  => '',     'defaultImage' => $C->defaultImage,
     'func'      => '',     'session'   => '',  );
 foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
-    $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection
+     $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection
 }
 /* ********************** */
 /* entry                  */
@@ -542,7 +543,6 @@ userEntry($R, $DB)  || exit();
 
 $DB->delete( "feedUpdate", "pTime+0< now()- $C->feedClearInterval"  ); // anything older than x sec is deleted
 
-
 /* **************************** */
 /* Routing, i.e. determine which function/model (view) to call  */
 /* change to switch: https://www.php.net/manual/en/control-structures.switch.php  */
@@ -550,14 +550,11 @@ $DB->delete( "feedUpdate", "pTime+0< now()- $C->feedClearInterval"  ); // anythi
 debug('B route:'.$R['func']);
 $allowed = [  /* only functions followed by 1 can be called if you are logged in */
     ''               => 0,     
-    'postSubmit'     => 1,      'postDelete'        => 1,
-    'postEmotion'    => 1,
-    'changeRelation' => 1,      'friendRelation'    => 1,      
-    'userEventFeed'  => 1,      'userProfileFeed'   => 1,
-    'userLostPass0'  => 0,      'userEvent'         => 1,   
-    'userAccount'    => 1,      'userLogout'        => 1,     
-    'userProfile'    => 1,      'userSearch'        => 1,  
-    'feedUpdate'     => 1,      'rebuildNode'       => 1,
+    'postSubmit'     => 1,      'postDelete'        => 1,       'postEmotion'       => 1,
+    'changeRelation' => 1,      'friendRelation'    => 1,       'userEventFeed'     => 1,      
+    'userProfileFeed'=> 1,      'userLostPass0'     => 0,       'userEvent'         => 1,   
+    'userAccount'    => 1,      'userLogout'        => 1,       'userProfile'       => 1,      
+    'userSearch'     => 1,      'feedUpdate'        => 1,       'rebuildNode'       => 1,
  ];
    
 if ( $allowed[ $R['func'] ] > 0 ) {
