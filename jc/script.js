@@ -38,12 +38,18 @@ function postDelete( pId ) {
     /* https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes */
     let post = document.querySelector('#pId'+pId );
     let data = post.dataset;
-    if ( !(data.uid == uId || data.ruid == uId )  ) { // if you are not owner of post or feed you may not delete
+    console.log( 'postDelete:' + post + ' data.uid:' + data.uid + ' d.ruid:' + data.ruid +  ' uId:' + uId );
+    if ( !( +data.uid == +uId || +data.ruid == +uId )  ) { // if you are not owner of post or feed you may not delete
+        console.log( 'postDelete return :' + post + ' data.uid:' + data.uid + ' d.ruid:' + data.ruid +  ' uId:' + uId );
+
          return;
     }
     var sendTxt = "func=postDelete&pId="+pId;
+    console.log( 'postDelete sendTxt' + sendTxt );
     // https://developer.mozilla.org/en-US/docs/Web/API/Element/remove
-    httpPost( sendTxt, function() { gid('pId'+pId).remove() } );    
+    httpPost( sendTxt, function() { feedUpdate(); 
+        /* gid('pId'+pId).remove() // rely on feedUpdate*/ 
+    }  );    
 }
 function emotionCreate( p ) {
     var emotion = p['emotion'] || '';
@@ -117,6 +123,7 @@ function setEmotion0( p ) {
     gid( 'postEmotion'+p['pId'] ).innerHTML = likeButtonCreate( p ) ;
 }
 function setEmotion( txt ) {
+    console.log( txt );
     var p = JSON.parse( txt );
     setEmotion0( p );
 }
@@ -126,16 +133,17 @@ function postEmotion( e, pId, emot ) {
 }
 function postSubmitAddNewNode0( p ) {
     if ( gid( 'pId' + p['pId'] ) ) return;  // failSafe: already there no need to add again
-    console.log( gid( 'pId'+p['pId']) + ' ' + p['pId'] );
     if ( p['ppId'] == undefined ) { p['ppId'] = ''; }
     if ( p['uImageId'] == undefined ) { p['uImageId'] = uImageId; } // uImageId is defined in feed0.htm
     var newNode = postCreate( p, '' );
     var parentNode = gid( 'pId' + p['ppId'] );
     if ( ! parentNode ) return;
+    console.log( 'postSubmitAddNewNode0' + p['ppId'] + ' ' + p['pId'] );
     if ( p['ppId'].length==0 ) { 
         parentNode.innerHTML = newNode + parentNode.innerHTML;
     } else {
-        parentNode.innerHTML += newNode;
+        console.log( 'duplicate?');
+        parentNode.innerHTML += newNode;  // <= !!! duplicates occur
     }
 }
 function postSubmitAddNewNode( txt ) {

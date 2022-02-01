@@ -152,6 +152,7 @@ function postSubmit( &$R, &$DB ) {
 
     // feedUpdate update
     $copy = $post;
+    unset( $copy['pTime'] );
     if ( isset( $copy['ppId'] ) ) {
         $copy['pId'] = $copy['ppId'];
         $copy['action'] = 'mod';
@@ -212,7 +213,7 @@ function postEmotion( &$R, &$DB ) {
 
      // feedUpdate update
     $post['action'] = 'mod';
-    $post['pTime']  = 'now()';
+    unset( $post['pTime'] );
     $DB->insert( 'feedUpdate',  $post );
 
     echo json_encode( $post );
@@ -276,10 +277,9 @@ function feedUpdate( &$R, &$DB ) {
     $friends = friendsOfUser( $R, $DB ); // this limitation important if we have a million concurrent users
     $stmnt = "*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fu inner " .
      "join user u on fu.uId=u.uId where 
-     (fu.ruId = $R[uId] or fu.uId in ($friends)) and pTime+0 > $R[lastFeedTime]";
-     debug( 'select '. $stmnt );
+     (fu.ruId = $R[uId] or fu.uId in ($friends)) and pTime+0 >= $R[lastFeedTime] order by pTime";
+    //  debug( 'select '. $stmnt );
     $post = $DB->select($stmnt);
-    debug( print_r( $post,1 ) );
     $time = $DB->selectOne('now()+0');
     /* TODO: PUT THIS IN MAIN */
     //$DB->delete( "feedUpdate", "pTime+0< now()-60"  ); // anything older than x sec is deleted
@@ -547,7 +547,6 @@ $DB->delete( "feedUpdate", "pTime+0< now()- $C->feedClearInterval"  ); // anythi
 /* Routing, i.e. determine which function/model (view) to call  */
 /* change to switch: https://www.php.net/manual/en/control-structures.switch.php  */
 /* **************************** */
-debug('B route:'.$R['func']);
 $allowed = [  /* only functions followed by 1 can be called if you are logged in */
     ''               => 0,     
     'postSubmit'     => 1,      'postDelete'        => 1,       'postEmotion'       => 1,
