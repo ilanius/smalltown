@@ -175,7 +175,7 @@ function postSubmit0( event, pId ) {
 function reqLoginMail( event, contId, uEmailId ) {
     // event.preventDefault();                                // cancel event bubble here
     var uEmail = gid( uEmailId ).value;
-    if ( uEmail.length < 8 ) return;
+    if ( uEmail.length < 8 ) return; 
     var sendTxt = "func=userLostPass0&uEmail="+uEmail;
     httpPost( sendTxt, function( txt ) { 
         gid( contId ).innerHTML = '  Mail requested ' + txt; 

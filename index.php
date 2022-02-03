@@ -407,7 +407,7 @@ function userAccount(&$R, &$DB ) {
             unset($R['uPassword'] );
         }
         $DB->update("user", $R, "uId=$R[uId]");    
-        $R['user'] = $DB->selectOne("* from user where uId=$R[uId]");
+        $R['user'] = $DB->selectOne("* from user where uId='$R[uId]'");
     }
 
     // List of friend requests
@@ -527,7 +527,8 @@ $DB = new Database( $C );
 
 $R = array( // $R is easier to write than $_REQUEST 
     'badLogin'  => '',     'defaultImage' => $C->defaultImage,
-    'func'      => '',     'session'   => '',  );
+    'func'      => '',     'session'   => '',
+    'error'     => '',  );
 foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
      $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection
 }

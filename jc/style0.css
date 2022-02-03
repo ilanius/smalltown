@@ -2,7 +2,7 @@
 /* General         */
 /* *************** */
 html {
-    background-color: rgb(215, 227, 231);
+    background-color: rgb(205, 231, 210);
     padding-top: 1em;
     border:0;
 }
@@ -17,16 +17,12 @@ body {
 }
 button {
     background-color: rgb(50, 74, 82);
-    border: 0;
     color: white;
     padding:2px;
     margin:4px;
-    border-radius:4px;
-    border: 2px rgb(50, 74, 82) dashed;
+    border-radius:0px;
+    border: 4px rgb(50, 74, 82) dashed;
     cursor: pointer;
-}
-button.postButton.active {
-    border: 2px red solid;
 }
 div, span {
     box-sizing: border-box;
@@ -70,8 +66,9 @@ input[type=text]:focus {
 .center button {
     width: 30%;
 }
-.center button:hover {
-    border: 2px red solid;
+button:hover {
+    border: 4px red solid;
+    border-radius:0.5em;
 }
 /* ************* */
 /* feed0.htm     */
@@ -88,7 +85,7 @@ span.postComment, div.post {
 }
 .profileBox, .contPane > .post, .search .contPane {
     background-color: white;
-    border-radius:5px;
+    border-radius:0px;
     margin-left:0;
     margin-bottom: 0.5em;
     padding:0.5em;
@@ -122,7 +119,7 @@ span.postComment, div.post {
 .headPane {
     border: 0; 
     background-color: white;
-    border-radius:5px;
+    border-radius:0px;
     margin-bottom: 0.5em;
     padding: 0.5em;
     display: flex;
@@ -130,7 +127,7 @@ span.postComment, div.post {
     align-items: center; 
 }
 .headPane .item {
-    border-radius:4px;
+    border-radius:0px;
     padding: 4px;
     padding-bottom:0px;
     text-align:center;
@@ -168,7 +165,7 @@ span.postComment, div.post {
 /* entry0.htm        */
 /* ******************** */
 .tab, .tab0 {
-    border: 10px rgb(50, 74, 82) solid;
+    border: 0px rgb(50, 74, 82) solid;
     margin:0;
     padding: 1em;
     padding-top:0;
@@ -253,7 +250,7 @@ span.postComment, div.post {
 }
 .userAccount > .contPane {
     background-color: white;
-    border-radius:5px;
+    border-radius:0px;
     padding: 0.5em;
 }
 .fulf1 {
