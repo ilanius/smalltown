@@ -1,5 +1,4 @@
 
-DROP TABLE IF EXISTS `feedupdate`;
 DROP TABLE IF EXISTS `feedUpdate`;
 
 CREATE TABLE `feedUpdate` (
