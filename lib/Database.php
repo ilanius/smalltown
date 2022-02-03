@@ -1,6 +1,6 @@
 <?php
 class Database {
-    var $DB;
+    public $DB;
 
     function __construct( $C ) {
         if ( $C ) {
@@ -54,7 +54,7 @@ class Database {
     }
     function delete( $table, $where ) {
         $stmnt = "delete from $table where $where";
-        $this->DB->query( $stmnt ) or die ( mysqli_error( $this-DB ) );
+        $this->DB->query( $stmnt ) or die ( mysqli_error( $this->DB ) );
     }
     function update( $table, $entry, $where ) {
         $tf = $this->_tablefields($table);

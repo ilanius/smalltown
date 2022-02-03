@@ -1,7 +1,8 @@
 
 DROP TABLE IF EXISTS `feedupdate`;
+DROP TABLE IF EXISTS `feedUpdate`;
 
-CREATE TABLE `feedupdate` (
+CREATE TABLE `feedUpdate` (
   `pId` int(11) NOT NULL DEFAULT 0,
   `ppId` int(11) DEFAULT NULL,
   `uId` int(11) NOT NULL,

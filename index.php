@@ -527,21 +527,24 @@ $DB = new Database( $C );
 
 $R = array( // $R is easier to write than $_REQUEST 
     'badLogin'  => '',     'defaultImage' => $C->defaultImage,
-    'func'      => '',     'session'   => '',  );
+    'func'      => '',     'session'   => '',
+    'error'     => '' );
 foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
      $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection
 }
 /* ********************** */
 /* entry                  */
 /* ********************** */
-debug('A route:'.$R['func']);
 
 /* if any of these succeeds they return 1 */
 checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userLostPass0( $R, $DB) || 
 /* userEntry returns 0  then we exit */
 userEntry($R, $DB)  || exit();
 
-$DB->delete( "feedUpdate", "pTime+0< now()- $C->feedClearInterval"  ); // anything older than x sec is deleted
+debug('A route:'.$R['func'] );
+
+// $DB->delete( "feedUpdate", "pTime+0< now()- $C->feedClearInterval"  ); // anything older than x sec is deleted
+debug('C unauthorized :'.$R['func']);
 
 /* **************************** */
 /* Routing, i.e. determine which function/model (view) to call  */
@@ -560,6 +563,5 @@ if ( $allowed[ $R['func'] ] > 0 ) {
     $R['func']($R, $DB );
     return; 
 }
-debug('C unauthorized :'.$R['func']);
     
 ?>
