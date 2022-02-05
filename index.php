@@ -43,6 +43,7 @@ function debug( $mess ) {
 /* Templates can only access system variables via $R
 /* ****************************************************** */
 function requir0( $fileName, &$R ) { 
+    global $C;
     file_exists( $fileName.'.htm') ? require $fileName.'.htm' : require $fileName.'0.htm';
 }
 /* ******************************************************************* */
@@ -126,46 +127,38 @@ function postSubmit( &$R, &$DB ) {
     // Add post to user feed
     if ( $R['ppId'] == '' ) {
         $post = [
-            'uId' => $R['user']['uId'],    'ruId' => $R['profileId'], // $R['user']['uId'],
-            'rpId' => 'null',              'pTxt' => $R['pTxt'],
-            'comment' => '',
+            'uId'     => $R['user']['uId'],    
+            'ruId'    => $R['profileId'],     // <= TODO: check $R['user']['uId'],
+            'rpId'    => 'null',              
+            'pTxt'    => $R['pTxt'],
+            'emotion' => '',
         ]; 
         $DB->insert( "post", $post ); /* untaint input */
         $DB->query( "update post set rpId=pId where rpId is NULL" );
     } else { 
         $post = $DB->selectOne( "* from post where pId=$R[ppId]");
-        $post['ppId'] = $post['pId'];
-        $post['pTxt'] = $R['pTxt'];
-        $post['uId']  = $R['user']['uId'];
-        unset( $post['pId'] );
-        unset( $post['pTime']);
+        $post['ppId']    = $post['pId'];
+        $post['pTxt']    = $R['pTxt'];
+        $post['uId']     = $R['user']['uId'];
         $post['emotion'] = '';
-        if ( $post['ppId'] != '' ) {
-            // unset( $post['ruId'] ); // why?
-        }
+        unset( $post['pId'] ); // we use auto increment functio of mysql
+        unset( $post['pTime']);
         $DB->insert( 'post', $post ); /* untaint input */
     }
     // auto_increment is convenient but we need to know pId
     // https://www.w3schools.com/sql/func_mysql_last_insert_id.asp
     $rslt = $DB->selectOne("last_insert_id()");
     $post['pId'] = $rslt['last_insert_id()'];
-
-    // feedUpdate update
-    $copy = $post;
-    unset( $copy['pTime'] );
-    if ( isset( $copy['ppId'] ) ) {
-        $copy['pId'] = $copy['ppId'];
-        $copy['action'] = 'mod';
-    } else {
-        $copy['action'] = 'add';
-        $copy['rpId']   = $copy['pId'];
+    if ( $post['rpId'] =='null' ) {
+        $post['rpId'] = $post['pId'];
     }
-    $DB->insert( 'feedUpdate', $copy  );
-
-    echo json_encode( $post );  // TODO: echo feedUpdate instead!!!!!!!!
+    unset( $post['pTime'] );
+    $post['action'] = 'add';
+    $DB->insert( 'feedUpdate', $post  );
+    return feedUpdate( $R, $DB ); // 
 }
 /* ****************************************************************************** */
-/* The algorithm below is not easy to understand so it has been heavily commented */
+/* The algorithm below is not an easy read so it has been heavily commented */
 /* ****************************************************************************** */
 function postDelete(&$R, &$DB) {
     /* We want to delete element with post id pId.
@@ -188,11 +181,8 @@ function postDelete(&$R, &$DB) {
     $dels[] = '-1';                   // If list is empty code will crash so we add dummy value here
     $colls = implode(',', $dels ); 
     $DB->delete( 'post', "pId in ($colls)");
-
-     // feedUpdate update del
     $DB->insert( 'feedUpdate',  [ 'pId' => $R[pId], 'uId' => $R[uId], 'action' => 'del' ] );
-
-    echo "OK";
+    return feedUpdate( $R, $DB ); // 
 }
 function postEmotion( &$R, &$DB ) {
     $post    = $DB->selectOne( "* from post where pId='$R[pId]'");
@@ -215,9 +205,24 @@ function postEmotion( &$R, &$DB ) {
     $post['action'] = 'mod';
     unset( $post['pTime'] );
     $DB->insert( 'feedUpdate',  $post );
-
-    echo json_encode( $post );
+    return feedUpdate( $R, $DB ); // 
+    // echo json_encode( $post );
 }
+/* ************************************************* */
+/* Dishes out posts equally for eventUserFeed posts. */
+/* userProfileFiltering done at client ************* */
+/* ************************************************* */
+function feedUpdate( &$R, &$DB ) {
+    $friends = friendsOfUser( $R, $DB ); // this limitation important if we have a million concurrent users
+    $stmnt = "fu.*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fu inner " .
+     "join user u on fu.uId=u.uId where 
+     (fu.ruId = $R[uId] or fu.uId in ($friends)) and pTime+0 >= $R[lastFeedTime] order by pTime and pId";
+    debug( 'feedupdate select '. $stmnt );
+    $post = $DB->select($stmnt);
+    $time = $DB->selectOne('now()+0');
+    echo json_encode( ['post'=> $post, 'lastFeedTime' => $time[0], 'stmnt' => $stmnt ] );
+}
+
 function userLostPass0( &$R, &$DB ) {
     if ( $R['func'] != 'userLostPass0' ) return 0;
     $body = '';
@@ -273,19 +278,6 @@ function userEventFeed( &$R, &$DB ) {
         echo "[]";
     }
 }
-function feedUpdate( &$R, &$DB ) {
-    $friends = friendsOfUser( $R, $DB ); // this limitation important if we have a million concurrent users
-    $stmnt = "*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fu inner " .
-     "join user u on fu.uId=u.uId where 
-     (fu.ruId = $R[uId] or fu.uId in ($friends)) and pTime+0 >= $R[lastFeedTime] order by pTime";
-    //  debug( 'select '. $stmnt );
-    $post = $DB->select($stmnt);
-    $time = $DB->selectOne('now()+0');
-    /* TODO: PUT THIS IN MAIN */
-    //$DB->delete( "feedUpdate", "pTime+0< now()-60"  ); // anything older than x sec is deleted
-    // we assume clients will update once every 30 s
-    echo json_encode( ['post'=> $post, 'lastFeedTime' => $time[0], 'stmnt' => $stmnt ] );
-}
 function userEvent( &$R, &$DB ) {
     $R['profile']   = &$R['user'];
     $R['profileId'] = $R['uId'];
@@ -321,19 +313,6 @@ function buildTreeDesc( &$posts ) {
     $posts = array_reverse( $posts );
     $tree = buildTree( $posts );
     return array_reverse( $tree );
-}
-function rebuildNode( &$R, &$DB ) {
-    $stmnt = "* from post where rpId='$R[rpId]' and pId>='$R[pId]' order by pTime desc";
-    $posts = $DB->select( $stmnt );
-    if ( sizeof( $posts ) > 0 ) {
-        $rpId  = $DB->implodeSelection( $posts, 'rpId');
-        $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc"; 
-        $posts = $DB->select( $stmnt ); 
-        $tree  = buildTreeDesc( $posts );
-        echo json_encode( $tree );
-    } else {
-        echo "[]";
-    }
 }
 /* ********************************************************************* */
 /* Function userProfileFeed delivers your own or a friends posts         */
@@ -527,7 +506,7 @@ $DB = new Database( $C );
 
 $R = array( // $R is easier to write than $_REQUEST 
     'badLogin'  => '',     'defaultImage' => $C->defaultImage,
-    'func'      => '',     'session'   => '',
+    'func'      => '',     'session'   => '',    
     'error'     => '',  );
 foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
      $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection
@@ -542,7 +521,8 @@ checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userLostP
 /* userEntry returns 0  then we exit */
 userEntry($R, $DB)  || exit();
 
-$DB->delete( "feedUpdate", "pTime+0< now()- $C->feedClearInterval"  ); // anything older than x sec is deleted
+/* anything older than x sec is deleted */
+$DB->delete( "feedUpdate", "pTime+0< now()- $C->feedClearInterval"  ); 
 
 /* **************************** */
 /* Routing, i.e. determine which function/model (view) to call  */
@@ -554,7 +534,7 @@ $allowed = [  /* only functions followed by 1 can be called if you are logged in
     'changeRelation' => 1,      'friendRelation'    => 1,       'userEventFeed'     => 1,      
     'userProfileFeed'=> 1,      'userLostPass0'     => 0,       'userEvent'         => 1,   
     'userAccount'    => 1,      'userLogout'        => 1,       'userProfile'       => 1,      
-    'userSearch'     => 1,      'feedUpdate'        => 1,       'rebuildNode'       => 1,
+    'userSearch'     => 1,      'feedUpdate'        => 1,   
  ];
    
 if ( $allowed[ $R['func'] ] > 0 ) {
