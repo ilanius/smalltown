@@ -1,6 +1,7 @@
 "strict";
 
 var feedType = '';
+var lastFeedTime   = 0;   /* this is mysql server time  */
 
 function gid( id ) {
     return document.getElementById( id );
@@ -34,7 +35,6 @@ function requestDeny( uId1, uId2 ) {
     friendRelation( contId, 'requestDeny', uId1, uId2 );
     o = gid( contId ).style.display = 'none';
 }
-
 function emotionCreate( p ) {
     var emotion = p['emotion'] || '';
     var p1 = emotion.indexOf('p1:');
@@ -107,8 +107,9 @@ function postCreate( p, child ) {
 }
 function emotionSubmit( e, pId, emot ) {
     clearTimeout( feedUpdateTime ); // this function may be called inside call interval
-    var sendTxt = "func=postEmotion&pId="+pId+"&emot="+ emot;
-    httpPost( sendTxt, feedUpdate ); 
+    var sendTxt = `func=postEmotion&pId=${pId}&emot=${emot}&lastFeedTime=${lastFeedTime}`;
+    resetFeedUpdate();
+    httpPost( sendTxt, feedUpdateSet ); 
     // this works as well but now the function call is identical on all clients
     // httpPost( sendTxt, setEmotion );
 }
@@ -116,13 +117,14 @@ function postSubmit(e,o) {
     if ( e.keyCode != 13 || o.value == '' ) return;
     e.preventDefault();                                   // cancel event bubble here
     var pId = o.name.substring( 'commentInput'.length );  // pId will be parent of this post
-    var sendTxt = "func=postSubmit&profileId="+profileId+"&ppId="+pId+"&pTxt="+ o.value;  
+    var sendTxt = `func=postSubmit&profileId=${profileId}&ppId=${pId}&pTxt=${o.value}&lastFeedTime=${lastFeedTime}`;  
     gid( 'commentInput'+pId).value= '';
     if ( pId.length > 0 ) {
         gid( 'commentInput'+pId).remove(); // text input not post is removed 
     } 
-    clearTimeout( feedUpdateTime ); // this function may be called inside call interval
-    httpPost( sendTxt, feedUpdate ); // postSubmitAddNewNode );
+    //clearTimeout( feedUpdateTime ); // this function may be called inside call interval
+    resetFeedUpdate();
+    httpPost( sendTxt, feedUpdateSet ); // postSubmitAddNewNode );
 }
 function postDelete( pId ) {  
     /* https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes */
@@ -132,10 +134,11 @@ function postDelete( pId ) {
         /* Only owner of post or feed may delete. Check at server */
         return;
     }
-    var sendTxt = "func=postDelete&pId="+pId;
+    var sendTxt = `func=postDelete&pId=${pId}&lastFeedTime=${lastFeedTime}`;
     // https://developer.mozilla.org/en-US/docs/Web/API/Element/remove
     clearTimeout( feedUpdateTime ); // this function may be called inside call interval
-    httpPost( sendTxt, function() { feedUpdate();  }  );    
+    resetFeedUpdate();
+    httpPost( sendTxt, feedUpdateSet );    
 }
 /* ************************************************** */
 function feedUpdateAdd( p ) {
@@ -170,9 +173,9 @@ function feedUpdateMod( p ) {
     }
 }
 function feedUpdateSet( txt ) {
+    // console.log( txt );
     var data = JSON.parse( txt );
     var post = data['post'];
-    // console.log( 'feedUpdateSet' + post );
     lastFeedTime = data['lastFeedTime'];
     for ( var i in post ) {
         var p = post[i];

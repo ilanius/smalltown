@@ -137,6 +137,7 @@ function postSubmit( &$R, &$DB ) {
         $DB->query( "update post set rpId=pId where rpId is NULL" );
     } else { 
         $post = $DB->selectOne( "* from post where pId=$R[ppId]");
+        if ( $post == 0 ) return feedUpdate( $R, $DB ); /* post we are trying to comment has been deleted */
         $post['ppId']    = $post['pId'];
         $post['pTxt']    = $R['pTxt'];
         $post['uId']     = $R['user']['uId'];
@@ -145,7 +146,7 @@ function postSubmit( &$R, &$DB ) {
         unset( $post['pTime']);
         $DB->insert( 'post', $post ); /* untaint input */
     }
-    // auto_increment is convenient but we need to know pId
+    // Auto_increment is convenient but we need to know pId
     // https://www.w3schools.com/sql/func_mysql_last_insert_id.asp
     $rslt = $DB->selectOne("last_insert_id()");
     $post['pId'] = $rslt['last_insert_id()'];
@@ -166,14 +167,14 @@ function postDelete(&$R, &$DB) {
     /* children of pId have post ids > pId and we make certain we own pId by selecting for uId as wel */
     $stmnt = "pId, ppId from post where pId>='$R[pId]' and rpId in ". 
     "(select rpId from post where pId='$R[pId]' and (uId='$R[uId]' or ruId='$R[uId]') )";
-    $posts = $DB->select( $stmnt );   // sizeof ( $posts ) may be empty if uId is wrong 
-
+    $posts = $DB->select( $stmnt );   // sizeof ( $posts ) may be empty if uId is wrong
+    if ( sizeof($posts) == 0 ) return feedUpdate( $R, $DB ); 
     $prev = $posts[0]['ppId'];
     $dels = [];                       // ids of posts we want to delete 
     $pars[ $posts[0]['pId'] ] = 'X';  // $posts[0]['ppId']; // parent of post pId is X
     $dels[] = $posts[0]['pId'];       // root post with post id = pId
     foreach ( $posts as &$p ) {
-        if ( $pars[ $p['ppId'] ] ) {  // If parent exists we delete this post
+        if ( isset($pars[$p['ppId']] ) ) { // && $pars[ $p['ppId'] ] ) {  // If parent exists we delete this post
             $pars[ $p['pId'] ] = $p['ppId']; // We add this post to chain of posts to delete
             $dels[] = $p['pId'];      // We add post id to our list of deletions
         }
@@ -181,11 +182,12 @@ function postDelete(&$R, &$DB) {
     $dels[] = '-1';                   // If list is empty code will crash so we add dummy value here
     $colls = implode(',', $dels ); 
     $DB->delete( 'post', "pId in ($colls)");
-    $DB->insert( 'feedUpdate',  [ 'pId' => $R[pId], 'uId' => $R[uId], 'action' => 'del' ] );
+    $DB->insert( 'feedUpdate',  [ 'pId' => $R['pId'], 'uId' => $R['uId'], 'action' => 'del' ] );
     return feedUpdate( $R, $DB ); // 
 }
 function postEmotion( &$R, &$DB ) {
     $post    = $DB->selectOne( "* from post where pId='$R[pId]'");
+    if ( $post == 0 ) return feedUpdate( $R, $DB ); /* this happens when someone tries to like a deleted post */
     [$emotion, $uId, $emot, $pId ] = [ &$post['emotion'], $R['uId'], $R['emot'], $R['pId'] ];
     /* ******************************************* */
     /* toggle emotion                              */
@@ -201,12 +203,11 @@ function postEmotion( &$R, &$DB ) {
     $post['emotion'] = $emotion;
     $DB->update( 'post', $post /*[ 'emotion' => '$emotion' ]*/ , "pId='$pId'" );
 
-     // feedUpdate update
+    /* feedUpdate update */
     $post['action'] = 'mod';
     unset( $post['pTime'] );
     $DB->insert( 'feedUpdate',  $post );
     return feedUpdate( $R, $DB ); // 
-    // echo json_encode( $post );
 }
 /* ************************************************* */
 /* Dishes out posts equally for eventUserFeed posts. */
@@ -513,7 +514,7 @@ foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
 /* ********************** */
 /* entry                  */
 /* ********************** */
-debug('A route:'.$R['func']);
+debug('A route:');
 
 /* if any of these succeeds they return 1 */
 checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userLostPass0( $R, $DB) || 

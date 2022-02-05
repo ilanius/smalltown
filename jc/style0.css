@@ -116,7 +116,9 @@ span.postComment, div.post {
 .dropPlate:hover .userPlate {
     display:block;
 }
-
+button.active {
+    border: 4px crimson solid;
+}
 /* **************************** */
 /* headPane.htm                 */
 /* **************************** */
