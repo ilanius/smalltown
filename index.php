@@ -162,7 +162,7 @@ function postSubmit( &$R, &$DB ) {
     }
     $DB->insert( 'feedUpdate', $copy  );
 
-    echo json_encode( $post );
+    echo json_encode( $post );  // TODO: echo feedUpdate instead!!!!!!!!
 }
 /* ****************************************************************************** */
 /* The algorithm below is not easy to understand so it has been heavily commented */

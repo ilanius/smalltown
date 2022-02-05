@@ -22,6 +22,8 @@ class Config {
     public    $decimals    = 0;
     public    $defaultImage = "profileDefaultImage.png";
 
+    public    $design      = '0';
+
     public    $feedClearInterval = 60; // s
 
     // --- newsletter --not used --- legacy code ------------------- */

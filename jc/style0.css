@@ -1,29 +1,38 @@
 /* *************** */
 /* General         */
 /* *************** */
+:root {
+    --lgCol: rgb(205, 231, 210);
+    --dgCol: rgb(50, 74, 82);
+}
 html {
-    background-color: rgb(205, 231, 210);
+    background-color: var(--lgCol );
     padding-top: 1em;
     border:0;
 }
 body {
     width: 90%;
     max-width: 600px;
-    margin:0;
-    margin: auto;
+    margin: 0 auto;
     border: 0;
     font-size: 12px;
-    background-color:transparent;
+    background-color: transparent;
 }
 button {
-    background-color: rgb(50, 74, 82);
+    background-color: var(--dgCol);
+    border: 4px var(--dgCol) solid;
     color: white;
-    padding:2px;
-    margin:4px;
-    border-radius:0px;
-    border: 4px rgb(50, 74, 82) dashed;
+    padding: 4px;
+    margin: 4px;
+    border-radius: 0px;
+    font-weight: bold;
+}
+button:hover {
+    background-color: var(--lgCol);
+    color: navy;
     cursor: pointer;
 }
+
 div, span {
     box-sizing: border-box;
 }
@@ -32,13 +41,13 @@ form {
 }
 input[type=text], input[type=email], input[type=password] {
     background-color:white; /* User Agent Stylesheet går före */
-    border:0;
+    border: 0;
     border-bottom: 1px gray dashed;
-    font-size:1em;
+    font-size: 1em;
     font-family: courier;
     width: 15em;
-    padding:2px;
-    margin:2px;
+    padding: 2px;
+    margin: 2px 4px;
     transition: ease-in-out, width .35s ease-in-out;
 }
 input[type=text]:focus {
@@ -55,20 +64,15 @@ input[type=text]:focus {
     border:0;
     background-color: transparent;
     text-decoration: none;
-    color: navy;
+    color: var(--lgCol);
     font-weight:bold;
     font-size:1.2em;
 }
 .link:hover {
-    color:crimson;  
-    text-decoration: underline;  
-}
+    color: navy;
+ }
 .center button {
     width: 30%;
-}
-button:hover {
-    border: 4px red solid;
-    border-radius:0.5em;
 }
 /* ************* */
 /* feed0.htm     */
