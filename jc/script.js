@@ -128,13 +128,11 @@ function postDelete( pId ) {
     /* https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes */
     let post = document.querySelector('#pId'+pId );
     let data = post.dataset;
-    console.log( 'postDelete:' + post + ' data.uid:' + data.uid + ' d.ruid:' + data.ruid +  ' uId:' + uId );
-    if ( !( +data.uid == +uId || +data.ruid == +uId )  ) { // if you are not owner of post or feed you may not delete
-        console.log( 'postDelete return :' + post + ' data.uid:' + data.uid + ' d.ruid:' + data.ruid +  ' uId:' + uId );
+    if ( !( +data.uid == +uId || +data.ruid == +uId )  ) { 
+        /* Only owner of post or feed may delete. Check at server */
         return;
     }
     var sendTxt = "func=postDelete&pId="+pId;
-    console.log( 'postDelete sendTxt' + sendTxt );
     // https://developer.mozilla.org/en-US/docs/Web/API/Element/remove
     clearTimeout( feedUpdateTime ); // this function may be called inside call interval
     httpPost( sendTxt, function() { feedUpdate();  }  );    
@@ -145,22 +143,15 @@ function feedUpdateAdd( p ) {
     if ( p['ppId'] == undefined ) { p['ppId'] = ''; }
 
     // Don't add root post to wrong feed
-    console.log( p );
-    if ( 
-        p['rpId'] == p['pId'] && 
-        p['uId'] != profileId &&
-        feedType != 'userEventFeed'
-        ) return;
+    if ( p['rpId'] == p['pId'] && p['uId'] != profileId && feedType != 'userEventFeed' ) return;
 
     if ( p['uImageId'] == undefined ) { p['uImageId'] = uImageId; } // uImageId is defined in feed0.htm
     var newNode = postCreate( p, '' );
     var parentNode = gid( 'pId' + p['ppId'] );
     if ( ! parentNode ) return;
-    console.log( 'postSubmitAddNewNode0' + p['ppId'] + ' ' + p['pId'] );
     if ( p['ppId'].length==0 ) { 
         parentNode.innerHTML = newNode + parentNode.innerHTML;
     } else {
-        console.log( 'duplicate?');
         parentNode.innerHTML += newNode;  // <= !!! duplicates occur
     }
 }
@@ -181,11 +172,10 @@ function feedUpdateMod( p ) {
 function feedUpdateSet( txt ) {
     var data = JSON.parse( txt );
     var post = data['post'];
-    console.log( 'feedUpdateSet' + post );
+    // console.log( 'feedUpdateSet' + post );
     lastFeedTime = data['lastFeedTime'];
     for ( var i in post ) {
         var p = post[i];
-        console.log( 'feedUpdate action:' + p['action'] );
         if ( p['action'] == 'del' ) {
             feedUpdateDel( p );   // delPost0
         } else if ( p['action'] == 'mod') { 

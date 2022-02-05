@@ -217,7 +217,6 @@ function feedUpdate( &$R, &$DB ) {
     $stmnt = "fu.*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fu inner " .
      "join user u on fu.uId=u.uId where 
      (fu.ruId = $R[uId] or fu.uId in ($friends)) and pTime+0 >= $R[lastFeedTime] order by pTime and pId";
-    debug( 'feedupdate select '. $stmnt );
     $post = $DB->select($stmnt);
     $time = $DB->selectOne('now()+0');
     echo json_encode( ['post'=> $post, 'lastFeedTime' => $time[0], 'stmnt' => $stmnt ] );
