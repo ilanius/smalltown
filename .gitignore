@@ -1,10 +1,6 @@
 debugLog.txt
-entry.htm
-account.htm
-feed.htm
-head.htm
-headPane.htm
-search.htm
+*.htm
+!*.0.htm
 jc/style.css
 img/*
 !img/profileDefaultImage.png

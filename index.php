@@ -43,7 +43,8 @@ function debug( $mess ) {
 /* Templates can only access system variables via $R
 /* ****************************************************** */
 function requir0( $fileName, &$R ) { 
-    file_exists( $fileName.'.htm') ? require $fileName.'.htm' : require $fileName.'0.htm';
+    global $C;
+    file_exists( $fileName.'.'.$C->design.'.htm') ? require $fileName.'.'.$C->design.'.htm' : require $fileName.'.0.htm';
 }
 /* ******************************************************************* */
 /* The following code is used to manipulate the relation column
@@ -126,61 +127,54 @@ function postSubmit( &$R, &$DB ) {
     // Add post to user feed
     if ( $R['ppId'] == '' ) {
         $post = [
-            'uId' => $R['user']['uId'],    'ruId' => $R['profileId'], // $R['user']['uId'],
-            'rpId' => 'null',              'pTxt' => $R['pTxt'],
-            'comment' => '',
+            'uId'     => $R['user']['uId'],    
+            'ruId'    => $R['profileId'],     // <= TODO: check $R['user']['uId'],
+            'rpId'    => 'null',              
+            'pTxt'    => $R['pTxt'],
+            'emotion' => '',
         ]; 
         $DB->insert( "post", $post ); /* untaint input */
         $DB->query( "update post set rpId=pId where rpId is NULL" );
     } else { 
         $post = $DB->selectOne( "* from post where pId=$R[ppId]");
-        $post['ppId'] = $post['pId'];
-        $post['pTxt'] = $R['pTxt'];
-        $post['uId']  = $R['user']['uId'];
-        unset( $post['pId'] );
-        unset( $post['pTime']);
+        if ( $post == 0 ) return feedUpdate( $R, $DB ); /* post we are trying to comment has been deleted */
+        $post['ppId']    = $post['pId'];
+        $post['pTxt']    = $R['pTxt'];
+        $post['uId']     = $R['user']['uId'];
         $post['emotion'] = '';
-        if ( $post['ppId'] != '' ) {
-            // unset( $post['ruId'] ); // why?
-        }
+        unset( $post['pId'] ); // we use auto increment functio of mysql
+        unset( $post['pTime']);
         $DB->insert( 'post', $post ); /* untaint input */
     }
-    // auto_increment is convenient but we need to know pId
+    // Auto_increment is convenient but we need to know pId
     // https://www.w3schools.com/sql/func_mysql_last_insert_id.asp
     $rslt = $DB->selectOne("last_insert_id()");
     $post['pId'] = $rslt['last_insert_id()'];
-
-    // feedUpdate update
-    $copy = $post;
-    unset( $copy['pTime'] );
-    if ( isset( $copy['ppId'] ) ) {
-        $copy['pId'] = $copy['ppId'];
-        $copy['action'] = 'mod';
-    } else {
-        $copy['action'] = 'add';
-        $copy['rpId']   = $copy['pId'];
+    if ( $post['rpId'] =='null' ) {
+        $post['rpId'] = $post['pId'];
     }
-    $DB->insert( 'feedUpdate', $copy  );
-
-    echo json_encode( $post );
+    unset( $post['pTime'] );
+    $post['action'] = 'add';
+    $DB->insert( 'feedUpdate', $post  );
+    return feedUpdate( $R, $DB ); // 
 }
-/* ****************************************************************************** */
-/* The algorithm below is not easy to understand so it has been heavily commented */
-/* ****************************************************************************** */
+/* *********************************************************** */
+/* The algorithm below is no easy read hence many comments     */
+/* *********************************************************** */
 function postDelete(&$R, &$DB) {
     /* We want to delete element with post id pId.
     /* We select pId and ppId where post id > pId  >= we select parent id and root parent id
     /* children of pId have post ids > pId and we make certain we own pId by selecting for uId as wel */
     $stmnt = "pId, ppId from post where pId>='$R[pId]' and rpId in ". 
     "(select rpId from post where pId='$R[pId]' and (uId='$R[uId]' or ruId='$R[uId]') )";
-    $posts = $DB->select( $stmnt );   // sizeof ( $posts ) may be empty if uId is wrong 
-
+    $posts = $DB->select( $stmnt );   // sizeof ( $posts ) may be empty if uId is wrong or post has already been deleted
+    if ( sizeof($posts) == 0 ) return feedUpdate( $R, $DB ); 
     $prev = $posts[0]['ppId'];
     $dels = [];                       // ids of posts we want to delete 
     $pars[ $posts[0]['pId'] ] = 'X';  // $posts[0]['ppId']; // parent of post pId is X
     $dels[] = $posts[0]['pId'];       // root post with post id = pId
     foreach ( $posts as &$p ) {
-        if ( $pars[ $p['ppId'] ] ) {  // If parent exists we delete this post
+        if ( isset($pars[$p['ppId']] ) ) { // && $pars[ $p['ppId'] ] ) {  // If parent exists we delete this post
             $pars[ $p['pId'] ] = $p['ppId']; // We add this post to chain of posts to delete
             $dels[] = $p['pId'];      // We add post id to our list of deletions
         }
@@ -188,14 +182,12 @@ function postDelete(&$R, &$DB) {
     $dels[] = '-1';                   // If list is empty code will crash so we add dummy value here
     $colls = implode(',', $dels ); 
     $DB->delete( 'post', "pId in ($colls)");
-
-     // feedUpdate update del
-    $DB->insert( 'feedUpdate',  [ 'pId' => $R[pId], 'uId' => $R[uId], 'action' => 'del' ] );
-
-    echo "OK";
+    $DB->insert( 'feedUpdate',  [ 'pId' => $R['pId'], 'uId' => $R['uId'], 'action' => 'del' ] );
+    return feedUpdate( $R, $DB ); // 
 }
 function postEmotion( &$R, &$DB ) {
     $post    = $DB->selectOne( "* from post where pId='$R[pId]'");
+    if ( $post == 0 ) return feedUpdate( $R, $DB ); /* this happens when someone tries to like a deleted post */
     [$emotion, $uId, $emot, $pId ] = [ &$post['emotion'], $R['uId'], $R['emot'], $R['pId'] ];
     /* ******************************************* */
     /* toggle emotion                              */
@@ -210,14 +202,26 @@ function postEmotion( &$R, &$DB ) {
     }
     $post['emotion'] = $emotion;
     $DB->update( 'post', $post /*[ 'emotion' => '$emotion' ]*/ , "pId='$pId'" );
-
-     // feedUpdate update
+    /* feedUpdate update */
     $post['action'] = 'mod';
     unset( $post['pTime'] );
     $DB->insert( 'feedUpdate',  $post );
-
-    echo json_encode( $post );
+    return feedUpdate( $R, $DB ); // 
 }
+/* ************************************************* */
+/* Dishes out posts equally for eventUserFeed posts. */
+/* userProfileFiltering done at client ************* */
+/* ************************************************* */
+function feedUpdate( &$R, &$DB ) {
+    $friends = friendsOfUser( $R, $DB ); // this limitation important if we have a million concurrent users
+    $stmnt = "fu.*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fu inner " .
+     "join user u on fu.uId=u.uId where 
+     (fu.ruId = $R[uId] or fu.uId in ($friends)) and pTime+0 >= $R[lastFeedTime] order by pTime and pId";
+    $post = $DB->select($stmnt);
+    $time = $DB->selectOne('now()+0');
+    echo json_encode( ['post'=> $post, 'lastFeedTime' => $time[0], 'stmnt' => $stmnt ] );
+}
+
 function userLostPass0( &$R, &$DB ) {
     if ( $R['func'] != 'userLostPass0' ) return 0;
     $body = '';
@@ -258,40 +262,6 @@ function friendsOfUser( &$R, &$DB ) {
     $fU           = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
     return $fU;
 }
-function userEventFeed( &$R, &$DB ) {
-    $friends      = friendsOfUser( $R, $DB );
-    $feedPosition = $R['feedPosition'];
-    $stmnt        = "distinct(rpId) from post where ruId in ($friends) order by pTime desc limit $feedPosition,100";
-    $posts        = $DB->select( $stmnt );
-    if ( sizeof( $posts ) > 0 ) {
-        $rpId  = $DB->implodeSelection( $posts, 'rpId');
-        $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc"; 
-        $posts = $DB->select( $stmnt ); 
-        $tree  = buildTreeDesc( $posts );
-        echo json_encode( $tree );
-    } else {
-        echo "[]";
-    }
-}
-function feedUpdate( &$R, &$DB ) {
-    $friends = friendsOfUser( $R, $DB ); // this limitation important if we have a million concurrent users
-    $stmnt = "*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fu inner " .
-     "join user u on fu.uId=u.uId where 
-     (fu.ruId = $R[uId] or fu.uId in ($friends)) and pTime+0 >= $R[lastFeedTime] order by pTime";
-    //  debug( 'select '. $stmnt );
-    $post = $DB->select($stmnt);
-    $time = $DB->selectOne('now()+0');
-    /* TODO: PUT THIS IN MAIN */
-    //$DB->delete( "feedUpdate", "pTime+0< now()-60"  ); // anything older than x sec is deleted
-    // we assume clients will update once every 30 s
-    echo json_encode( ['post'=> $post, 'lastFeedTime' => $time[0], 'stmnt' => $stmnt ] );
-}
-function userEvent( &$R, &$DB ) {
-    $R['profile']   = &$R['user'];
-    $R['profileId'] = $R['uId'];
-    $R['feedType']  = 'userEventFeed';
-    requir0( 'feed', $R );
-}
 /* ******************************************************************************** */
 /* buildTree is used by userEventFeed and userProfileFeed                           */
 /* to build a tree of posts. TODO: just send JSON of SQL results to client          */
@@ -322,18 +292,27 @@ function buildTreeDesc( &$posts ) {
     $tree = buildTree( $posts );
     return array_reverse( $tree );
 }
-function rebuildNode( &$R, &$DB ) {
-    $stmnt = "* from post where rpId='$R[rpId]' and pId>='$R[pId]' order by pTime desc";
-    $posts = $DB->select( $stmnt );
+function userEventFeed( &$R, &$DB ) {
+    global $C;
+    $friends      = friendsOfUser( $R, $DB );
+    $feedPosition = $R['feedPosition'];
+    $stmnt        = "distinct(rpId) from post where ruId in ($friends) order by pTime desc limit $feedPosition,$C->feedLimit";
+    $posts        = $DB->select( $stmnt );
     if ( sizeof( $posts ) > 0 ) {
         $rpId  = $DB->implodeSelection( $posts, 'rpId');
-        $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc"; 
+        $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc, pId desc"; 
         $posts = $DB->select( $stmnt ); 
         $tree  = buildTreeDesc( $posts );
         echo json_encode( $tree );
     } else {
         echo "[]";
     }
+}
+function userEvent( &$R, &$DB ) {
+    $R['profile']   = &$R['user'];
+    $R['profileId'] = $R['uId'];
+    $R['feedType']  = 'userEventFeed';
+    requir0( 'feed', $R );
 }
 /* ********************************************************************* */
 /* Function userProfileFeed delivers your own or a friends posts         */
@@ -407,16 +386,14 @@ function userAccount(&$R, &$DB ) {
             unset($R['uPassword'] );
         }
         $DB->update("user", $R, "uId=$R[uId]");    
-        $R['user'] = $DB->selectOne("* from user where uId=$R[uId]");
+        $R['user'] = $DB->selectOne("* from user where uId='$R[uId]'");
     }
-
     // List of friend requests
     $friendRequest      = $DB->select("uId1 from friend where uId2='$R[uId]' and relation&8");
     array_push( $friendRequest, ['uId1' => '-1'] ); // in case request is empty
     $fId                = $DB->implodeSelection( $friendRequest, 'uId1' );
     $stmnt              = "* from user where uId in ($fId)";
     $R['friendRequest'] = $DB->select( $stmnt );
-
     // List of friends
     $stmnt              = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1=$R[uId] and friend.relation&4";
     $friend             = $DB->select( $stmnt); 
@@ -424,7 +401,6 @@ function userAccount(&$R, &$DB ) {
     $fId                = $DB->implodeSelection( $friend, 'uId2' );
     $stmnt              = "* from user where uId in ($fId)";
     $R['friend']        = $DB->select( $stmnt );
-
     // TODO: Friend suggestion
     $R['friendSuggestion'] = [];
     if ( isset( $R['user']['uYear'] ) ) {
@@ -527,8 +503,8 @@ $DB = new Database( $C );
 
 $R = array( // $R is easier to write than $_REQUEST 
     'badLogin'  => '',     'defaultImage' => $C->defaultImage,
-    'func'      => '',     'session'   => '',
-    'error'     => '' );
+    'func'      => '',     'session'   => '',    
+    'error'     => '',  );
 foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
      $R[$k] = str_replace( array('\\\\','\"'), array('','&quot'), $_REQUEST[$k] ); // guard against sql injection
 }
@@ -541,27 +517,25 @@ checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userLostP
 /* userEntry returns 0  then we exit */
 userEntry($R, $DB)  || exit();
 
-debug('A route:'.$R['func'] );
-
-// $DB->delete( "feedUpdate", "pTime+0< now()- $C->feedClearInterval"  ); // anything older than x sec is deleted
-debug('C unauthorized :'.$R['func']);
+/* anything older than x sec is deleted */
+$DB->delete( "feedUpdate", "pTime+0< now()- $C->feedClearInterval"  ); 
 
 /* **************************** */
 /* Routing, i.e. determine which function/model (view) to call  */
 /* change to switch: https://www.php.net/manual/en/control-structures.switch.php  */
 /* **************************** */
 $allowed = [  /* only functions followed by 1 can be called if you are logged in */
-    ''               => 0,     
     'postSubmit'     => 1,      'postDelete'        => 1,       'postEmotion'       => 1,
     'changeRelation' => 1,      'friendRelation'    => 1,       'userEventFeed'     => 1,      
-    'userProfileFeed'=> 1,      'userLostPass0'     => 0,       'userEvent'         => 1,   
+    'userProfileFeed'=> 1,      'userEvent'         => 1,   
     'userAccount'    => 1,      'userLogout'        => 1,       'userProfile'       => 1,      
-    'userSearch'     => 1,      'feedUpdate'        => 1,       'rebuildNode'       => 1,
- ];
+    'userSearch'     => 1,      'feedUpdate'        => 1,   
+];
    
-if ( $allowed[ $R['func'] ] > 0 ) {
+if ( isset($allowed[ $R['func'] ]) ) {
     $R['func']($R, $DB );
     return; 
 }
     
+debug('C unauthorized :'.$R['func']);    
 ?>
