@@ -139,9 +139,7 @@ function postDelete( pId ) {
 function feedUpdateAdd( p ) {
     if ( gid( 'pId' + p['pId'] ) ) return;  // post exists, no need to add again
     if ( p['ppId'] == undefined ) { p['ppId'] = ''; }
-    if ( p['rpId'] == p['pId'] && p['uId'] != profileId && feedType != 'userEventFeed' ) {
-        return; /* Don't add root post to wrong feed */
-    }
+    // if ( p['rpId'] == p['pId'] && p['uId'] != profileId && feedType != 'userEventFeed' ) {    return; /* Don't add root post to wrong feed */  }
     if ( p['uImageId'] == undefined ) { p['uImageId'] = uImageId; } // uImageId is defined in feed0.htm
     var newNode = postCreate( p, '' );
     var parentNode = gid( 'pId' + p['ppId'] );
@@ -167,8 +165,8 @@ function feedUpdateMod( p ) {
     }
 }
 function feedUpdateSet( txt ) {
-    // console.log( txt );
     var data = JSON.parse( txt );
+    console.log( data );
     var post = data['post'];
     lastFeedTime = data['lastFeedTime'];
     for ( var i in post ) {
