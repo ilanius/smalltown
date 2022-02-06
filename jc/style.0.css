@@ -32,7 +32,6 @@ button:hover {
     color: navy;
     cursor: pointer;
 }
-
 div, span {
     box-sizing: border-box;
 }
@@ -45,13 +44,12 @@ input[type=text], input[type=email], input[type=password] {
     border-bottom: 1px gray dashed;
     font-size: 1em;
     font-family: courier;
-    width: 15em;
     padding: 2px;
-    margin: 2px 4px;
+    margin:  2px 4px;
     transition: ease-in-out, width .35s ease-in-out;
+    outline: none;
 }
-input[type=text]:focus {
-    width: 70%;
+input:focus {
     outline: none;
 }
 .center {
@@ -71,12 +69,18 @@ input[type=text]:focus {
 .link:hover {
     color: navy;
  }
-.center button {
-    width: 30%;
-}
+ button.link.active { /* https://css-tricks.com/multiple-class-id-selectors/ */
+    border:0;    
+ }
 /* ************* */
 /* feed0.htm     */
 /* ************* */
+.comment {
+    width: 30%;
+}
+.comment:focus, .postComment input {
+    width: 90%;
+}
 span.postComment, div.post { 
     display:block;
     text-align:left;
@@ -170,14 +174,14 @@ button.active {
 /* ******************** */
 /* entry0.htm        */
 /* ******************** */
-.tab, .tab0 {
-    border: 0px rgb(50, 74, 82) solid;
-    margin:0;
+.tab, footer {
+    border: 0;
+    margin: 0;
     padding: 1em;
-    padding-top:0;
+    padding-top: 0;
     background-color: white;
 }
-.tab0 {
+footer {
     margin-top:1em;
     text-align:center;
     font-size:0.8em;
@@ -196,25 +200,11 @@ button.active {
     padding: 4px;
 }
 .tab input {
-    width: 60%;    
+    width: 40%;
 }
-.black, .tabButton {
-    background-color: rgb(50, 74, 82);
-    color: white;
-    border: 0;
-    padding:2px;
-    border-bottom:2px white solid;
-    border-top: 2px white solid;
-}
-.tabButton {
-    width: 25%;
-    border-bottom:2px green solid;
-    border-top: 2px green solid;
-    cursor: pointer;
-}
-.tabButton.active {
-    border-bottom:2px red solid;
-    border-top: 2px red solid;
+.tab input:focus {
+    width: 60%;
+
 }
 #lost, #signup {
     display:none;

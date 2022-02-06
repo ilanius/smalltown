@@ -44,7 +44,7 @@ function debug( $mess ) {
 /* ****************************************************** */
 function requir0( $fileName, &$R ) { 
     global $C;
-    file_exists( $fileName.'.'.$C->design.'.htm') ? require $fileName.'.htm' : require $fileName.'.0.htm';
+    file_exists( $fileName.'.'.$C->design.'.htm') ? require $fileName.'.'.$C->design.'.htm' : require $fileName.'.0.htm';
 }
 /* ******************************************************************* */
 /* The following code is used to manipulate the relation column
@@ -158,16 +158,16 @@ function postSubmit( &$R, &$DB ) {
     $DB->insert( 'feedUpdate', $post  );
     return feedUpdate( $R, $DB ); // 
 }
-/* ****************************************************************************** */
-/* The algorithm below is not an easy read so it has been heavily commented */
-/* ****************************************************************************** */
+/* *********************************************************** */
+/* The algorithm below is no easy read hence many comments     */
+/* *********************************************************** */
 function postDelete(&$R, &$DB) {
     /* We want to delete element with post id pId.
     /* We select pId and ppId where post id > pId  >= we select parent id and root parent id
     /* children of pId have post ids > pId and we make certain we own pId by selecting for uId as wel */
     $stmnt = "pId, ppId from post where pId>='$R[pId]' and rpId in ". 
     "(select rpId from post where pId='$R[pId]' and (uId='$R[uId]' or ruId='$R[uId]') )";
-    $posts = $DB->select( $stmnt );   // sizeof ( $posts ) may be empty if uId is wrong
+    $posts = $DB->select( $stmnt );   // sizeof ( $posts ) may be empty if uId is wrong or post has already been deleted
     if ( sizeof($posts) == 0 ) return feedUpdate( $R, $DB ); 
     $prev = $posts[0]['ppId'];
     $dels = [];                       // ids of posts we want to delete 
@@ -202,7 +202,6 @@ function postEmotion( &$R, &$DB ) {
     }
     $post['emotion'] = $emotion;
     $DB->update( 'post', $post /*[ 'emotion' => '$emotion' ]*/ , "pId='$pId'" );
-
     /* feedUpdate update */
     $post['action'] = 'mod';
     unset( $post['pTime'] );
@@ -388,14 +387,12 @@ function userAccount(&$R, &$DB ) {
         $DB->update("user", $R, "uId=$R[uId]");    
         $R['user'] = $DB->selectOne("* from user where uId='$R[uId]'");
     }
-
     // List of friend requests
     $friendRequest      = $DB->select("uId1 from friend where uId2='$R[uId]' and relation&8");
     array_push( $friendRequest, ['uId1' => '-1'] ); // in case request is empty
     $fId                = $DB->implodeSelection( $friendRequest, 'uId1' );
     $stmnt              = "* from user where uId in ($fId)";
     $R['friendRequest'] = $DB->select( $stmnt );
-
     // List of friends
     $stmnt              = "* from friend inner join user on user.uId=friend.uId2 where friend.uId1=$R[uId] and friend.relation&4";
     $friend             = $DB->select( $stmnt); 
@@ -403,7 +400,6 @@ function userAccount(&$R, &$DB ) {
     $fId                = $DB->implodeSelection( $friend, 'uId2' );
     $stmnt              = "* from user where uId in ($fId)";
     $R['friend']        = $DB->select( $stmnt );
-
     // TODO: Friend suggestion
     $R['friendSuggestion'] = [];
     if ( isset( $R['user']['uYear'] ) ) {
@@ -529,18 +525,16 @@ $DB->delete( "feedUpdate", "pTime+0< now()- $C->feedClearInterval"  );
 /* change to switch: https://www.php.net/manual/en/control-structures.switch.php  */
 /* **************************** */
 $allowed = [  /* only functions followed by 1 can be called if you are logged in */
-    ''               => 0,     
     'postSubmit'     => 1,      'postDelete'        => 1,       'postEmotion'       => 1,
     'changeRelation' => 1,      'friendRelation'    => 1,       'userEventFeed'     => 1,      
-    'userProfileFeed'=> 1,      'userLostPass0'     => 0,       'userEvent'         => 1,   
+    'userProfileFeed'=> 1,      'userEvent'         => 1,   
     'userAccount'    => 1,      'userLogout'        => 1,       'userProfile'       => 1,      
     'userSearch'     => 1,      'feedUpdate'        => 1,   
- ];
+];
    
-if ( $allowed[ $R['func'] ] > 0 ) {
+if ( isset($allowed[ $R['func'] ]) ) {
     $R['func']($R, $DB );
     return; 
 }
-debug('C unauthorized :'.$R['func']);
-    
+debug('C unauthorized :'.$R['func']);    
 ?>

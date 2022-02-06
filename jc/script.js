@@ -192,8 +192,19 @@ function reqLoginMail( event, contId, uEmailId ) {
     } );
 }
 
-// function tabView( event, view ) { // removed 6 feb 2022
-
+function tabView( event, view ) { 
+    var i, tab, viewButton;
+    var tab = document.getElementsByClassName("tab");
+    for ( i = 0; i < tab.length; i++ ) {
+        tab[i].style.display = "none";  
+    }
+    var tabButton = document.getElementsByClassName("tabButton");
+    for ( i = 0; i < tabButton.length; i++) {
+        tabButton[i].className = tabButton[i].className.replace(" active", "");
+    }
+    event.currentTarget.className += " active";
+    document.getElementById( view ).style.display = "block";  
+}
 /* ********************************************************** */
 /*
 /* https://css-tricks.com/cycle-through-classes-html-element/ 
