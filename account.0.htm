@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+  <head>
+  <?php requir0('head', $R ); ?>
+    <!-- add your javascript here. Toggle password visibility on/off    -->
+  <script>
+  </script>
+</head>  
+<body class="userAccount">
+  <?php requir0('headPane', $R );   ?>
+  <div class="contPane"> 
+    <?php $U = &$R['user']; ?>
+    <form action="?func=userAccount" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="subFunc" value="update">
+      <div class="fulf0">
+        <img src="img/<?=$U['uImageId']?>"> 
+        <div class="fulf1">
+          Select image to upload: <br>
+          <input type="file" name="profileImage" id="fileToUpload"> 
+        </div>
+      </div>
+    <?php  
+    $userFields = [ 
+      'uFirstName' => 'First name',  'uLastName'  => 'Last name', 
+      'uEmail'     => 'Email',       'uYear'      => 'Year', 
+      'uCourse'    => 'Course'  ];
+
+    foreach ( $userFields as $key => $val ) {
+      echo <<<html
+      <label class="uLabel" for="$key">$val </label>
+      <input id="$key" class="uInput" name="$key" type="text" value="$U[$key]"> <br>
+html;
+    }
+    ?>
+    <br>
+    <a href="https://www.w3schools.com/howto/howto_js_toggle_password.asp"> Howto Toggle Password</a><br>
+    Password  
+    <?php if (isset($R['updateNow']) ) { ?>
+    <input  class="updateNow" autofocus type="password" name="uPassword" value=""> Update now!
+    <?php } else { ?>
+      <input  type="password" name="uPassword" value=""> 
+    <?php } ?>
+    <br>
+    <button type="submit"> Update Account </button>
+    </form>
+
+    <!-- friend request list -->
+    <?php
+    if ( sizeof( $R['friendRequest'] ) > 0 ) {
+      echo "<h2> Friend requests </h2>";
+      foreach( $R['friendRequest'] as $f ) {
+        echo <<<html
+      <div>
+        <a href="?func=userProfile&profileId=$f[uId]"> 
+          <img width="48" src="img/$f[uImageId]"> $f[uFirstName] $f[uLastName] 
+        </a> &nbsp; 
+        <span id="nokok$R[uId]_$f[uId]">
+        <button class="relButton" onclick="requestAccept('$R[uId]', '$f[uId]');"> Accept </button>
+        <button class="relButton" onclick="requestDeny('$R[uId]', '$f[uId]');">  Deny  </button>
+        </span>
+      </div>
+html;
+      }
+      echo "<br>";
+    } 
+    ?>
+    <br>
+
+    <!-- friends list -->   
+    <?php
+    if ( sizeof( $R['friend'] ) > 0 ) {
+      echo "<h2> Friends </h2>";
+      foreach( $R['friend'] as $f ) {
+        if ( !isset( $f['uImageId'] ) ) {
+          $f['uImageId'] = $R['defaultImage'];
+        }
+        echo <<<html
+        <a class="friendBox" href="?func=userProfile&profileId=$f[uId]">
+          <img src="img/$f[uImageId]">
+          <span class="friendBoxName">$f[uFirstName] $f[uLastName] </span>
+        </a>
+  html;
+      }
+      echo "<br>";
+    } 
+    ?>
+
+    <!-- friends suggestions -->
+    <?php
+    if ( sizeof( $R['friendSuggestion'] ) > 0 ) {
+      echo "<h2> Friend suggestions </h2>";
+      foreach( $R['friendSuggestion'] as $f ) {
+        echo <<<html
+        <a class="friendBox" href="?func=userProfile&profileId=$f[uId]">
+          <img src="img/$f[uImageId]">
+           <span class="friendBoxName">$f[uFirstName] $f[uLastName] </span>
+        </a>
+  html;
+      }
+    } 
+  ?>    
+  </div>
+  
+  <div class="footPane"> 
+  </div>
+
+</body>
+</html>

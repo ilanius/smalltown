@@ -44,7 +44,7 @@ function debug( $mess ) {
 /* ****************************************************** */
 function requir0( $fileName, &$R ) { 
     global $C;
-    file_exists( $fileName.'.htm') ? require $fileName.'.htm' : require $fileName.'0.htm';
+    file_exists( $fileName.'.'.$C->design.'.htm') ? require $fileName.'.htm' : require $fileName.'.0.htm';
 }
 /* ******************************************************************* */
 /* The following code is used to manipulate the relation column
