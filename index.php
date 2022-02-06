@@ -262,27 +262,6 @@ function friendsOfUser( &$R, &$DB ) {
     $fU           = $DB->implodeSelection( $friends, 'uId2' ); //  .",-1,$R[uId]";
     return $fU;
 }
-function userEventFeed( &$R, &$DB ) {
-    $friends      = friendsOfUser( $R, $DB );
-    $feedPosition = $R['feedPosition'];
-    $stmnt        = "distinct(rpId) from post where ruId in ($friends) order by pTime desc limit $feedPosition,100";
-    $posts        = $DB->select( $stmnt );
-    if ( sizeof( $posts ) > 0 ) {
-        $rpId  = $DB->implodeSelection( $posts, 'rpId');
-        $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc"; 
-        $posts = $DB->select( $stmnt ); 
-        $tree  = buildTreeDesc( $posts );
-        echo json_encode( $tree );
-    } else {
-        echo "[]";
-    }
-}
-function userEvent( &$R, &$DB ) {
-    $R['profile']   = &$R['user'];
-    $R['profileId'] = $R['uId'];
-    $R['feedType']  = 'userEventFeed';
-    requir0( 'feed', $R );
-}
 /* ******************************************************************************** */
 /* buildTree is used by userEventFeed and userProfileFeed                           */
 /* to build a tree of posts. TODO: just send JSON of SQL results to client          */
@@ -312,6 +291,29 @@ function buildTreeDesc( &$posts ) {
     $posts = array_reverse( $posts );
     $tree = buildTree( $posts );
     return array_reverse( $tree );
+}
+function userEventFeed( &$R, &$DB ) {
+    global $C;
+    $friends      = friendsOfUser( $R, $DB );
+    $feedPosition = $R['feedPosition'];
+    $stmnt        = "distinct(rpId) from post where ruId in ($friends) order by pTime desc, rpId desc limit $feedPosition,$C->feedLimit";
+    $posts        = $DB->select( $stmnt );
+    debug( print_r( $posts, 1 ) );
+    if ( sizeof( $posts ) > 0 ) {
+        $rpId  = $DB->implodeSelection( $posts, 'rpId');
+        $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc, pId desc"; 
+        $posts = $DB->select( $stmnt ); 
+        $tree  = buildTreeDesc( $posts );
+        echo json_encode( $tree );
+    } else {
+        echo "[]";
+    }
+}
+function userEvent( &$R, &$DB ) {
+    $R['profile']   = &$R['user'];
+    $R['profileId'] = $R['uId'];
+    $R['feedType']  = 'userEventFeed';
+    requir0( 'feed', $R );
 }
 /* ********************************************************************* */
 /* Function userProfileFeed delivers your own or a friends posts         */
