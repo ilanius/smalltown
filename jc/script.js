@@ -1,6 +1,6 @@
 "strict";
 
-var feedType = '';
+var feedType       = '';
 var lastFeedTime   = 0;   /* this is mysql server time  */
 
 function gid( id ) {
@@ -67,10 +67,8 @@ function addPostSubmitField( event, pId ) {
     gid( 'commentInput'+pId ).focus();
 }
 /* *************************************** */
-/* parameter children has already been created recursively 
-/* i.e. if child nodes exist 
 /* See buildTree in feed0.htm
-/* a new level of recursiveness
+/* A new level of recursiveness
 /* *************************************** */
 function postInnerHtml( p, children ) {
     if ( !p['uImageId'] ) { p['uImageId'] ='profileDefaultImage.png' };
@@ -105,24 +103,21 @@ function postCreate( p, child ) {
     '</div>';
     return str;
 }
-function emotionSubmit( e, pId, emot ) {
+function emotionSubmit( event, pId, emot ) {
     clearTimeout( feedUpdateTime ); // this function may be called inside call interval
     var sendTxt = `func=postEmotion&pId=${pId}&emot=${emot}&lastFeedTime=${lastFeedTime}`;
     resetFeedUpdate();
     httpPost( sendTxt, feedUpdateSet ); 
-    // this works as well but now the function call is identical on all clients
-    // httpPost( sendTxt, setEmotion );
 }
-function postSubmit(e,o) {
-    if ( e.keyCode != 13 || o.value == '' ) return;
-    e.preventDefault();                                   // cancel event bubble here
+function postSubmit(event,o) {
+    if ( event.keyCode != 13 || o.value == '' ) return;
+    event.preventDefault();                                   // cancel event bubble here
     var pId = o.name.substring( 'commentInput'.length );  // pId will be parent of this post
     var sendTxt = `func=postSubmit&profileId=${profileId}&ppId=${pId}&pTxt=${o.value}&lastFeedTime=${lastFeedTime}`;  
     gid( 'commentInput'+pId).value= '';
     if ( pId.length > 0 ) {
         gid( 'commentInput'+pId).remove(); // text input not post is removed 
     } 
-    //clearTimeout( feedUpdateTime ); // this function may be called inside call interval
     resetFeedUpdate();
     httpPost( sendTxt, feedUpdateSet ); // postSubmitAddNewNode );
 }
@@ -142,12 +137,11 @@ function postDelete( pId ) {
 }
 /* ************************************************** */
 function feedUpdateAdd( p ) {
-    if ( gid( 'pId' + p['pId'] ) ) return;  // failSafe: already there no need to add again
+    if ( gid( 'pId' + p['pId'] ) ) return;  // post exists, no need to add again
     if ( p['ppId'] == undefined ) { p['ppId'] = ''; }
-
-    // Don't add root post to wrong feed
-    if ( p['rpId'] == p['pId'] && p['uId'] != profileId && feedType != 'userEventFeed' ) return;
-
+    if ( p['rpId'] == p['pId'] && p['uId'] != profileId && feedType != 'userEventFeed' ) {
+        return; /* Don't add root post to wrong feed */
+    }
     if ( p['uImageId'] == undefined ) { p['uImageId'] = uImageId; } // uImageId is defined in feed0.htm
     var newNode = postCreate( p, '' );
     var parentNode = gid( 'pId' + p['ppId'] );
@@ -155,7 +149,7 @@ function feedUpdateAdd( p ) {
     if ( p['ppId'].length==0 ) { 
         parentNode.innerHTML = newNode + parentNode.innerHTML;
     } else {
-        parentNode.innerHTML += newNode;  // <= !!! duplicates occur
+        parentNode.innerHTML += newNode;  
     }
 }
 function feedUpdateDel( p ) {
@@ -180,19 +174,18 @@ function feedUpdateSet( txt ) {
     for ( var i in post ) {
         var p = post[i];
         if ( p['action'] == 'del' ) {
-            feedUpdateDel( p );   // delPost0
+            feedUpdateDel( p );   
         } else if ( p['action'] == 'mod') { 
             feedUpdateMod( p );
         } else if ( p['action'] == 'add' ) {
-            feedUpdateAdd( p );  // addPost0
+            feedUpdateAdd( p );  
         }
     }
 }
-/* ***********************************************  */
-
 /* ************************************************ */
+
 function reqLoginMail( event, contId, uEmailId ) {
-    // event.preventDefault();                                // cancel event bubble here
+    // event.preventDefault();  // cancel event bubble here
     var uEmail = gid( uEmailId ).value;
     if ( uEmail.length < 8 ) return; 
     var sendTxt = "func=userLostPass0&uEmail="+uEmail;
@@ -201,24 +194,13 @@ function reqLoginMail( event, contId, uEmailId ) {
     } );
 }
 
-/* ****************************************** */
-/* https://css-tricks.com/cycle-through-classes-html-element/ */
-/* ****************************************** */
-function tabView( event, view ) { // we keep event just in case
-    var i, tab, viewButton;
-    var tab = document.getElementsByClassName("tab");
-    for ( i = 0; i < tab.length; i++ ) {
-      tab[i].style.display = "none";  
-    }
-    var tabButton = document.getElementsByClassName("tabButton");
-    for ( i = 0; i < tabButton.length; i++) {
-      tabButton[i].className = tabButton[i].className.replace(" active", "");
-    }
-    event.currentTarget.className += " active";
-    document.getElementById( view ).style.display = "block";  
-}
+// function tabView( event, view ) { // removed 6 feb 2022
 
-/* ************** */
+/* ********************************************************** */
+/*
+/* https://css-tricks.com/cycle-through-classes-html-element/ 
+/* 
 /* Adding drag and drop of image to input field
 /* https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/^M
-/* ********************************** */
+/*
+/* ********************************************************** */
