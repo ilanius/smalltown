@@ -296,9 +296,8 @@ function userEventFeed( &$R, &$DB ) {
     global $C;
     $friends      = friendsOfUser( $R, $DB );
     $feedPosition = $R['feedPosition'];
-    $stmnt        = "distinct(rpId) from post where ruId in ($friends) order by pTime desc, rpId desc limit $feedPosition,$C->feedLimit";
+    $stmnt        = "distinct(rpId) from post where ruId in ($friends) order by pTime desc limit $feedPosition,$C->feedLimit";
     $posts        = $DB->select( $stmnt );
-    debug( print_r( $posts, 1 ) );
     if ( sizeof( $posts ) > 0 ) {
         $rpId  = $DB->implodeSelection( $posts, 'rpId');
         $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc, pId desc"; 
