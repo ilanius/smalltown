@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+  <?php requir0('head', $R); ?>
+  <script>  </script>
+</head>
+
+<body class="login">
+  <div class="error<?=$R['error']?>"></div>
+  <div id="login" class="tab">
+    <div class="right"> 
+      <button class="link" onclick="tabView(event, 'lost')">   Lost Password </button>
+      <button class="link" onclick="tabView(event, 'signup')"> Sign Up!      </button>
+    </div>
+    <h1>Smalltown - login </h1>
+    <form action="index.php" method="post">
+      <input type="hidden"  name="func" value="userLogin">
+      <label for="uEmail">    User Email   </label> <input type="email"    name="uEmail" pattern=".{8,}" required> <br>
+      <label for="uPassword0"> Password    </label> <input type="password" name="uPassword0" required> <br>
+      <label for="">                       </label> <button type="submit"> login </button>
+    </form>                   
+    <br>
+  </div>                       
+ 
+  <div id="lost" class="tab">
+    <div class="right"> 
+      <button class="link" onclick="tabView(event, 'login')">  login        </button>
+      <button class="link" onclick="tabView(event, 'signup')"> sign up      </button>
+    </div>
+
+    <h1>Smalltown - lost password </h1>
+    <label for="uEmail"> User Email </label> <input type="email" id="reqUEmail" name="uEmail" required> 
+    <label for=""> </label>
+    <span id="reqLoginMail"> 
+      <button onclick="reqLoginMail(event, 'reqLoginMail','reqUEmail')"> request password </button> 
+    </span>
+  </div>
+
+  <div id="signup" class="tab">
+    <div class="right"> 
+      <button class="link" onclick="tabView(event, 'login')">  login         </button>
+      <button class="link" onclick="tabView(event, 'lost')">   lost password </button>
+    </div>
+
+    <h1>Smalltown - sign up </h1>
+    <form action="index.php" method="post">
+      <input type="hidden" name="func" value="userSignup">
+      <label for="uEmail">    User Email       </label> <input type="email"    name="uEmail"     required> <br>
+      <label for="uFirstName">User Firstname   </label> <input type="text"     name="uFirstName" pattern="\w+"   required> <br>
+      <label for="uLastName"> User Lastname    </label> <input type="text"     name="uLastName"  pattern="\w+"   required> <br>
+      <label for="uYear">     User Year  (YYYY)</label> <input type="text"     name="uYear"      pattern="\d{4}" value="1234" required> <br>
+      <label for="uPassword0">Password         </label> <input type="password" name="uPassword0" required> <br>
+      <label for=""></label>                            <button type="submit">sign up</button>
+    </form>
+    <br>
+  </div>
+
+  <footer> 
+    <div class="cookieLoose">
+        This site uses cookies. If you don't like cookies don't use this site.
+    </div>
+  </footer>
+
+</body>
+</html>

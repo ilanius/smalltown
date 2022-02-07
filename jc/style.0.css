@@ -1,0 +1,264 @@
+/* *************** */
+/* General         */
+/* *************** */
+:root {
+    --lgCol: rgb(205, 231, 210);
+    --dgCol: rgb(50, 74, 82);
+}
+html {
+    background-color: var(--lgCol );
+    padding-top: 1em;
+    border:0;
+}
+body {
+    width: 90%;
+    max-width: 600px;
+    margin: 0 auto;
+    border: 0;
+    font-size: 12px;
+    background-color: transparent;
+}
+button {
+    background-color: var(--dgCol);
+    border: 4px var(--dgCol) solid;
+    color: white;
+    padding: 4px;
+    margin: 4px;
+    border-radius: 0px;
+    font-weight: bold;
+}
+button:hover {
+    background-color: var(--lgCol);
+    color: navy;
+    cursor: pointer;
+}
+div, span {
+    box-sizing: border-box;
+}
+form {
+    display:inline;
+}
+input[type=text], input[type=email], input[type=password] {
+    background-color:white; /* User Agent Stylesheet går före */
+    border: 0;
+    border-bottom: 1px gray dashed;
+    font-size: 1em;
+    font-family: courier;
+    padding: 2px;
+    margin:  2px 4px;
+    transition: ease-in-out, width .35s ease-in-out;
+    outline: none;
+}
+input:focus {
+    outline: none;
+}
+.center {
+    text-align:center;
+}
+.right {
+    text-align: right;
+}
+.link {
+    border:0;
+    background-color: transparent;
+    text-decoration: none;
+    color: var(--lgCol);
+    font-weight:bold;
+    font-size:1.2em;
+}
+.link:hover {
+    color: navy;
+ }
+ button.link.active { /* https://css-tricks.com/multiple-class-id-selectors/ */
+    border:0;    
+ }
+/* ************* */
+/* feed0.htm     */
+/* ************* */
+.comment {
+    width: 30%;
+}
+.comment:focus, .postComment input {
+    width: 90%;
+}
+span.postComment, div.post { 
+    display:block;
+    text-align:left;
+    margin-left: 1em;
+}
+.pTxt {
+    display: inline-block;
+    padding:4px;
+    font-size:1.6em;
+}
+.profileBox, .contPane > .post, .search .contPane {
+    background-color: white;
+    border-radius:0px;
+    margin-left:0;
+    margin-bottom: 0.5em;
+    padding:0.5em;
+}
+.pImg {
+    width:24px;
+    border-radius: 50%;
+}
+.relationBox button {
+    font-size:0.8em;
+}
+.emotLike::before { /* https://unicode-table.com/en/1F44D/ */
+    content: '\1f44d'; /* number is in hex-form */
+}
+.emotDisl::before { /* https://unicode-table.com/en/1F44E/ */
+    content: '\1f44e';
+}
+.emotSmil::before { /* https://unicode-table.com/en/1F600/ */
+    content: '\1f600';
+}
+.userPlate {
+    display:none;
+}
+.dropPlate:hover .userPlate {
+    display:block;
+}
+button.active {
+    border: 4px crimson solid;
+}
+/* **************************** */
+/* headPane.htm                 */
+/* **************************** */
+.headPane {
+    border: 0; 
+    background-color: white;
+    border-radius:0px;
+    margin-bottom: 0.5em;
+    padding: 0.5em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center; 
+}
+.headPane .item {
+    border-radius:0px;
+    padding: 4px;
+    padding-bottom:0px;
+    text-align:center;
+    color:rgb(8, 51, 8);
+    height:40px;
+    width:40px;
+}
+.home, .setting {
+    text-decoration: none;
+    font-size: 2em;
+}
+.headPane .search input {
+    width: 100%;
+}
+.dropdown {
+  position: relative;
+  display: inline-block;
+} 
+.dropdown-content {
+  display: none;
+  position: absolute;
+  width: 100px;
+  box-shadow: 0; 
+  padding: 12px 16px;
+  z-index: 1;
+  font-size:14px;
+  left:-54px;
+  text-align:left;
+  background-color:white;
+}  
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+/* ******************** */
+/* entry0.htm        */
+/* ******************** */
+.tab, footer {
+    border: 0;
+    margin: 0;
+    padding: 1em;
+    padding-top: 0;
+    background-color: white;
+}
+footer {
+    margin-top:1em;
+    text-align:center;
+    font-size:0.8em;
+    padding-top:1em;
+}
+.tab {
+    background-image: url('../img/smalltown.png');
+    background-size: 100% 50%;
+    background-repeat: no-repeat;
+    background-position: bottom;
+    min-height: 300px;
+}
+.tab label {
+    width: 30%;
+    display: inline-block;
+    padding: 4px;
+}
+.tab input {
+    width: 40%;
+}
+.tab input:focus {
+    width: 60%;
+
+}
+#lost, #signup {
+    display:none;
+}
+.error, .errorUserExists, .errorBadLogin {
+    text-align:center;
+    background-color:brown;
+    padding: 2px; 
+}
+.error {
+    display: none;
+}
+.errorUserExists::before {
+    content: 'User Exists';
+    display: block;
+}
+.errorBadLogin::before {
+    content: 'Bad Login';
+    display: blocK;
+}
+/* ************************* */
+/* userAccount.htm           */
+/* ************************* */
+.updateNow {
+    border: 4px red dashed;
+    margin: 4px;
+    padding: 4px;
+}
+.uLabel {
+    display: inline-block;
+    width: 100px;
+    padding: 2px; 
+}
+.friendBox img {
+    width: 40px;
+}
+.check::before {
+    content: '\2713';
+}
+.userAccount > .contPane {
+    background-color: white;
+    border-radius:0px;
+    padding: 0.5em;
+}
+.fulf1 {
+    display: inline-block;
+    padding:0.5em;
+}
+.friendBox {
+    display:inline-block;
+    width:30%;
+    padding:0.5em;
+    text-decoration:none;
+}
+.friendBox:hover {
+    color:red;    
+}

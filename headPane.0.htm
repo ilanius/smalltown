@@ -1,0 +1,24 @@
+<div class="headPane">
+    <span class="item">
+      <a href="?func=userEvent" class="home"> &#10224; </a> <!-- https://www.toptal.com/designers/htmlarrows/arrows/up-quadruple-arrow/ -->
+    </span> 
+    <span class="search">
+    <form action="?func=userSearch" method="post">
+      <!-- TODO: redo this using ajax http request -->
+      <input type="text" name="search" id="search" placeholder="search">
+    </form>
+    </span >
+    <span class="item">
+      <a href="?func=userProfile"> 
+        <img src="img/<?=$R['user']['uImageId']?>" width="30" height="30"> 
+      </a> 
+    </span>
+    <span class="item dropdown setting">
+      &#9881;
+      <div class="dropdown-content">
+      <a href="?func=userAccount"> account  </a> 
+      <a href="?func=userLogout"> logout    </a>
+      </div>
+    </span>
+  </div>
+  
