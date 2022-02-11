@@ -194,6 +194,18 @@ footer {
     background-position: bottom;
     min-height: 300px;
 }
+.logoTop {
+    border: 0px red solid;
+    background-image: url('../img/logoSmallTown.png');
+    background-size: 64px 32px;
+    background-repeat: no-repeat;
+    background-position: top left;
+    height: 48px;
+    padding:0em;
+    padding-top:0.2em;
+    padding-left:2em;
+    margin:0;
+}
 .tab label {
     width: 30%;
     display: inline-block;
