@@ -9,6 +9,7 @@ class Config {
     public    $password     = 'smalltown';
     public    $database     = 'smalltown';
 
+    public    $domain       = 'http://onnestad.lgwa.net/smalltown';
     public    $mailfrom     = 'XX@XXX.XXX';
     public    $webroot      = '/';
 

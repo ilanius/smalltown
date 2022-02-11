@@ -223,28 +223,36 @@ function feedUpdate( &$R, &$DB ) {
 }
 
 function userLostPass0( &$R, &$DB ) {
+    global $C;
     if ( $R['func'] != 'userLostPass0' ) return 0;
     $body = '';
     if ( isset( $R['uEmail'] ) ) {
         $U = $DB->selectOne("* from user where uEmail='$R[uEmail]'");
         if ( $U ) {
             $U['uPassword0'] = urlencode( $U['uPassword'] );
-            $to_email = "leonard.ilanius@gmail.com";
             $subject = "Password reset";
-            $body = '';
+            $body = '<html><body>';
             $body = $body . <<<html
-         "Hi,\n This is test email send by PHP Script. 
-        <a href="?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]"> Access Token </a>
+<h1>Hi!</h1>
+<p>Password Reset Request</p>
+<a href="$C->domain/index.php?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]">
+  Access Token 
+</a>
+<p>Good Luck!</p>
+</body>
+</html>
 html;
-            $headers = "From: admin@smalltown.com";
+            $headers =  'MIME-Version: 1.0'."\r\n"; 
+            $headers .= 'Content-type: text/html; charset=utf-8'."\r\n";
+            $headers .= "From: admin@smalltown.com";  // TODO: fix!
         } else {
             $body = '';
         }
         /* ***************************************************** */
         /* we need a working e-mail server for this line to work */
-        /* mail($R['uEmail'], $subject, $body, $headers);        */
+        mail($R['uEmail'], $subject, $body, $headers);        
         /* ***************************************************** */
-        echo $body; 
+        echo 'Mail Sent!'; // $body; 
         return 1;
     } 
     return 0;
