@@ -23,6 +23,12 @@ function checkLogin( &$R, &$DB ) {
     }        
     return 0;
 }
+function collectPlate( &$R,&$DB ) {
+    $stmnt = "uId, uFirstName, uLastName, uImageId from user where uId in ( $R[users] )";
+    debug( $stmnt );
+    $uReg = $DB->getReg( $stmnt, 'uId');
+    echo json_encode( $uReg );
+}
 /* ************************************************** */
 /* We set session cookie here 
 /* ************************************************** */
@@ -59,7 +65,7 @@ function requir0( $fileName, &$R ) {
 function friendRelation( &$R, &$DB ) {
     global $C;
     $action = [
-        'requestAccept' => "relation=(relation|4)&7",
+        'requestAccept' => "relation=(relation|6)&7",
         'block'         => "relation=1",            'unblock'   => "relation=relation&14",
         'follow'        => "relation=relation|2",   'unfollow'  => "relation=relation&13",
         'request'       => "relation=relation|8",   // this is curious as you may be blocking the one you are requesting
@@ -74,7 +80,7 @@ function friendRelation( &$R, &$DB ) {
         $DB->query( $stmnt); 
     }
     $reaction = [ // if A blocks or unfriends B, B's relation data vis a vis A must be updated
-        'requestAccept' => "relation=(relation|4)&7",
+        'requestAccept' => "relation=(relation|6)&7",
         'requestDeny'   => "relation=relation&7",
         'block'         => 'relation=relation&1',    
         'unfriend'      => 'relation=relation&3',
@@ -208,20 +214,6 @@ function postEmotion( &$R, &$DB ) {
     $DB->insert( 'feedUpdate',  $post );
     return feedUpdate( $R, $DB ); // 
 }
-/* ************************************************* */
-/* Dishes out posts equally for eventUserFeed posts. */
-/* userProfileFiltering done at client ************* */
-/* ************************************************* */
-function feedUpdate( &$R, &$DB ) {
-    $friends = friendsOfUser( $R, $DB ); // this limitation important if we have a million concurrent users
-    $stmnt = "fu.*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fu inner " .
-     "join user u on fu.uId=u.uId where 
-     (fu.ruId = $R[uId] or fu.uId in ($friends)) and pTime+0 >= $R[lastFeedTime] order by pTime and pId";
-    $post = $DB->select($stmnt);
-    $time = $DB->selectOne('now()+0');
-    echo json_encode( ['post'=> $post, 'lastFeedTime' => $time[0], 'stmnt' => $stmnt ] );
-}
-
 function userLostPass0( &$R, &$DB ) {
     global $C;
     if ( $R['func'] != 'userLostPass0' ) return 0;
@@ -250,9 +242,10 @@ html;
         }
         /* ***************************************************** */
         /* we need a working e-mail server for this line to work */
-        mail($R['uEmail'], $subject, $body, $headers);        
+        // mail($R['uEmail'], $subject, $body, $headers);        
         /* ***************************************************** */
-        echo 'Mail Sent!'; // $body; 
+        echo $body; // 'Mail Sent!'; // $body; 
+        // we need to create session 
         return 1;
     } 
     return 0;
@@ -300,6 +293,39 @@ function buildTreeDesc( &$posts ) {
     $tree = buildTree( $posts );
     return array_reverse( $tree );
 }
+function augmentPostsWithUserData( &$R, &$DB, &$posts ) {
+    if ( sizeof( $posts ) == 0 ) return;
+    $coll = [];
+    $c = $DB->implodeSelection( $posts, 'uId');    
+    if ( $c > '' ) array_push($coll, $c );
+    $c = $DB->implodeSelection( $posts, 'ruId');  
+    if ( $c > '' ) array_push($coll, $c );
+    if ( sizeof( $coll ) == 0 ) return;
+    $coll = implode( $coll, ',');
+    $stmnt = "* from user where uId in ($coll)"; // coll contains uid and root user id of posts // $uIdColl,$ruIdColl)";
+    $uReg  = $DB->getReg( $stmnt, 'uId');
+    foreach ( $posts as &$p ) {
+        foreach( ['uImageId','uFirstName','uLastName'] as $f ) {
+            $p[ $f ] = $uReg[ $p['uId']][ $f  ];
+            if ( !isset( $p['ruId']) ) continue; // may happen with delete item from feedUpdate
+            $p[ 'r'.$f ] = $uReg[ $p['ruId']][ $f  ];                
+        }
+    }
+}
+/* ************************************************* */
+/* Dishes out posts equally for eventUserFeed posts. */
+/* userProfileFiltering done at client ************* */
+/* ************************************************* */
+function feedUpdate( &$R, &$DB ) {
+    $friends = friendsOfUser( $R, $DB ); // this limitation important if we have a million concurrent users
+    $stmnt = "fu.*,u.uImageId,u.uFirstName,u.uLastName from feedUpdate fu inner " .
+     "join user u on fu.uId=u.uId where 
+     (fu.ruId = $R[uId] or fu.uId in ($friends)) and pTime+0 >= $R[lastFeedTime] order by pTime and pId";
+    $post = $DB->select($stmnt);
+    augmentPostsWithUserData( $R, $DB, $post );
+    $time = $DB->selectOne('now()+0');
+    echo json_encode( ['post'=> $post, 'lastFeedTime' => $time[0], 'stmnt' => $stmnt ] );
+}
 function userEventFeed( &$R, &$DB ) {
     global $C;
     $friends      = friendsOfUser( $R, $DB );
@@ -308,8 +334,11 @@ function userEventFeed( &$R, &$DB ) {
     $posts        = $DB->select( $stmnt );
     if ( sizeof( $posts ) > 0 ) {
         $rpId  = $DB->implodeSelection( $posts, 'rpId');
-        $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc, pId desc"; 
+        //$stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc, pId desc"; 
+        $stmnt = "* from post where rpId in ($rpId) order by pTime desc, pId desc"; 
         $posts = $DB->select( $stmnt ); 
+        // now we augment posts with user data
+        augmentPostsWithUserData( $R, $DB, $posts);
         $tree  = buildTreeDesc( $posts );
         echo json_encode( $tree );
     } else {
@@ -340,6 +369,7 @@ function userProfileFeed( &$R, &$DB ) {
     $rpId  = $DB->implodeSelection( $posts, 'rpId');    
     $stmnt = "post.*,user.uImageId,user.uFirstName,user.uLastName from post inner join user on post.uId=user.uId where rpId in ($rpId) order by pTime desc"; 
     $posts = $DB->select( $stmnt );
+    augmentPostsWithUserData( $R, $DB, $posts);
     $tree = buildTreeDesc( $posts );
     echo json_encode( $tree );
 }
@@ -538,7 +568,7 @@ $allowed = [  /* only functions followed by 1 can be called if you are logged in
     'changeRelation' => 1,      'friendRelation'    => 1,       'userEventFeed'     => 1,      
     'userProfileFeed'=> 1,      'userEvent'         => 1,   
     'userAccount'    => 1,      'userLogout'        => 1,       'userProfile'       => 1,      
-    'userSearch'     => 1,      'feedUpdate'        => 1,   
+    'userSearch'     => 1,      'feedUpdate'        => 1,       'collectPlate'      => 1,
 ];
    
 if ( isset($allowed[ $R['func'] ]) ) {

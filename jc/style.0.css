@@ -114,11 +114,26 @@ span.postComment, div.post {
 .emotSmil::before { /* https://unicode-table.com/en/1F600/ */
     content: '\1f600';
 }
-.userPlate {
+.emotionPlate {
     display:none;
 }
-.dropPlate:hover .userPlate {
-    display:block;
+.dropPlate:hover > .emotionPlate {
+    display:inline-block;
+    padding:4px;
+    border: 4px var(--lgCol) solid;
+    background-color: var(--lgCol ); /* white; /*  var(--dgCol ); */
+    color: var(--dgCol ); /* white; */
+    min-width: 200px;
+}
+.dropPlate:hover > .emotionPlate a {
+    color: var(--dgCol ); /* white; */
+    display: inline-block;
+    padding: 4px;
+    padding-left:0;
+    text-decoration: none;
+}
+.dropPlate:hover > .emotionPlate a:hover {
+    font-weight:bold;
 }
 button.active {
     border: 4px crimson solid;
@@ -159,18 +174,34 @@ button.active {
 .dropdown-content {
   display: none;
   position: absolute;
-  width: 100px;
-  box-shadow: 0; 
-  padding: 12px 16px;
+  width: 120px;
+  padding: 2px 6px;
   z-index: 1;
   font-size:14px;
-  left:-54px;
+  left:-68px;
+  top:-12px;
   text-align:left;
   background-color:white;
 }  
 .dropdown:hover .dropdown-content {
   display: block;
+  border: 6px var(--lgCol) solid;
+  background-color: white; 
+  padding:0;
 }
+.dropdown:hover .dropdown-content a {
+    color: var(--dgCol);
+    text-decoration: none;
+    padding:4px;
+    padding-bottom:8px;
+    display: block;
+    font-size: 1.4em;
+}
+.dropdown:hover .dropdown-content a:hover {
+    color: var(--lgCol);
+    background-color: var( --dgCol);
+}
+
 /* ******************** */
 /* entry0.htm        */
 /* ******************** */
