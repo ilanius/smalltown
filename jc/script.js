@@ -35,18 +35,54 @@ function requestDeny( uId1, uId2 ) {
     friendRelation( contId, 'requestDeny', uId1, uId2 );
     o = gid( contId ).style.display = 'none';
 }
+function setEmos( str, emo, user ) {
+    let emos = emo.split(',');
+    let str2 = '';
+    for ( let i in emos ) {
+        let uId = emos[i];
+        if ( uId == '' ) break;
+        str2 += 
+`<a href="?func=userProfile&profileId=${uId}"> 
+  ${user[uId]['uFirstName']} ${user[uId]['uLastName']} 
+</a> <br>`;
+    }
+    if ( str2.length > 0 ) return str + '<br>' + str2;
+    return '';
+} 
+function setPlate( txt, pId, emo, plat ) {
+    let user = JSON.parse( txt );
+    let str = '';
+    str  += setEmos( 'dislike', emo[1], user );
+    str  += setEmos( 'like',    emo[2], user );
+    str  += setEmos( 'smile',   emo[3], user );
+    plat.innerHTML = str;
+}
+function collectPlate( pId, emotion ) {
+    let plat = gid( 'emotionPlate' + pId );
+
+    /* This condition works as a brake. collectPlace onmouseover fires 50 times a second */
+    if ( plat.innerHTML != '!' ) return; 
+    plat.innerHTML = '';
+
+    let emo = emotion.split( /[np]\d:/ ); // get rid of n1 p1 p2
+    let users = emo[1] + emo[2] + emo[3];
+    users = encodeURIComponent( users.substring( 0, users.length - 1) );
+    var sendTxt = "func=collectPlate&users="+users;
+    httpPost( sendTxt, function( txt ) { setPlate( txt, pId, emo, plat );   } );
+}
 function emotionCreate( p ) {
     var emotion = p['emotion'] || '';
     var p1 = emotion.indexOf('p1:');
     var p2 = emotion.indexOf('p2:');
-    var a=0,b=0,c=0;
-    while ( (p=emotion.indexOf(',', p) ) > 0 ) {
-        if ( p > 0  && p < p1 ) a++;
-        if ( p > p1 && p < p2 ) b++;
-        if ( p > p2 ) c++;
-        p++;
+    var a=0,b=0,c=0, i=0;
+    while ( ( i=emotion.indexOf(',', i) ) > 0 ) {
+        if ( i > 0  && i < p1 ) a++;
+        if ( i > p1 && i < p2 ) b++;
+        if ( i > p2 ) c++;
+        i++;
     }
-    var out = '<span class="dropPlate"><div class="userPlate">'+ emotion +'</div>';
+    var out = `<span id="collectPlate${p['pId']}" onmouseover="collectPlate(${p['pId']}, '${p['emotion']}')" class="dropPlate">
+    <div id="emotionPlate${p['pId']}" class="emotionPlate">!</div>`;
     if ( b > 0 ) out += '<span class="emotLike">' + b + '</span>'; // <== insert your own icons here
     if ( a > 0 ) out += '<span class="emotDisl">' + a + '</span>';
     if ( c > 0 ) out += '<span class="emotSmil">' + c + '</span>';
@@ -74,10 +110,13 @@ function postInnerHtml( p, children ) {
     if ( !p['uImageId'] ) { p['uImageId'] ='profileDefaultImage.png' };
     let str = 
     `<span class="fromTo">
-      <!-- ${p['fromTo']} -->
       <a href="?func=userProfile&profileId=${p['uId']}" title="${p['uFirstName']+' '+p['uLastName']}">
-        <img class="pImg" src="img/${p['uImageId']}"></a>
-    </span> ` +
+        <img class="pImg" src="img/${p['uImageId']}"> ${p['uFirstName']+' '+p['uLastName']} </a> `;
+    if ( p['ruId'] && p['ruId'] != p['uId'] && p['pId'] == p['rpId'] ) {
+        str += `=> ${p['ruFirstName']+' '+p['ruLastName']} `;
+    }
+                   
+    str += '</span><br> ' +
     `<div id="pTxt${p['pId']}" class="pTxt"> ${p['pTxt']}     </div>`   + 
     `<div id="emotion${p['pId']}" class="emotion">` +
     emotionCreate( p ) +
@@ -94,10 +133,7 @@ function postInnerHtml( p, children ) {
     return str;
 }
 function postCreate( p, child ) {
-    p['fromTo'] = p['uId'];
-    if ( p['ruId'] && p['ruId'] != p['uId'] ) {
-      p['fromTo'] += '=>' + p['ruId'];
-    }        
+    // p['fromTo'] = p['uId'];    if ( p['ruId'] && p['ruId'] != p['uId'] ) { p['fromTo'] += '=>' + p['ruId']; } 
     let str = `<div data-ruid="${p['ruId']}" data-uid="${p['uId']}" id="pId${p['pId']}" class="post">` + 
     postInnerHtml( p, child ) + 
     '</div>';
@@ -166,7 +202,6 @@ function feedUpdateMod( p ) {
 }
 function feedUpdateSet( txt ) {
     var data = JSON.parse( txt );
-    console.log( data );
     var post = data['post'];
     lastFeedTime = data['lastFeedTime'];
     for ( var i in post ) {

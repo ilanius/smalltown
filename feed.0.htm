@@ -65,6 +65,9 @@
   <?php requir0( 'headPane', $R ); ?>
   
   <div class="profileBox">
+    <?php 
+    if ( $R['feedType'] != 'userEventFeed' ) {
+    ?>
     <img src="img/<?=$R['profile']['uImageId']?>" width="100"> 
     <span> <?php echo $pr['uFirstName']. ' '. $pr['uLastName']; ?> </span>
       <?php 
@@ -73,7 +76,11 @@
         echo expressRelation( $R, $R['profile']);
         echo "</span>";
       }
-      ?>
+    } else {
+      echo '<span>Event Feed</span>';
+    }
+    ?>
+
       <br>
     <input type="text" id="commentInput" name="commentInput" 
            class="comment" placeholder="What is on your mind" 
