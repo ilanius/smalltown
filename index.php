@@ -194,9 +194,10 @@ function postDelete(&$R, &$DB) {
 function postEmotion( &$R, &$DB ) {
     $post    = $DB->selectOne( "* from post where pId='$R[pId]'");
     if ( $post == 0 ) return feedUpdate( $R, $DB ); /* this happens when someone tries to like a deleted post */
-    [$emotion, $uId, $emot, $pId ] = [ &$post['emotion'], $R['uId'], $R['emot'], $R['pId'] ];
+    [$emotion, $uId, $emot, $pId ] 
+        = [ $post['emotion'], $R['uId'], $R['emot'], $R['pId'] ];
     /* ******************************************* */
-    /* toggle emotion                              */
+    /* Toggle emotion                              */
     /* format for emotion /n1:\d+,p1:\d+,p2:\d+,/  */
     /* n1 == sad, p1 == like, p2 == smiley         */
     /* ******************************************* */
@@ -211,6 +212,10 @@ function postEmotion( &$R, &$DB ) {
     /* feedUpdate update */
     $post['action'] = 'mod';
     unset( $post['pTime'] );
+    /* A post in your feed belongs to someone who is not a friend 
+    of yours or someone you follow FeedUpdate will miss it
+    so we set ruId = $R[uId] in feedUpdate - this is a hack ! */
+    $post['ruId'] = $R['uId'];
     $DB->insert( 'feedUpdate',  $post );
     return feedUpdate( $R, $DB ); // 
 }

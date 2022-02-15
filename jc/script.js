@@ -201,6 +201,7 @@ function feedUpdateMod( p ) {
     }
 }
 function feedUpdateSet( txt ) {
+    console.log( txt );
     var data = JSON.parse( txt );
     var post = data['post'];
     lastFeedTime = data['lastFeedTime'];
