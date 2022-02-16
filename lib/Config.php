@@ -31,10 +31,10 @@ class Config {
     public    $salt         = "XXXX";
 
     public    $opposites = [
-        'block'    => 'unblock',    'unblock'   => 'block',  
-        'follow'   => 'unfollow',   'unfollow'  => 'follow', 
-        'friend'   => 'unfriend',   'unfriend'  => 'friend', 
-        'request'  => 'unrequest',  'unrequest' => 'request'
+        'block'     => 'unblock',        'unblock'   => 'block',  
+        'follow'    => 'unfollow',       'unfollow'  => 'follow', 
+        'friend'    => 'unfriend',       'unfriend'  => 'friend', 
+        'request'   => 'unrequest',      'unrequest' => 'request'
     ];
     public    $prettyPrint = [
         'unblock'   => 'remove block',   'unfriend'  => 'remove friend',

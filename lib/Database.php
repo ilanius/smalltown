@@ -11,6 +11,9 @@ class Database {
         if ( preg_match( "/^(NULL|NOW\(\))$/i", $entry ) ) {
             return $entry;
         }
+        // input containing ' makes system crash
+        // https://www.php.net/manual/en/mysqli.real-escape-string.php
+        // TODO: $DB->mysqli_real_escape_string( $entry );
         return '\''.$entry.'\'';
     }
     function _tablefields( $table, $forceAll = false )  {
