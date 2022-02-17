@@ -145,12 +145,13 @@ function emotionSubmit( event, pId, emot ) {
     resetFeedUpdate();
     httpPost( sendTxt, feedUpdateSet ); 
 }
-function postSubmit(event,o) {
+function postSubmit(event, o ) {
     if ( event.keyCode != 13 || o.value == '' ) return;
     event.preventDefault();                                   // cancel event bubble here
     var pId = o.name.substring( 'commentInput'.length );  // pId will be parent of this post
     var sendTxt = `func=postSubmit&profileId=${profileId}&ppId=${pId}&pTxt=${o.value}&lastFeedTime=${lastFeedTime}`;  
-    gid( 'commentInput'+pId).value= '';
+    //gid( 'commentInput'+pId).value= '';
+    o.value = '';
     if ( pId.length > 0 ) {
         gid( 'commentInput'+pId).remove(); // text input not post is removed 
     } 
@@ -201,7 +202,7 @@ function feedUpdateMod( p ) {
     }
 }
 function feedUpdateSet( txt ) {
-    console.log( txt );
+    // console.log( txt );
     var data = JSON.parse( txt );
     var post = data['post'];
     lastFeedTime = data['lastFeedTime'];

@@ -13,7 +13,7 @@ class Database {
         }
         // input containing ' makes system crash
         // https://www.php.net/manual/en/mysqli.real-escape-string.php
-        // TODO: $DB->mysqli_real_escape_string( $entry );
+        $entry = mysqli_real_escape_string( $this->DB, $entry );
         return '\''.$entry.'\'';
     }
     function _tablefields( $table, $forceAll = false )  {
