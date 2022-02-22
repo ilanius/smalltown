@@ -98,7 +98,9 @@ function likeButtonCreate( p ) {
 }
 function addPostSubmitField( event, pId ) {
     comment = gid( 'comment' + pId);
-    comment.innerHTML = `<input type="text" id="commentInput${pId}" name="commentInput${pId}"` + 
+    // https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
+    // https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/Drag_operations#specifying_drop_targets
+    comment.innerHTML = `<input type="text" ondragenter="return false" ondragover="return false" ondrop="alert('drop not yet implemented'); return false" id="commentInput${pId}" name="commentInput${pId}"` + 
     ' placeholder="opinion" onkeyUp="postSubmit(event, this);">';
     gid( 'commentInput'+pId ).focus();
 }
