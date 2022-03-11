@@ -232,7 +232,7 @@ function userLostPass0( &$R, &$DB ) {
             $body = $body . <<<html
 <h1>Hi!</h1>
 <p>Password Reset Request</p>
-<a href="$C->domain/index.php?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]">
+<a href="http://$C->domain/index.php?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]">
   Access Token 
 </a>
 <p>Good Luck!</p>
@@ -247,7 +247,7 @@ html;
         }
         /* ***************************************************** */
         /* we need a working e-mail server for this line to work */
-        mail($R['uEmail'], $subject, $body, $headers);        
+        // mail($R['uEmail'], $subject, $body, $headers);        
         /* ***************************************************** */
         echo $body; // 'Mail Sent!'; // $body; 
         // we need to create session 
