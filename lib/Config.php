@@ -9,8 +9,8 @@ class Config {
     public    $password     = 'smalltown';
     public    $database     = 'smalltown';
 
-    public    $domain       = '/smalltown';
-    public    $mailfrom     = 'XX@XXX.XXX';
+    public    $domain       = 'smalltown.one';
+    public    $mailfrom     = 'admin@smalltown.one';
     public    $webroot      = '/';
 
     // --- miscellaneous  --------------------- */
@@ -22,7 +22,7 @@ class Config {
     public    $thumbheight  = 40;
     public    $defaultImage = "profileDefaultImage.png";
 
-    public    $design       = ''; // <= your design here
+    public    $design       = '0'; // <= your design here
 
     public    $feedClearInterval = 60; // unit is in seconds
 
