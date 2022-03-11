@@ -247,7 +247,7 @@ html;
         }
         /* ***************************************************** */
         /* we need a working e-mail server for this line to work */
-        // mail($R['uEmail'], $subject, $body, $headers);        
+        mail($R['uEmail'], $subject, $body, $headers);        
         /* ***************************************************** */
         echo $body; // 'Mail Sent!'; // $body; 
         // we need to create session 
