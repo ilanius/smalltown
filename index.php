@@ -23,7 +23,6 @@ function checkLogin( &$R, &$DB ) {
     }        
     return 0;
 }
-
 function collectPlate( &$R,&$DB ) {
     $stmnt = "uId, uFirstName, uLastName, uImageId from user where uId in ( $R[users] )";
     debug( $stmnt );
