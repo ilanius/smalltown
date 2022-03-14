@@ -232,7 +232,7 @@ function userLostPass0( &$R, &$DB ) {
             $body = $body . <<<html
 <h1>Hi!</h1>
 <p>Password Reset Request</p>
-<a href="$C->domain/index.php?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]">
+<a href="http://$C->domain/index.php?func=userLostPass1&uEmail=$U[uEmail]&uPassword0=$U[uPassword0]">
   Access Token 
 </a>
 <p>Good Luck!</p>
@@ -554,7 +554,6 @@ foreach ( $_REQUEST as $k=>$v ) { // $R less to write than $_REQUEST
 /* ********************** */
 /* entry                  */
 /* ********************** */
-debug('A route:');
 
 /* if any of these succeeds they return 1 */
 checkLogin( $R, $DB ) || userLogin( $R, $DB ) || userSignup($R,$DB) || userLostPass0( $R, $DB) || 
@@ -580,5 +579,6 @@ if ( isset($allowed[ $R['func'] ]) ) {
     $R['func']($R, $DB );
     return; 
 }
+    
 debug('C unauthorized :'.$R['func']);    
 ?>
