@@ -1,7 +1,7 @@
 <?php
 /* *********************************** */
 /* Smalltown a.k.a facebook light      */
-/* no ads                              */
+/* no ads -                            */
 /* *********************************** */
 function checkLogin( &$R, &$DB ) {
     if ( isset( $_COOKIE['session'] ) ) {
