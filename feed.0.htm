@@ -32,6 +32,7 @@
         return str;
     }  
     function userFeedAdd( txt ) {  // supplements post tree
+console.log( txt );
         var tree = JSON.parse( txt );
         if ( tree.length > 0 ) feedPosition+= feedLimit; // 100; 
         var contPane = gid( 'pId' );

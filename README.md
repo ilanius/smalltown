@@ -30,6 +30,8 @@ In ordinary shell in directory /htdocs/smalltown/ write:
 On your system likely:
 "C:\Program Files\MariaDB 10.6\bin\mysql.exe" -usmalltown -psmalltown -hlocalhost smalltown < smalltown.sql
 
+image function require installation
+apt install php7.4-gd
 
 # Improvements
 I think a good starting point where one could improve Graphical User Interface (GUI)
