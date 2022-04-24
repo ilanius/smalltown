@@ -126,22 +126,43 @@ function changeRelation( &$R, &$DB ) {
     }
     echo expressRelation( $R, $p );
 }
+function uploadImage(&$R, &$DB ) {
+    $fTmp    = $_FILES['image']['tmp_name'];
+    $fName   = $_FILES['image']['name'];
+    if ( strlen($fTmp) > 0 && is_uploaded_file($fTmp) && preg_match( "/(jpeg|jpg|png|gif)$/",$fName)) { // Can only handle jpg,gif,png
+        $iType = strtolower(pathinfo($fName, PATHINFO_EXTENSION)) ;
+        $imageId = substr( md5( $R['uId'].$iType.$fTmp ), 5).'.'.$iType; // hash filename to prevent harvesting of image
+        // https://stackoverflow.com/questions/14649645/resize-image-in-php
+        // https://www.php.net/manual/en/function.imagecreatefromjpeg.php
+        $iType = $iType == 'jpg' ? 'jpeg' : $iType; 
+        $image = ('imagecreatefrom'.$iType)($fTmp); 
+        // https://www.php.net/manual/en/function.getimagesize.php
+        // https://www.php.net/manual/en/function.imagescale.php        
+        $imgResized = imagescale($image , 128, 128); // brutal resizing to 128x128 format
+        if ( preg_match("/(png)$/", $iType )) {
+            imagealphablending($imgResized, false);
+            imagesavealpha($imgResized, true);
+        }
+        ('image'.$iType)( $imgResized, 'img/'.$imageId );   // perhaps all images should be saved as jpg   
+    }        
+    return $imageId;
+}
 /* ********************************************************************** */
 /* This function allows you to post in your own feed or in a friends feed */
 /* ********************************************************************** */
-function postSubmit( &$R, &$DB ) {
-    // Add post to user feed
+function postSubmit( &$R, &$DB ) {  // Add post to user feed
+    debug('postSubmit');
+    
     if ( $R['ppId'] == '' ) {
         $post = [
-            'uId'     => $R['user']['uId'],    
-            'ruId'    => $R['profileId'],     // <= TODO: check $R['user']['uId'],
-            'rpId'    => 'null',              
-            'pTxt'    => $R['pTxt'],
-            'emotion' => '',
+            'uId'     => $R['user']['uId'],  'ruId'    => $R['profileId'],     // <= TODO: check $R['user']['uId'],
+            'rpId'    => 'null',             'pTxt'    => $R['pTxt'],              'emotion' => '',
         ]; 
         $DB->insert( "post", $post ); /* untaint input */
         $DB->query( "update post set rpId=pId where rpId is NULL" );
     } else { 
+        debug('postImageSubmit:' . "* from post where pId=$R[ppId]" );
+    
         $post = $DB->selectOne( "* from post where pId=$R[ppId]");
         if ( $post == 0 ) return feedUpdate( $R, $DB ); /* post we are trying to comment has been deleted */
         $post['ppId']    = $post['pId'];
@@ -164,6 +185,11 @@ function postSubmit( &$R, &$DB ) {
     $DB->insert( 'feedUpdate', $post  );
     return feedUpdate( $R, $DB ); // 
 }
+function postImageSubmit(&$R, &$DB ) { 
+    $R['pTxt'] = '<img src="img/'. uploadImage( $R, $DB ) .'">';
+    return postSubmit( $R, $DB );
+}
+
 /* *********************************************************** */
 /* The algorithm below is no easy read hence many comments     */
 /* *********************************************************** */
@@ -404,24 +430,10 @@ function userProfile( &$R, &$DB) {
 /* ********************************************************************** */
 function userAccount(&$R, &$DB ) {
     if ( isset( $R['subFunc'] ) && $R['subFunc'] == 'update' ) {
-        $fTmp    = $_FILES['profileImage']['tmp_name'];
-        $fName   = $_FILES['profileImage']['name'];
+        $fTmp    = $_FILES['image']['tmp_name'];
+        $fName   = $_FILES['image']['name'];
         if ( strlen($fTmp) > 0 && is_uploaded_file($fTmp) && preg_match( "/(jpeg|jpg|png|gif)$/",$fName)) { // Can only handle jpg,gif,png
-            $iType = strtolower(pathinfo($fName, PATHINFO_EXTENSION)) ;
-            // In order to prevent harvesting of images by foreign machines we hash the filename, but we keep the filetype
-            $R['uImageId'] = substr( md5( $R['uId'].$iType.$fTmp ), 5).'.'.$iType; // sufficiently complicated
-            // https://stackoverflow.com/questions/14649645/resize-image-in-php
-            // https://www.php.net/manual/en/function.imagecreatefromjpeg.php
-            $iType = $iType == 'jpg' ? 'jpeg' : $iType; 
-            $image = ('imagecreatefrom'.$iType)($fTmp); 
-            // https://www.php.net/manual/en/function.getimagesize.php
-            // https://www.php.net/manual/en/function.imagescale.php        
-            $imgResized = imagescale($image , 128, 128); // brutal resizing to 128x128 format
-            if ( preg_match("/(png)$/", $iType )) {
-                imagealphablending($imgResized, false);
-                imagesavealpha($imgResized, true);
-            }
-            ('image'.$iType)( $imgResized, 'img/'.$R['uImageId'] );   // perhaps all images should be saved as jpg   
+            $R['uImageId'] = uploadImage( $R, $DB );
         }        
         if ( isset( $R['uPassword'] ) && strlen( $R['uPassword'] ) > 0 ) {
             $R['uPassword'] = password_hash( $R['uPassword'] , PASSWORD_DEFAULT);
@@ -431,7 +443,7 @@ function userAccount(&$R, &$DB ) {
         $DB->update("user", $R, "uId=$R[uId]");    
         $R['user'] = $DB->selectOne("* from user where uId='$R[uId]'");
     }
-    // List of friend requests
+    /* List of friend requests */
     $friendRequest      = $DB->select("uId1 from friend where uId2='$R[uId]' and relation&8");
     array_push( $friendRequest, ['uId1' => '-1'] ); // in case request is empty
     $fId                = $DB->implodeSelection( $friendRequest, 'uId1' );
@@ -573,8 +585,10 @@ $allowed = [  /* only functions followed by 1 can be called if you are logged in
     'userProfileFeed'=> 1,      'userEvent'         => 1,   
     'userAccount'    => 1,      'userLogout'        => 1,       'userProfile'       => 1,      
     'userSearch'     => 1,      'feedUpdate'        => 1,       'collectPlate'      => 1,
+    'postImageSubmit' => 1,
 ];
-   
+debug('A func:'.$R['func']);    
+
 if ( isset($allowed[ $R['func'] ]) ) {
     $R['func']($R, $DB );
     return; 

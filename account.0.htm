@@ -12,12 +12,14 @@
     <?php $U = &$R['user']; ?>
     <form action="?func=userAccount" method="post" enctype="multipart/form-data">
       <input type="hidden" name="subFunc" value="update">
-      <div class="fulf0">
-        <img src="img/<?=$U['uImageId']?>"> 
+      <div id="pimage" class="fulf0" ondrop="uploadProfileImage(event);" ondragover="return highLight('pimage');" ondragleave="return deLight('pimage');">
+        <img src="img/<?=$U['uImageId']?>" > 
+       <!--
         <div class="fulf1">
           Select image to upload: <br>
-          <input type="file" name="profileImage" id="fileToUpload"> 
+          <input type="file" name="image" id="fileToUpload"> 
         </div>
+      -->
       </div>
     <?php  
     $userFields = [ 
@@ -65,7 +67,6 @@ html;
     } 
     ?>
     <br>
-
     <!-- friends list -->   
     <?php
     if ( sizeof( $R['friend'] ) > 0 ) {
@@ -84,7 +85,6 @@ html;
       echo "<br>";
     } 
     ?>
-
     <!-- friends suggestions -->
     <?php
     if ( sizeof( $R['friendSuggestion'] ) > 0 ) {
@@ -93,16 +93,14 @@ html;
         echo <<<html
         <a class="friendBox" href="?func=userProfile&profileId=$f[uId]">
           <img src="img/$f[uImageId]">
-           <span class="friendBoxName">$f[uFirstName] $f[uLastName] </span>
+          <span class="friendBoxName">$f[uFirstName] $f[uLastName] </span>
         </a>
   html;
       }
     } 
   ?>    
   </div>
-  
   <div class="footPane"> 
   </div>
-
 </body>
 </html>

@@ -32,7 +32,6 @@
         return str;
     }  
     function userFeedAdd( txt ) {  // supplements post tree
-console.log( txt );
         var tree = JSON.parse( txt );
         if ( tree.length > 0 ) feedPosition+= feedLimit; // 100; 
         var contPane = gid( 'pId' );
@@ -83,7 +82,9 @@ console.log( txt );
     ?>
 
     <br>
-    <input type="text" id="commentInput" name="commentInput" ondragenter="return false" ondragover="return false" ondrop="alert('drop not yet implemented'); return false;"
+    <input type="text" id="commentInput" name="commentInput" 
+           ondragover="return highLight( 'commentInput');" ondragleave="return deLight( 'commentInput');" 
+           ondrop="return postImageSubmit(event, this);"
            class="comment" placeholder="What is on your mind" 
            onkeyup="postSubmit(event,this);" >
   </div>

@@ -75,6 +75,10 @@ input:focus {
 /* ************* */
 /* feed0.htm     */
 /* ************* */
+input.highLight {
+    border: 2px red dashed;
+    padding: 10px;
+}
 .comment {
     width: 30%;
 }
@@ -291,6 +295,10 @@ footer {
     background-color: white;
     border-radius:0px;
     padding: 0.5em;
+}
+div.highLight img {
+    border: 2px red dashed;
+    padding: 10px;
 }
 .fulf1 {
     display: inline-block;
