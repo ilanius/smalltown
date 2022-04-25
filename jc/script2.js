@@ -105,8 +105,8 @@ function requestAccept( uId1, uId2 ) {
 }
 function requestDeny( uId1, uId2 ) {
     var contId = 'nokok'+uId1+'_'+uId2;
-    friendRelation( contId, 'requestDeny', uId1, uId2 );
-    o = gid( contId ).style.display = 'none';
+    var sendTxt = "func=friendRelation&subFunc=requestDeny&uId1="+uId1+"&uId2="+uId2;
+    httpPost( sendTxt, reloadPage );
 }
 function setEmos( str, emo, user ) {
     let emos = emo.split(',');
